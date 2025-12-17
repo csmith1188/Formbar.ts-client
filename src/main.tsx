@@ -96,6 +96,7 @@ function App() {
 	const [connectionTries, setConnectionTries] = useState(0);
 	const [showNotConnected, setShowNotConnected] = useState(false);
 
+	showNotConnected;
 	isConnected;
 
 	useEffect(() => {
@@ -127,6 +128,7 @@ function App() {
 		}
 
 		function connectError(err: any) {
+			console.error('Connection Error:', err);
 			setConnectionTries(prev => {
 				connectionTries;
 				const newCount = prev + 1;

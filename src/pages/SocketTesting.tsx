@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 export default function SocketTestingPage() {
     const [classData, setClassData] = useState<any>(null);
     const [betaAnswers, setBetaAnswers] = useState<any>([]);
+    classData;
 
     function Respond(response: string) {
         socket.emit('pollResp', response, '');
