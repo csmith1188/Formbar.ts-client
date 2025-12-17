@@ -2,7 +2,6 @@ import { Button, Modal, Typography } from "antd";
 const { Text, Title } = Typography;
 import { textColorForBackground } from "../../CustomStyleFunctions";
 import { socket } from "../../socket";
-import { useState } from "react";
 
 const defaultPolls = [
     {
@@ -76,7 +75,6 @@ export default function PollsMenu({ openModalId, setOpenModalId }: { openModalId
     function startPoll(id: number) {
         const poll = defaultPolls.filter(e => e.id == id)[0];
 
-        console.log(poll);
         socket.emit('startPoll', poll);
         setOpenModalId(null);
     }

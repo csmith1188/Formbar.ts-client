@@ -61,7 +61,8 @@ function randomText() {
         "Forming the Bar...",
         "While you wait, why not watch \"Hundreds of Beavers\"?",
         "Filling Pog Meters...",
-        "Releasing Half-Life 3..."
+        "Releasing Half-Life 3...",
+        "I'm the Formboy!"
     ];
 
     return texts[Math.floor(Math.random() * texts.length)];

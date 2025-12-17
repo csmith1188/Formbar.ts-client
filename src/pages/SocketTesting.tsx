@@ -8,8 +8,6 @@ export default function SocketTestingPage() {
     const [classData, setClassData] = useState<any>(null);
     const [betaAnswers, setBetaAnswers] = useState<any>([]);
 
-    console.log(classData)
-
     function Respond(response: string) {
         socket.emit('pollResp', response, '');
         console.log('emitted ' + response);

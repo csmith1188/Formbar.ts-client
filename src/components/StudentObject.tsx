@@ -1,5 +1,5 @@
-import { Badge, Button, Modal, Typography } from "antd";
-import { socket } from "../socket";
+import { Badge, Button, Flex, Modal, Typography } from "antd";
+import { StudentAccordion } from "./AccordionCollapse";
 const { Text } = Typography;
 
 export default function StudentObject({ student, openModalId, setOpenModalId }: { student: any, openModalId: number | null, setOpenModalId: React.Dispatch<React.SetStateAction<number | null>> }) {
@@ -34,16 +34,18 @@ export default function StudentObject({ student, openModalId, setOpenModalId }: 
                 }
                 <Modal 
                     centered
-                    title={<>{student.displayName}<br/><Text italic type="secondary" style={{fontWeight:300}}>ID: {student.id}</Text></>} 
+                    title={
+                        <Flex vertical>{student.displayName}
+                            <Text italic type="secondary" style={{fontWeight:300, fontSize:'16px'}}>ID: {student.id}</Text>
+                        </Flex>
+                    } 
                     open={openModalId === student.id} 
                     onCancel={() => setOpenModalId(null)} 
                     footer={null}
                 >
-                    <p>
-                        isGuest: {student.isGuest ? "Yes" : "No"}<br/>
-                        help: {student.help ? ( <>Yes <Button color='red' type="default" variant="solid" onClick={() => socket.emit("deleteTicket", student.id)}>Delete</Button></> )  : "No"}<br/>
-                        break: {typeof student.break === "string" ? (<>{student.break} <Button color='green' type="default" variant="solid" onClick={() => socket.emit("approveBreak", true, student.id)}>Approve</Button><Button color='red' type="default" variant="solid" onClick={() => socket.emit("approveBreak", false, student.id)}>Deny</Button></>) : typeof student.break === "boolean" && student.break ? (<>{"On Break"}<Button color='red' type="default" variant="solid" onClick={() => socket.emit("approveBreak", false, student.id)}>End Break</Button></>) : "No"}<br/>
-                    </p>
+                    <Flex justify="center">
+                        <StudentAccordion studentData={student} />
+                    </Flex>
                 </Modal>
             </div>
         </div>

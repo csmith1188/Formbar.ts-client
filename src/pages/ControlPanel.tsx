@@ -261,9 +261,10 @@ export default function ControlPanel() {
                                 <Col span={isSingleColumn ? 24 : 12}>
                                     <Card variant="borderless">
                                         <Statistic.Timer
+                                            
                                             type="countup"
                                             title="Poll Runtime"
-                                            value={classData?.poll.startTime == undefined ? 0 : classData?.poll.startTime}
+                                            value={classData?.poll.startTime == undefined ? Date.now() : classData?.poll.startTime}
                                             format="H:mm:ss"
                                         />
                                     </Card>
