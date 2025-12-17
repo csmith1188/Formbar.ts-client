@@ -15,3 +15,15 @@ export type Student = {
     pogMeter: number;
     isGuest: boolean;
 };
+
+export type UserData = {
+    loggedIn: boolean,
+    id: number,
+    email: string,
+    permissions: number,
+    classPermissions: number,
+    help: boolean,
+    break: boolean | string,
+    pogMeter: number,
+    classId: number | null,
+}

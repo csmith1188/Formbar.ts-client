@@ -8,11 +8,12 @@ import AccordionCollapse from "../components/AccordionCollapse";
 import FullCircularPoll from "../components/CircularPoll";
 import PollButton from "../components/PollButton";
 import StudentObject from "../components/StudentObject";
+import type { UserData } from "../types";
 
-export default function TestingPage() {
+export default function TestingPage({ userData }: { userData: UserData | null }) {
 	const [enableCategory3, setEnableCategory3] = useState(false);
 
-
+	console.log("User Data in TestingPage:", userData);
 	
 
 	const components = [

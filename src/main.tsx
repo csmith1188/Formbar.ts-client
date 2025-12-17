@@ -5,13 +5,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
-import { socket } from './socket';
+import { url, api, socket } from './socket';
 
 import { darkMode, lightMode, showMobileIfVertical, themeColors } from "../themes/GlobalConfig";
 
 import "./assets/css/index.css";
 
 import pages from "./pages";
+import type { UserData } from "./types";
 
 type ThemeContextType = {
 	isDark: boolean;
@@ -95,6 +96,7 @@ function App() {
 	const [isConnected, setIsConnected] = useState(socket.connected);
 	const [connectionTries, setConnectionTries] = useState(0);
 	const [showNotConnected, setShowNotConnected] = useState(false);
+	const [userData, setUserData] = useState<UserData | null>(null);
 
 	showNotConnected;
 	isConnected;
@@ -116,6 +118,21 @@ function App() {
 			setIsConnected(true);
 			setConnectionTries(0); // Reset on successful connection
 			console.log('connected')
+
+			fetch(`${url}/api/me`, {
+				method: 'GET',
+				headers: {
+					"api": api,
+				}
+			})
+			.then(res => res.json())
+			.then(data => {
+				console.log(data);
+				setUserData(data);
+			})
+			.catch(err => {
+				console.error('Error fetching user data:', err);
+			})
 		}
 
 		function onDisconnect() {
@@ -125,6 +142,8 @@ function App() {
 		function onSetClass(classID: number) {
 			console.log("Class ID set to:", classID);
 			socket.emit('classUpdate');
+
+			
 		}
 
 		function connectError(err: any) {
@@ -165,7 +184,7 @@ function App() {
 								return <Route key={page.routePath} path={page.routePath} element={
 									<>
 									<LoadingScreen attempt={connectionTries} isConnected={isConnected} />
-									<Element />
+									<Element userData={userData} />
 									</>
 								} />
 							})

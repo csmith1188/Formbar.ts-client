@@ -12,6 +12,7 @@ import SettingsMenu from "../components/ControlPanel/SettingsMenu";
 
 import { themeColors } from "../../themes/GlobalConfig";
 import { socket } from "../socket";
+import type { UserData } from "../types";
 
 
 const items = [
