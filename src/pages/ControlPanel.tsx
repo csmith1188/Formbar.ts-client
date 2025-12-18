@@ -3,7 +3,7 @@ const { Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { isMobile, useTheme } from "../main";
+import { isMobile, useClassData, useTheme } from "../main";
 import { Activity, useEffect, useState, useRef } from "react";
 
 import Dashboard from "../components/ControlPanel/Dashboard";
@@ -12,56 +12,56 @@ import SettingsMenu from "../components/ControlPanel/SettingsMenu";
 
 import { themeColors } from "../../themes/GlobalConfig";
 import { socket } from "../socket";
-import type { UserData } from "../types";
+import Log from "../debugLogger";
 
 
 const items = [
 	{
 		key: "1",
 		icon: <IonIcon icon={IonIcons.pieChart} />,
-		deselectedIcon: <IonIcon icon={IonIcons.pieChartOutline} />,
-		selectedIcon: <IonIcon icon={IonIcons.pieChart} />,
+		deselectedicon: <IonIcon icon={IonIcons.pieChartOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.pieChart} />,
 		label: "Dashboard",
 	},
 	{
 		key: "2",
 		icon: <IonIcon icon={IonIcons.barChartOutline} />,
-		deselectedIcon: <IonIcon icon={IonIcons.barChartOutline} />,
-		selectedIcon: <IonIcon icon={IonIcons.barChart} />,
+		deselectedicon: <IonIcon icon={IonIcons.barChartOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.barChart} />,
 		label: "Polls",
 	},
 	{
 		key: "3",
 		icon: <IonIcon icon={IonIcons.timerOutline} />,
-		deselectedIcon: <IonIcon icon={IonIcons.timerOutline} />,
-		selectedIcon: <IonIcon icon={IonIcons.timer} />,
+		deselectedicon: <IonIcon icon={IonIcons.timerOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.timer} />,
 		label: "Timer",
 	},
 	{
 		key: "4",
 		icon: <IonIcon icon={IonIcons.peopleOutline} />,
-		deselectedIcon: <IonIcon icon={IonIcons.peopleOutline} />,
-		selectedIcon: <IonIcon icon={IonIcons.people} />,
+		deselectedicon: <IonIcon icon={IonIcons.peopleOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.people} />,
 		label: "Users",
 	},
 	{
 		key: "5",
 		icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
-		deselectedIcon: <IonIcon icon={IonIcons.lockClosedOutline} />,
-		selectedIcon: <IonIcon icon={IonIcons.lockClosed} />,
+		deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
 		label: "Permissions",
 	},
 	{
 		key: "6",
 		icon: <IonIcon icon={IonIcons.settingsOutline} />,
-		deselectedIcon: <IonIcon icon={IonIcons.settingsOutline} />,
-		selectedIcon: <IonIcon icon={IonIcons.settings} />,
+		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.settings} />,
 		label: "Settings",
 	},
 ];
 
 export default function ControlPanel() {
-    const [classData, setClassData] = useState<any>(null);
+    const { classData, setClassData } = useClassData();
 
     const statsPanelRef = useRef<HTMLDivElement>(null);
     const [panelWidth, setPanelWidth] = useState(480);
@@ -86,9 +86,9 @@ export default function ControlPanel() {
 
         function classUpdate(classData: any) {
             setClassData(classData);
-            console.log("Class Update:", classData);
+            Log({ message: "Class Update received.", data: classData, level: 'info' });
 
-            console.log("Total Voters: " + classData.poll.totalResponders);
+            Log({ message: "Total Voters: " + classData.poll.totalResponders, level: 'info' });
         }
 
         socket.on('classUpdate', classUpdate);
@@ -141,10 +141,10 @@ export default function ControlPanel() {
 		const updatedItems = menuItems.map((item) => {
 			if (item && item.key === key && "icon" in item) {
 				// Set selected icon
-				return { ...item, icon: item.selectedIcon };
+				return { ...item, icon: item.selectedicon };
 			} else if (item && "icon" in item) {
 				// Set deselected icon
-				return { ...item, icon: item.deselectedIcon };
+				return { ...item, icon: item.deselectedicon };
 			}
 			return item;
 		});
@@ -162,10 +162,10 @@ export default function ControlPanel() {
                 const studentResponseTimeMs = new Date(student.pollRes.time).getTime();
                 
                 // Poll start time is already in milliseconds
-                const pollStartTimeMs = classData.poll.startTime;
+                const pollStartTimeMs = classData?.poll.startTime;
                 
                 // Calculate difference in seconds (student time - poll start time)
-                const timeDifferenceMs = studentResponseTimeMs - pollStartTimeMs;
+                const timeDifferenceMs = studentResponseTimeMs - (pollStartTimeMs ?? 0);
                 const timeDifferenceSeconds = timeDifferenceMs / 1000;
                 
                 // Only include if positive and reasonable (less than 1 hour)
@@ -233,7 +233,7 @@ export default function ControlPanel() {
                 <Splitter.Panel min={'520'}>
                     <div style={{ marginLeft: '250px', padding: '20px', height: '100%', flex: '1 1 auto'}}>
                         <Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
-                            <Dashboard classData={classData} openModalId={openModalId} setOpenModalId={setOpenModalId}/>
+                            <Dashboard openModalId={openModalId} setOpenModalId={setOpenModalId}/>
                         </Activity>
                         <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
                             <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />

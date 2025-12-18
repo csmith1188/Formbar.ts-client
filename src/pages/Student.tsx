@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useMobileDetect } from "../main";
 import { Typography, Flex } from "antd";
 import PollButton from "../components/PollButton";
+import Log from "../debugLogger";
 const { Title } = Typography;
 
 export default function Student() {
@@ -17,7 +18,7 @@ export default function Student() {
 
     function Respond(response: string) {
         socket.emit('pollResp', response, '');
-        console.log('emitted ' + response);
+        Log({ message: `Responded with: ${response}`, level: 'info' });
     }
 
     useEffect(() => {
@@ -40,7 +41,7 @@ export default function Student() {
 
 		function classUpdate(classData: any) {
 			setClassData(classData);
-            console.log("Class Update:", classData);
+            Log({ message: "Class Update received.", data: classData, level: 'info' });
 
             let answers = [];
 

@@ -9,11 +9,12 @@ import FullCircularPoll from "../components/CircularPoll";
 import PollButton from "../components/PollButton";
 import StudentObject from "../components/StudentObject";
 import type { UserData } from "../types";
+import Log from "../debugLogger";
 
 export default function TestingPage({ userData }: { userData: UserData | null }) {
 	const [enableCategory3, setEnableCategory3] = useState(false);
 
-	console.log("User Data in TestingPage:", userData);
+	Log({ message: "User Data in TestingPage:", data: userData, level: 'debug' });
 	
 
 	const components = [

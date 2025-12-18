@@ -27,3 +27,51 @@ export type UserData = {
     pogMeter: number,
     classId: number | null,
 }
+
+export type ClassData = {
+    id: number,
+    className: string,
+    isActive: boolean,
+    timer: {
+        startTime: number,
+        timeLeft: number,
+        active: boolean,
+        sound: boolean
+    },
+    poll: {
+        status: boolean,
+        responses: any[],
+        allowTextResponses: boolean,
+        prompt: string,
+        weight: number,
+        blind: boolean,
+        excludedRespondents: any[],
+        totalResponses: number,
+        totalResponders: number,
+        startTime?: number
+    },
+    permissions: {
+        links: number,
+        controlPoll: number,
+        manageStudents: number,
+        breakHelp: number,
+        manageClass: number,
+        auxiliary: number,
+        userDefaults: number,
+        seePoll: number,
+        votePoll: number
+    },
+    key: string,
+    tags: string[],
+    settings: {
+        mute: boolean,
+        filter: any,
+        sort: any,
+        isExcluded: {
+            guests: boolean,
+            mods: boolean,
+            teachers: boolean
+        }
+    },
+    students: Student[]
+};

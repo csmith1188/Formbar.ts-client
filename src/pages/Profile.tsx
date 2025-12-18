@@ -94,7 +94,6 @@ export default function Profile() {
                                 style={{width:'100%'}} 
                                 expandIcon={({isActive}) => <IonIcon icon={isActive ? IonIcons.lockOpen : IonIcons.lockClosed}/>} 
                                 collapsible={showSensitiveInfo ? "header" : "disabled"}
-                                onChange={(e) => {console.log(e);}}
                                 size="small"
                                 items={
                                     [

@@ -3,24 +3,26 @@ import { socket } from "../socket";
 import FormbarHeader from "../components/FormbarHeader";
 import FullCircularPoll from "../components/CircularPoll";
 import { useEffect, useState } from "react";
+import Log from "../debugLogger";
+import { useClassData } from "../main";
 
 export default function SocketTestingPage() {
-    const [classData, setClassData] = useState<any>(null);
+    const {classData, setClassData} = useClassData();
     const [betaAnswers, setBetaAnswers] = useState<any>([]);
     classData;
 
     function Respond(response: string) {
         socket.emit('pollResp', response, '');
-        console.log('emitted ' + response);
+        Log({ message: `Responded with: ${response}`, level: 'info' });
     }
 
     useEffect(() => {
 
 		function classUpdate(classData: any) {
 			setClassData(classData);
-            console.log("Class Update:", classData);
+            Log({ message: "Class Update received.", data: classData, level: 'info' });
 
-            console.log("Total Voters: " + classData.poll.totalResponders);
+            Log({ message: "Total Voters: " + classData.poll.totalResponders, level: 'info' });
 
             let answers = [];
 

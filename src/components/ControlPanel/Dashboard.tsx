@@ -3,17 +3,12 @@ const { Title } = Typography;
 
 import StudentObject from '../StudentObject';
 
+import { useClassData, useUserData } from '../../main';
 
-// classData.students are expected in an object like this:
-// {
-//     1: {
-//         id: 1,
-//         name: "Student Name",
-//         email: ...
-//     }
-// }
+export default function Dashboard({ openModalId, setOpenModalId }: { openModalId: number | null, setOpenModalId: React.Dispatch<React.SetStateAction<number | null>> }) {
 
-export default function Dashboard({ classData, openModalId, setOpenModalId }: { classData: any, openModalId: number | null, setOpenModalId: React.Dispatch<React.SetStateAction<number | null>> }) {
+    const { classData } = useClassData();
+    const { userData } = useUserData();
 
     const students = classData && classData.students ? Object.values(classData.students) as any[] : [];
 
@@ -38,7 +33,7 @@ export default function Dashboard({ classData, openModalId, setOpenModalId }: { 
                     }}>
                         {
                             students.map((student: any) => (
-                                student.id !== classData.owner ? (
+                                student.id !== userData?.id ? (
                                     <StudentObject 
                                         key={student.id}
                                         student={student}

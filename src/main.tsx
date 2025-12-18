@@ -12,11 +12,22 @@ import { darkMode, lightMode, showMobileIfVertical, themeColors } from "../theme
 import "./assets/css/index.css";
 
 import pages from "./pages";
-import type { UserData } from "./types";
+import type { ClassData, UserData } from "./types";
+import Log from "./debugLogger";
 
 type ThemeContextType = {
 	isDark: boolean;
 	toggleTheme: () => void;
+}
+
+type UserDataContextType = {
+	userData: UserData | null;
+	setUserData: (data: UserData | null) => void;
+}
+
+type ClassDataContextType = {
+	classData: ClassData | null;
+	setClassData: (data: ClassData | null) => void;
 }
 
 const connectionTriesLimit = 5;
@@ -62,6 +73,20 @@ export const useTheme = () => {
 	return context;
 };
 
+const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
+const ClassDataContext = createContext<ClassDataContextType | undefined>(undefined);
+
+export const useUserData = () => {
+	const context = useContext(UserDataContext);
+	if (!context) throw new Error("useUserData must be used within UserDataProvider");
+	return context;
+};
+
+export const useClassData = () => {
+	const context = useContext(ClassDataContext);
+	if (!context) throw new Error("useClassData must be used within ClassDataProvider");
+	return context;
+}
 
 const ThemeProvider = ({ children }: { children: ReactNode }) => {
 	const [isDark, setIsDark] = useState(() => {
@@ -92,11 +117,30 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
 	);
 };
 
-function App() {
+const UserDataProvider = ({ children }: { children: ReactNode }) => {
+	const [userData, setUserData] = useState<UserData | null>(null);
+
+	return (
+		<UserDataContext.Provider value={{ userData, setUserData }}>
+			{children}
+		</UserDataContext.Provider>
+	);
+};
+
+const ClassDataProvider = ({ children }: { children: ReactNode }) => {
+	const [classData, setClassData] = useState<ClassData | null>(null);
+	return (
+		<ClassDataContext.Provider value={{ classData, setClassData }}>
+			{children}
+		</ClassDataContext.Provider>
+	);
+}
+
+const AppContent = () => {
 	const [isConnected, setIsConnected] = useState(socket.connected);
 	const [connectionTries, setConnectionTries] = useState(0);
 	const [showNotConnected, setShowNotConnected] = useState(false);
-	const [userData, setUserData] = useState<UserData | null>(null);
+	const { setUserData } = useUserData();
 
 	showNotConnected;
 	isConnected;
@@ -117,7 +161,7 @@ function App() {
 		function onConnect() {
 			setIsConnected(true);
 			setConnectionTries(0); // Reset on successful connection
-			console.log('connected')
+			Log({ message: 'Connected to server.', level: 'info' });
 
 			fetch(`${url}/api/me`, {
 				method: 'GET',
@@ -127,7 +171,7 @@ function App() {
 			})
 			.then(res => res.json())
 			.then(data => {
-				console.log(data);
+				Log({ message: 'User data fetched successfully.', data, level: 'info' });
 				setUserData(data);
 			})
 			.catch(err => {
@@ -140,10 +184,8 @@ function App() {
 		}
 
 		function onSetClass(classID: number) {
-			console.log("Class ID set to:", classID);
-			socket.emit('classUpdate');
-
-			
+			Log({ message: "Class ID set to: " + classID, level: 'debug' });
+			socket.emit('classUpdate', '');
 		}
 
 		function connectError(err: any) {
@@ -173,24 +215,35 @@ function App() {
 			socket.off('setClass', onSetClass);
 		};
 	}, []);
+
+	return (
+		<BrowserRouter>
+			<Routes>
+				{
+					pages.map(page => {
+						const Element = page.page;
+						return <Route key={page.routePath} path={page.routePath} element={
+							<>
+							<LoadingScreen attempt={connectionTries} isConnected={isConnected} />
+							<Element />
+							</>
+						} />
+					})
+				}
+			</Routes>
+		</BrowserRouter>
+	);
+};
+
+function App() {
 	return (
 		<StrictMode>
 			<ThemeProvider>
-				<BrowserRouter>
-					<Routes>
-						{
-							pages.map(page => {
-								const Element = page.desktopPage;
-								return <Route key={page.routePath} path={page.routePath} element={
-									<>
-									<LoadingScreen attempt={connectionTries} isConnected={isConnected} />
-									<Element userData={userData} />
-									</>
-								} />
-							})
-						}
-					</Routes>
-				</BrowserRouter>
+				<UserDataProvider>
+					<ClassDataProvider>
+						<AppContent />
+					</ClassDataProvider>
+				</UserDataProvider>
 			</ThemeProvider>
 		</StrictMode>
 	);

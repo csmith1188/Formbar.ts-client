@@ -4,6 +4,7 @@ const { Text } = Typography;
 
 export default function StudentObject({ student, openModalId, setOpenModalId }: { student: any, openModalId: number | null, setOpenModalId: React.Dispatch<React.SetStateAction<number | null>> }) {
     const getStatusText = () => {
+        if (student.tags.includes('Offline')) return "Offline";
         if (student.help) return "Help Ticket";
         if (typeof student.break === "string") return "Requesting Break";
         if (typeof student.break === "boolean" && student.break) return "On Break";

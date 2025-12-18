@@ -4,43 +4,49 @@ import ControlPanel from "./pages/ControlPanel.tsx"
 import Profile from "./pages/Profile.tsx"
 import Student from "./pages/Student.tsx"
 import SocketTestingPage from "./pages/SocketTesting.tsx";
+import InfoPage from "./pages/InfoPage.tsx";
 
 type Page = {
     pageName: string,
     routePath: string,
-    desktopPage: any,
+    page: any,
 }
 
 const pages: Page[] = [
 	{
         pageName: "Testing",
         routePath: '/*',
-        desktopPage: TestingPage,
+        page: TestingPage,
     },
 	{
         pageName: "Login",
         routePath: '/login',
-        desktopPage: LoginPage,
+        page: LoginPage,
     },
     {
         pageName: "Control Panel",
         routePath: '/panel',
-        desktopPage: ControlPanel,
+        page: ControlPanel,
     },
     {
         pageName: "Profile",
         routePath: '/profile',
-        desktopPage: Profile,
+        page: Profile,
     },
     {
         pageName: "Socket Test",
         routePath: '/socket-test',
-        desktopPage: SocketTestingPage,
+        page: SocketTestingPage,
     },
     {
         pageName: "Student",
         routePath: '/student',
-        desktopPage: Student,
+        page: Student,
+    },
+    {
+        pageName: "InfoPage",
+        routePath: '/info',
+        page: InfoPage
     }
 ]
 
