@@ -5,9 +5,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
-import { url, api, socket } from './socket';
+import { socket, registerSocketEventHandlers, connectionUrl, connectionAPI, prodUrl, loginSocket } from './socket';
 
-import { darkMode, lightMode, showMobileIfVertical, themeColors } from "../themes/GlobalConfig";
+import { darkMode, lightMode, showMobileIfVertical, themeColors } from "../themes/ThemeConfig";
 
 import "./assets/css/index.css";
 
@@ -134,35 +134,64 @@ const ClassDataProvider = ({ children }: { children: ReactNode }) => {
 }
 
 const AppContent = () => {
-	const [isConnected, setIsConnected] = useState(socket.connected);
-	const [connectionTries, setConnectionTries] = useState(0);
-	const [showNotConnected, setShowNotConnected] = useState(false);
+	const [isConnected, setIsConnected] = useState(socket?.connected || false);
+	const [socketErrorCount, setSocketErrorCount] = useState(0);
+	const [httpErrorCount, setHttpErrorCount] = useState(0);
 	const { setUserData } = useUserData();
 
-	showNotConnected;
-	isConnected;
-
+	/*
+	* This effect handles initial HTTP connection and pinging the server
+	*/
 	useEffect(() => {
-		socket.connect();
+		let attempts = 0;
+		let timeoutId: ReturnType<typeof setTimeout>;
 
-		return () => {
-		socket.disconnect();
+		function pingServer() {
+			attempts++;
+			setHttpErrorCount(attempts - 1);
+
+			fetch(`${prodUrl}/certs`, { method: 'GET' })
+			.then(res => {
+				if (res.ok) {
+					Log({ message: 'Ping successful.', level: 'info' });
+					setIsConnected(true);
+					setHttpErrorCount(0);
+				} else {
+					console.error('Ping failed with status:', res.status);
+					if (attempts < connectionTriesLimit) {
+						timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
+					}
+				}
+			})
+			.catch(err => {
+				console.error('Error during ping:', err);
+				if (attempts < connectionTriesLimit) {
+					timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
+				}
+			});
+		}
+
+		pingServer();
+
+		return() => {
+			clearTimeout(timeoutId);
 		};
 	}, []);
 
 	useEffect(() => {
-		
-		socket.on('setClass', onSetClass);
 
+		if(!socket?.connected && localStorage.getItem('connectionUrl') && localStorage.getItem('connectionAPI')) {
+			loginSocket(localStorage.getItem('connectionUrl')!, localStorage.getItem('connectionAPI')!);
+		}
+		
 		function onConnect() {
-			setIsConnected(true);
-			setConnectionTries(0); // Reset on successful connection
+			setSocketErrorCount(0); // Reset on successful connection
 			Log({ message: 'Connected to server.', level: 'info' });
 
-			fetch(`${url}/api/me`, {
+			fetch(`${connectionUrl}/api/me`, {
 				method: 'GET',
 				headers: {
-					"api": api,
+					"api": connectionAPI,
 				}
 			})
 			.then(res => res.json())
@@ -172,11 +201,8 @@ const AppContent = () => {
 			})
 			.catch(err => {
 				console.error('Error fetching user data:', err);
+				setHttpErrorCount(prev => prev + 1);
 			})
-		}
-
-		function onDisconnect() {
-			setIsConnected(false);
 		}
 
 		function onSetClass(classID: number) {
@@ -186,29 +212,34 @@ const AppContent = () => {
 
 		function connectError(err: any) {
 			console.error('Connection Error:', err);
-			setConnectionTries(prev => {
-				connectionTries;
+			setSocketErrorCount(prev => {
 				const newCount = prev + 1;
-				console.error('Connection Failed on Attempt:', newCount);
 
 				if (newCount >= connectionTriesLimit) {
-					console.error('Max connection attempts reached. Please check your network or contact support.');
-					socket.disconnect();
-					setShowNotConnected(true);
+					console.error('Max socket connection attempts reached. Please check your network or contact support.');
+					socket?.disconnect();
 				}
 				return newCount;
 			});
 		}
 
-		socket.on('connect', onConnect);
-		socket.on('connect_error', connectError);
-		socket.on('disconnect', onDisconnect);
+		function onDisconnect(reason: string) {
+			console.warn('Disconnected from server. Reason:', reason);
+		}
+
+		// Register socket event handlers
+		registerSocketEventHandlers({
+			onConnect,
+			onConnectError: connectError,
+			onDisconnect,
+			onSetClass
+		});
 
 		return () => {
-			socket.off('connect', onConnect);
-			socket.off('connect_error', connectError);
-			socket.off('disconnect', onDisconnect);
-			socket.off('setClass', onSetClass);
+			socket?.off('connect', onConnect);
+			socket?.off('connect_error', connectError);
+			socket?.off('disconnect', onDisconnect);
+			socket?.off('setClass', onSetClass);
 		};
 	}, []);
 
@@ -220,7 +251,7 @@ const AppContent = () => {
 						const Element = page.page;
 						return <Route key={page.routePath} path={page.routePath} element={
 							<>
-							<LoadingScreen attempt={connectionTries} isConnected={isConnected} />
+							<LoadingScreen socketErrors={socketErrorCount} httpErrors={httpErrorCount} isConnected={isConnected} />
 							<Element />
 							</>
 						} />

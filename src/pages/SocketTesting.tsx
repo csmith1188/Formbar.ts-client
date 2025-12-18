@@ -12,7 +12,7 @@ export default function SocketTestingPage() {
     classData;
 
     function Respond(response: string) {
-        socket.emit('pollResp', response, '');
+        socket?.emit('pollResp', response, '');
         Log({ message: `Responded with: ${response}`, level: 'info' });
     }
 
@@ -46,7 +46,7 @@ export default function SocketTestingPage() {
         <>
             <FormbarHeader />
 
-            <button onClick={ () => socket.emit('getActiveClass') }>Get Active Class</button>
+            <button onClick={ () => socket?.emit('getActiveClass') }>Get Active Class</button>
             <button onClick={ () => Respond('Up') }>Up</button>
             <button onClick={ () => Respond('Down') }>Down</button>
             <button onClick={ () => Respond('Wiggle') }>Wiggle</button>

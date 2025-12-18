@@ -75,3 +75,10 @@ export type ClassData = {
     },
     students: Student[]
 };
+
+export type PollAnswer = {
+    answer: string;
+    color: string;
+    responses: number;
+    weight: number;
+}

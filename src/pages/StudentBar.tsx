@@ -1,15 +1,15 @@
 import { socket } from "../socket";
 
 import FormbarHeader from "../components/FormbarHeader";
-import FullCircularPoll from "../components/CircularPoll";
 import { useEffect, useState } from "react";
 import { useMobileDetect } from "../main";
 import { Typography, Flex } from "antd";
 import PollButton from "../components/PollButton";
 import Log from "../debugLogger";
+import ControlPanelPoll from "../components/BarPoll";
 const { Title } = Typography;
 
-export default function Student() {
+export default function StudentBar() {
     const [classData, setClassData] = useState<any>(null);
     const [answerState, setAnswerState] = useState<any>([]);
     const isMobileView = useMobileDetect();
@@ -45,7 +45,7 @@ export default function Student() {
         if (!socket) return; // Don't set up listener if socket isn't ready
 
         function classUpdate(classData: any) {
-			setClassData(classData);
+            setClassData(classData);
             Log({ message: "Class Update received.", data: classData, level: 'info' });
 
             let answers = [];
@@ -56,7 +56,7 @@ export default function Student() {
             }
 
             setAnswerState(answers);
-		}
+        }
 
         socket.on('classUpdate', classUpdate);
         
@@ -70,7 +70,9 @@ export default function Student() {
         <>
             <FormbarHeader />
 
-            <Title style={{position:'absolute',transform:'translate(-50%)',left:'50%',top:'90px',width:'100%', textAlign:'center'}}>{classData?.poll.prompt}</Title>
+            <ControlPanelPoll classData={classData} height="50px"/>
+
+            <Title style={{marginTop:'50px',width:'100%',textAlign:'center'}}>{classData?.poll.prompt}</Title>
 
             <Flex 
                 style={!isMobileView ? {width:'100%', height:'100%'} : {width:'100%', height:'calc(100% - 120px)', marginTop:'120px'}}
@@ -78,15 +80,6 @@ export default function Student() {
                 align="center"
                 vertical={isMobileView}
                 >
-
-                {
-                    (classData?.poll.responses.length > 0) ? (
-                        <Flex justify="center" align="center" vertical style={isMobileView ? {width:'100%', height:'50%'} : {width:'50%'}}>
-                            <FullCircularPoll pollAnswers={answerState} size={pollWidth} />
-                        </Flex>
-                    ) : null
-                }
-                
 
                 {
                     classData?.poll.status ? (
@@ -101,7 +94,8 @@ export default function Student() {
                                 gap={10}
                                 style={{width:'100%'}}
                                 justify="center"
-                                align="center"
+                                align="stretch"
+                                vertical
                             >
                                 {
                                     classData?.poll.responses.map((resp: any, index: number) => (
@@ -127,7 +121,6 @@ export default function Student() {
                 
                 
             </Flex>
-
             
         </>
     );

@@ -29,3 +29,21 @@ export function darkenButtonColor(color: string, amount: number) {
     }
     return color;
 }
+
+export function calculateFontSize(containerWidth: number, text: string, fontFamily: string = 'Outfit', maxFontSize: number = 32, minFontSize: number = 8): number {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) return minFontSize; // Fallback font size
+    let fontSize = maxFontSize;
+
+    while (fontSize > minFontSize) {
+        context.font = `${fontSize}px ${fontFamily}`;
+        const textMetrics = context.measureText(text);
+        const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+        if (textHeight <= containerWidth * 0.25) {
+            break;
+        }
+        fontSize -= 1;
+    }
+    return fontSize;
+}

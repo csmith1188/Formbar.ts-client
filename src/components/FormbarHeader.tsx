@@ -4,9 +4,10 @@ import * as IonIcons from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
 
 import { useMobileDetect, useTheme } from '../main';
-import { themeColors, version } from '../../themes/GlobalConfig';
+import { themeColors, version } from '../../themes/ThemeConfig';
 
 import pages from '../pages';
+import { socket } from '../socket';
 
 export default function FormbarHeader() {
     const { isDark, toggleTheme } = useTheme();
@@ -32,6 +33,13 @@ export default function FormbarHeader() {
     const sortedPages = [...pages].sort((a, b) => 
         (a.pageName ?? '').toLowerCase().localeCompare((b.pageName ?? '').toLowerCase())
     );
+
+    function logoutHandler() {
+        localStorage.removeItem('connectionUrl');
+        localStorage.removeItem('connectionAPI');
+        socket?.disconnect();
+        navigate('/login');
+    }
 
     return (
         <Flex style={headerStyles} align="center" className='formbarHeader' justify="space-between" gap="16">
@@ -89,7 +97,7 @@ export default function FormbarHeader() {
                         cancelText={"No"}
                         okText={"Yes"}
                         okType='danger'
-                        onConfirm={() => navigate('/login')}
+                        onConfirm={() => {logoutHandler()}}
                     >
                         
                             <Button type='primary' color='blue' size='large' style={styles.headerButton}>

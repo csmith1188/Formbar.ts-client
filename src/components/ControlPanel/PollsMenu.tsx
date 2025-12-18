@@ -75,7 +75,7 @@ export default function PollsMenu({ openModalId, setOpenModalId }: { openModalId
     function startPoll(id: number) {
         const poll = defaultPolls.filter(e => e.id == id)[0];
 
-        socket.emit('startPoll', poll);
+        socket?.emit('startPoll', poll);
         setOpenModalId(null);
     }
     
@@ -94,7 +94,8 @@ export default function PollsMenu({ openModalId, setOpenModalId }: { openModalId
                         centered
                         title={poll.prompt} 
                         open={openModalId === poll.id} 
-                        onCancel={() => {setOpenModalId(null)}} 
+                        onCancel={() => {setOpenModalId(null)}}
+                        destroyOnHidden
                         footer={null}
                     >
                         {

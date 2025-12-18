@@ -2,11 +2,17 @@ import { Button, Card, Flex, Input, Segmented, Typography } from "antd";
 import FormbarHeader from "../components/FormbarHeader"
 import { useState } from "react";
 const { Title } = Typography;
+import { useEffect } from "react";
+import { socket } from '../socket';
 
-import { useMobileDetect } from '../main';
-import { url } from "../socket";
+import { useMobileDetect, useUserData } from '../main';
+import { loginSocket, connectionUrl } from "../socket";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
+    const navigate = useNavigate();
+    const { userData } = useUserData();
+
     const [mode, setMode] = useState('Login');
     const isMobileView = useMobileDetect();
 
@@ -15,44 +21,65 @@ export default function LoginPage() {
     const [username, setUsername] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
+    const [dev__api, setDevApi] = useState('');
+    const [dev__url, setDevUrl] = useState('');
+
     function handleSubmit() {
         // Handle form submission based on mode
-        if (mode === 'Login') {
-            console.log('Logging in with:', { email, password });
-            
-            const formData = new URLSearchParams();
-            formData.append('email', email);
-            formData.append('password', password);
-            formData.append('loginType', 'login');
+        switch (mode) {
+            case 'Login':
+                console.log('Logging in with:', { email, password });
+                
+                const formData = new URLSearchParams();
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('loginType', 'login');
 
-            fetch(`${url}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData.toString(),
-                redirect: 'manual'
-            })
-            .then(response => {
-                if(response.status === 0) {
-                    console.log('Login successful, redirecting...');
-                } else {
-                    console.error('Login failed with status:', response.status);
-                }
-            })
-            .catch(error => {
-                console.error('Error during login:', error);
-                // Handle login error (e.g., show error message)
-            });
+                fetch(`${connectionUrl}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData.toString(),
+                    redirect: 'manual'
+                })
+                .then(response => {
+                    if(response.status === 0) {
+                        console.log('Login successful, redirecting...');
+                    } else {
+                        console.error('Login failed with status:', response.status);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during login:', error);
+                    // Handle login error (e.g., show error message)
+                });
+                break;
 
-        } else if (mode === 'Sign Up') {
-            console.log('Signing up with:', { username, email, password, confirmPassword });
-            // Add sign-up logic here
-        } else if (mode === 'Guest') {
-            console.log('Continuing as guest with username:', { username });
-            // Add guest logic here
+            case 'Sign Up':
+                console.log('Signing up with:', { username, email, password, confirmPassword });
+                // Add sign-up logic here
+                break;
+
+            case 'Guest':
+                console.log('Continuing as guest with username:', { username });
+                // Add guest logic here
+                break;
+
+            case 'Developer':
+                console.log('Developer login with:', { dev__url, dev__api });
+                loginSocket(dev__url, dev__api);
+                navigate('/');
+                break;
         }
     }
+
+    //? Check if user is already logged in and redirect to home page, preventing access to login page if so
+    useEffect(() => {
+        if(socket?.connected && userData) {
+            navigate('/');
+        }
+    }, []);
 
     return (
         <>
@@ -101,7 +128,8 @@ export default function LoginPage() {
                             [
                                 'Login',
                                 'Sign Up',
-                                'Guest'
+                                'Guest',
+                                'Developer'
                             ]
                         } 
                         onChange={setMode}
@@ -110,23 +138,34 @@ export default function LoginPage() {
 
                     <Card title={mode}>
                         {
-                            (mode === 'Guest' || mode === 'Sign Up') && (
-                                <Input placeholder="Username" style={{ marginBottom: '10px' }} value={username} onChange={e => setUsername(e.target.value)} />
-                            )
-                        }
-                        
-                        {
-                            mode !== 'Guest' && (
+                            mode !== 'Developer' ? (
                                 <>
-                                    <Input placeholder="Email" style={{ marginBottom: '10px' }} value={email} onChange={e => setEmail(e.target.value)} />
-                                    <Input.Password placeholder="Password" style={{ marginBottom: '10px' }} value={password} onChange={e => setPassword(e.target.value)} />
-                                </>
-                            )
-                        }
+                                {
+                                    (mode === 'Guest' || mode === 'Sign Up') && (
+                                        <Input placeholder="Username" style={{ marginBottom: '10px' }} value={username} onChange={e => setUsername(e.target.value)} />
+                                    )
+                                }
+                                
+                                {
+                                    mode !== 'Guest' && (
+                                        <>
+                                            <Input placeholder="Email" style={{ marginBottom: '10px' }} value={email} onChange={e => setEmail(e.target.value)} />
+                                            <Input.Password placeholder="Password" style={{ marginBottom: '10px' }} value={password} onChange={e => setPassword(e.target.value)} />
+                                        </>
+                                    )
+                                }
 
-                        {
-                            mode === 'Sign Up' && (
-                                <Input.Password placeholder="Confirm Password" style={{ marginBottom: '10px' }} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                                {
+                                    mode === 'Sign Up' && (
+                                        <Input.Password placeholder="Confirm Password" style={{ marginBottom: '10px' }} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+                                    )
+                                }
+                                </>
+                            ) : (
+                                <>
+                                <Input placeholder="URL" style={{ marginBottom: '10px' }} value={dev__url} onChange={e => setDevUrl(e.target.value)} />
+                                <Input.Password placeholder="API Key" style={{ marginBottom: '10px' }} value={dev__api} onChange={e => setDevApi(e.target.value)} />
+                                </>
                             )
                         }
 

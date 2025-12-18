@@ -4,7 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { IonIcon } from '@ionic/react';
 import * as IonIcons from "ionicons/icons";
 
-export default function LoadingScreen({ attempt, isConnected }: { attempt: number, isConnected: boolean }) {
+export default function LoadingScreen({ socketErrors, httpErrors, isConnected }: { socketErrors: number, httpErrors: number, isConnected: boolean }) {
 
     return (
         <>
@@ -21,7 +21,7 @@ export default function LoadingScreen({ attempt, isConnected }: { attempt: numbe
                 {
                     isConnected ? (
                         <IonIcon icon={IonIcons.checkmark} style={{ height: '48px', fontSize: '48px', color: '#fff' }} />
-                    ) : attempt < 5 ? (
+                    ) : socketErrors < 5 ? (
                         <Spin size="large" indicator={<LoadingOutlined />} styles={
                             {
                                 indicator: {
@@ -45,7 +45,7 @@ export default function LoadingScreen({ attempt, isConnected }: { attempt: numbe
                 {
                     isConnected ? null : (
                         <Text style={{color: '#fff5', fontSize: '12px', fontWeight: 400, marginTop: '0'}}>
-                            {attempt === 0 ? 'Connecting to server...' : attempt < 5 ? `Re-attempting connection (Attempt ${attempt})` : 'Connection failed. Is the server running?'}
+                            {httpErrors === 0 ? 'Connecting to server...' : httpErrors < 5 ? `Trying again... (Attempt ${httpErrors})...` : 'Connection failed. Is the server running?'}
                         </Text>
                     )
                 }

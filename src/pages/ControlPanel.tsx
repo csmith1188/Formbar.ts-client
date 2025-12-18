@@ -10,9 +10,10 @@ import Dashboard from "../components/ControlPanel/Dashboard";
 import PollsMenu from "../components/ControlPanel/PollsMenu";
 import SettingsMenu from "../components/ControlPanel/SettingsMenu";
 
-import { themeColors } from "../../themes/GlobalConfig";
+import { themeColors } from "../../themes/ThemeConfig";
 import { socket } from "../socket";
 import Log from "../debugLogger";
+import ControlPanelPoll from "../components/BarPoll";
 
 
 const items = [
@@ -76,6 +77,7 @@ export default function ControlPanel() {
     const isSingleColumn = panelWidth < 380;
 
     useEffect(() => {
+        if (!socket) return; // Don't set up listener if socket isn't ready
 
         function classUpdate(classData: any) {
             setClassData(classData);
@@ -90,7 +92,7 @@ export default function ControlPanel() {
         return () => {
             socket.off('classUpdate', classUpdate);
         };
-    }, []);
+    }, [socket, setClassData]);
 
 	const { isDark } = useTheme();
 
@@ -107,12 +109,12 @@ export default function ControlPanel() {
     //const [allStudents, setAllStudents] = useState<Student[]>(students);
 
     function startClass() {
-        socket.emit('startClass')
+        socket?.emit('startClass')
         setClassActive(true);
     }
 
     function endClass() {
-        socket.emit('endClass')
+        socket?.emit('endClass')
         setClassActive(false);
     }
 
@@ -184,167 +186,176 @@ export default function ControlPanel() {
 	return (
 		<>
 			<FormbarHeader />
-			<Menu
-				defaultSelectedKeys={["1"]}
-				defaultOpenKeys={["sub1"]}
-				mode="inline"
-				inlineCollapsed={false}
-				items={menuItems}
-				theme={isDark ? "dark" : "light"}
-				style={{
-					position: "absolute",
-					height: "100%",
-					width: "250px",
-					padding: "0 10px",
-					paddingTop: "15px",
-				}}
-                styles={{
-                    itemIcon: {
-                        marginRight: '18px'
-                    }
-                }}
-				onClick={(e) => openMenu(e.key)}
-			/>
 
-            <Flex style={{position:'absolute', bottom:'30px', left:'10px', gap:'10px', width:'230px'}} vertical>
+            <ControlPanelPoll classData={classData} height="40px"/>
+
+            <Flex style={{
+                height: 'calc(100% - 40px)'
+            }}>
+                <Menu
+                    defaultSelectedKeys={["1"]}
+                    defaultOpenKeys={["sub1"]}
+                    mode="inline"
+                    inlineCollapsed={false}
+                    items={menuItems}
+                    theme={isDark ? "dark" : "light"}
+                    style={{
+                        height: "100%",
+                        minWidth: "250px",
+                        maxWidth: "250px",
+                        padding: "0 10px",
+                        paddingTop: "15px",
+                    }}
+                    styles={{
+                        itemIcon: {
+                            marginRight: '18px'
+                        }
+                    }}
+                    onClick={(e) => openMenu(e.key)}
+                />
+
+
+
+                <Flex style={{position:'absolute', bottom:'30px', left:'10px', gap:'10px', width:'230px'}} vertical>
+                    
+                    <Activity mode={classActive ? "hidden" : "visible"}>
+                        <Button color="green" variant="solid" type="default" onClick={startClass}>
+                            Start Class
+                        </Button>
+                    </Activity>
+                    
+                    <Activity mode={classActive ? "visible" : "hidden"}>
+                        <Button color="red" variant="solid" type="default" onClick={endClass}>
+                            End Class
+                        </Button>
+                    </Activity>
+                </Flex>
                 
-                <Activity mode={classActive ? "hidden" : "visible"}>
-                    <Button color="green" variant="solid" type="default" onClick={startClass}>
-                        Start Class
-                    </Button>
-                </Activity>
-                
-                <Activity mode={classActive ? "visible" : "hidden"}>
-                    <Button color="red" variant="solid" type="default" onClick={endClass}>
-                        End Class
-                    </Button>
-                </Activity>
+                <Splitter style={{height:'100%', width:'100%'}}>
+
+                    <Splitter.Panel min={'520'}>
+                        <div style={{ padding: '20px', height: '100%', flex: '1 1 auto'}}>
+                            <Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
+                                <Dashboard openModalId={openModalId} setOpenModalId={setOpenModalId}/>
+                            </Activity>
+                            <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
+                                <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />
+                            </Activity>
+                            <Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
+                                <SettingsMenu />
+                            </Activity>
+                        </div>
+                    </Splitter.Panel>
+
+                    <Splitter.Panel defaultSize={'480'}>
+                        {
+                            !isMobile() ? <Flex
+                            ref={statsPanelRef}
+                            style={{
+                                background: infoDivs.background,
+                                padding:'20px',
+                                width: 'calc(100% - 40px)',
+                                height: 'calc(100% - 40px)',
+                                borderRadius:'10px',
+                                margin: '20px',
+                                overflow: 'auto'
+                            }} vertical  justify='start' align='center' gap={20}>
+                                <Title style={{ marginBottom: 'auto' }}>Statistics</Title>
+                                <Row gutter={[16, 8]}>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic.Timer
+                                                
+                                                type="countup"
+                                                title="Poll Runtime"
+                                                value={classData?.poll.startTime == undefined ? Date.now() : classData?.poll.startTime}
+                                                format="H:mm:ss"
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Allowed to Vote"
+                                            value={students.filter((s: any) => !s.tags.includes('Offline')).length}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Response Time"
+                                            value={responseTime}
+                                            precision={2}
+                                            styles={{ content: { color: '#3f8600' } }}
+                                            prefix={<><IonIcon icon={IonIcons.arrowUp} style={{marginTop:'2px'}}/></>}
+                                            suffix="s"
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Responses"
+                                            value={responses}
+                                            suffix={`/ ${students.length}`}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Help Tickets"
+                                            value={helpTickets}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="On Break"
+                                            value={studentsOnBreak}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Other Statistic"
+                                            value={"N/A"}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Other Statistic"
+                                            value={"N/A"}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Other Statistic"
+                                            value={"N/A"}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span={isSingleColumn ? 24 : 12}>
+                                        <Card variant="borderless">
+                                            <Statistic
+                                            title="Other Statistic"
+                                            value={"N/A"}
+                                            />
+                                        </Card>
+                                    </Col>
+                                </Row>
+                            </Flex> : null
+                        }
+                    </Splitter.Panel>
+                </Splitter>
             </Flex>
-            
-            <Splitter style={{height:'100%', width:'100%'}}>
-
-                <Splitter.Panel min={'520'}>
-                    <div style={{ marginLeft: '250px', padding: '20px', height: '100%', flex: '1 1 auto'}}>
-                        <Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
-                            <Dashboard openModalId={openModalId} setOpenModalId={setOpenModalId}/>
-                        </Activity>
-                        <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
-                            <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />
-                        </Activity>
-                        <Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
-                            <SettingsMenu />
-                        </Activity>
-                    </div>
-                </Splitter.Panel>
-
-                <Splitter.Panel defaultSize={'480'}>
-                    {
-                        !isMobile() ? <Flex
-                        ref={statsPanelRef}
-                        style={{
-                            background: infoDivs.background,
-                            padding:'20px',
-                            width: 'calc(100% - 40px)',
-                            height: 'calc(100% - 40px)',
-                            borderRadius:'10px',
-                            margin: '20px',
-                            overflow: 'auto'
-                        }} vertical  justify='start' align='center' gap={20}>
-                            <Title style={{ marginBottom: 'auto' }}>Statistics</Title>
-                            <Row gutter={[16, 8]}>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic.Timer
-                                            
-                                            type="countup"
-                                            title="Poll Runtime"
-                                            value={classData?.poll.startTime == undefined ? Date.now() : classData?.poll.startTime}
-                                            format="H:mm:ss"
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Allowed to Vote"
-                                        value={students.filter((s: any) => !s.tags.includes('Offline')).length}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Response Time"
-                                        value={responseTime}
-                                        precision={2}
-                                        styles={{ content: { color: '#3f8600' } }}
-                                        prefix={<><IonIcon icon={IonIcons.arrowUp} style={{marginTop:'2px'}}/></>}
-                                        suffix="s"
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Responses"
-                                        value={responses}
-                                        suffix={`/ ${students.length}`}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Help Tickets"
-                                        value={helpTickets}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="On Break"
-                                        value={studentsOnBreak}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Other Statistic"
-                                        value={"N/A"}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Other Statistic"
-                                        value={"N/A"}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Other Statistic"
-                                        value={"N/A"}
-                                        />
-                                    </Card>
-                                </Col>
-                                <Col span={isSingleColumn ? 24 : 12}>
-                                    <Card variant="borderless">
-                                        <Statistic
-                                        title="Other Statistic"
-                                        value={"N/A"}
-                                        />
-                                    </Card>
-                                </Col>
-                            </Row>
-                        </Flex> : null
-                    }
-                </Splitter.Panel>
-            </Splitter>
 		</>
 	);
 }

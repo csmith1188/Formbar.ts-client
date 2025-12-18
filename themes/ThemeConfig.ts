@@ -3,7 +3,7 @@ import { theme } from 'antd'
 export const themeColors = {
     dark: {
         body: {
-            background: 'linear-gradient(rgba(35, 62, 97, 1) 0%, rgba(13, 40, 77, 1) 100%)',
+            background: 'linear-gradient(rgba(54, 94, 146, 1) 0%, rgba(13, 40, 77, 1) 100%)',
             color: '#ffffffd9',
         },
         header: {

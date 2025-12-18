@@ -6,6 +6,7 @@ import Student from "./pages/Student.tsx"
 import SocketTestingPage from "./pages/SocketTesting.tsx";
 import InfoPage from "./pages/InfoPage.tsx";
 import NewsPage from "./pages/NewsPage.tsx";
+import StudentBar from "./pages/StudentBar.tsx";
 
 type Page = {
     pageName: string,
@@ -16,7 +17,7 @@ type Page = {
 const pages: Page[] = [
 	{
         pageName: "Testing",
-        routePath: '/*',
+        routePath: '/testing',
         page: TestingPage,
     },
 	{
@@ -43,6 +44,11 @@ const pages: Page[] = [
         pageName: "Student",
         routePath: '/student',
         page: Student,
+    },
+    {
+        pageName: "StudentBar",
+        routePath: '/studentbar',
+        page: StudentBar,
     },
     {
         pageName: "InfoPage",

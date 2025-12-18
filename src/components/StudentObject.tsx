@@ -4,7 +4,7 @@ const { Text } = Typography;
 
 export default function StudentObject({ student, openModalId, setOpenModalId }: { student: any, openModalId: number | null, setOpenModalId: React.Dispatch<React.SetStateAction<number | null>> }) {
     const getStatusText = () => {
-        if (student.tags.includes('Offline')) return "Offline";
+        if (student.tags?.includes('Offline')) return "Offline";
         if (student.help) return "Help Ticket";
         if (typeof student.break === "string") return "Requesting Break";
         if (typeof student.break === "boolean" && student.break) return "On Break";
@@ -24,12 +24,12 @@ export default function StudentObject({ student, openModalId, setOpenModalId }: 
                             statusText === "On Break" ? "yellow" : "gray"
                         } style={{position:'absolute',top:'-20px'}} text={statusText}>
                             <Button type="primary" style={{padding:'10px', width:'100%'}} onClick={() => setOpenModalId(student.id)}>
-                                <Text strong>{student.displayName}</Text>
+                                <Text strong>{student.displayName}{student.pollRes.buttonRes !== '' ? ` - ${student.pollRes.buttonRes}` : ''}</Text>
                             </Button>
                         </Badge.Ribbon>
                     ) : (
                         <Button type="primary" style={{padding:'10px', width:'100%'}} onClick={() => setOpenModalId(student.id)}>
-                            <Text strong>{student.displayName}</Text>
+                            <Text strong>{student.displayName}{student.pollRes.buttonRes !== '' ? ` - ${student.pollRes.buttonRes}` : ''}</Text>
                         </Button>
                     )
                 }
