@@ -33,12 +33,10 @@ type ClassDataContextType = {
 const connectionTriesLimit = 5;
 
 export const isMobile = () => {
-	// Do thorough check for mobile devices
 	const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
 
 	let isMobileBool = /android|avantgo|blackberry|bb|playbook|iemobile|ipad|iphone|ipod|kindle|mobile|palm|phone|silk|symbian|tablet|up\.browser|up\.link|webos|windows ce|windows phone/i.test(userAgent.toLowerCase());
 
-	// Additionally check for small screen sizes
 	if (window.innerWidth <= 768) {
 		isMobileBool = true;
 	}
@@ -99,7 +97,6 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
 		expires.setFullYear(expires.getFullYear() + 1);
 		document.cookie = `theme=${isDark ? 'dark' : 'light'}; expires=${expires.toUTCString()}; path=/`;
 		
-		// Apply body background color based on theme
 		const bodyColor = isDark ? themeColors.dark.body.background : themeColors.light.body.background;
 		const bodyTextColor = isDark ? themeColors.dark.body.color : themeColors.light.body.color;
 		document.body.style.background = bodyColor;
@@ -146,7 +143,6 @@ const AppContent = () => {
 	isConnected;
 
 	useEffect(() => {
-    // no-op if the socket is already connected
 		socket.connect();
 
 		return () => {

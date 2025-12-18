@@ -12,7 +12,7 @@ export function textColorForBackground(bgColor: string) {
         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
         return brightness > 125 ? '#000000' : '#FFFFFF';
     }
-    return '#000000'; // Default to black if input is invalid
+    return '#000000';
 }
 
 export function darkenButtonColor(color: string, amount: number) {
@@ -27,5 +27,5 @@ export function darkenButtonColor(color: string, amount: number) {
         let b = Math.max(0, Math.min(255, parseInt(color.slice(3, 4).repeat(2), 16) - amount));
         return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
-    return color; // Return original color if input is invalid
+    return color;
 }

@@ -5,6 +5,7 @@ import Profile from "./pages/Profile.tsx"
 import Student from "./pages/Student.tsx"
 import SocketTestingPage from "./pages/SocketTesting.tsx";
 import InfoPage from "./pages/InfoPage.tsx";
+import NewsPage from "./pages/NewsPage.tsx";
 
 type Page = {
     pageName: string,
@@ -47,6 +48,11 @@ const pages: Page[] = [
         pageName: "InfoPage",
         routePath: '/info',
         page: InfoPage
+    },
+    {
+        pageName: "Home",
+        routePath: '/',
+        page: NewsPage,
     }
 ]
 

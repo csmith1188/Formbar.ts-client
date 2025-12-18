@@ -51,14 +51,14 @@ export default function FormbarHeader() {
             <Flex align="center" justify="center" gap={10}>
                 <Popover placement="bottomRight" trigger='click' content={
                     <>
-                        <Select defaultValue="Pages" style={{ width: 120 }} variant='borderless' onChange={(value) => navigate(value.replaceAll('*',''))} size='small' showSearch={{
+                        <Select defaultValue="Pages" style={{ width: 360 }} variant='borderless' onChange={(value) => navigate(value.replaceAll('*',''))} size='small' showSearch={{
                         optionFilterProp: 'label',
                         filterSort: (optionA, optionB) =>
                             (String(optionA?.label) ?? '').toLowerCase().localeCompare((String(optionB?.label) ?? '').toLowerCase()),
                         }}>
                             {
                                 sortedPages.map((page, index) => (
-                                    <Select.Option key={index} value={page.routePath}>{page.pageName}</Select.Option>
+                                    <Select.Option key={index} value={page.routePath}>{page.pageName} - {page.routePath}</Select.Option>
                                 ))
                             }
                         </Select>

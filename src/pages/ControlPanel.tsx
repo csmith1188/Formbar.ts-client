@@ -39,20 +39,13 @@ const items = [
 	},
 	{
 		key: "4",
-		icon: <IonIcon icon={IonIcons.peopleOutline} />,
-		deselectedicon: <IonIcon icon={IonIcons.peopleOutline} />,
-		selectedicon: <IonIcon icon={IonIcons.people} />,
-		label: "Users",
-	},
-	{
-		key: "5",
 		icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
 		deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
 		label: "Permissions",
 	},
 	{
-		key: "6",
+		key: "5",
 		icon: <IonIcon icon={IonIcons.settingsOutline} />,
 		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.settings} />,
@@ -238,7 +231,7 @@ export default function ControlPanel() {
                         <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
                             <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />
                         </Activity>
-                        <Activity mode={currentMenu == "6" ? "visible" : "hidden"}>
+                        <Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
                             <SettingsMenu />
                         </Activity>
                     </div>
