@@ -5,25 +5,25 @@ import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { isMobile } from "../main";
-
-const profileProps = {
-    "Display Name": "Landon",
-    "Email": "28lharnish@live.ytech.edu",
-    "Digipogs": 1243,
-    "ID": 34,
-
-    "Pog Meter": 75
-}
+import { useUserData, isMobile } from "../main";
 
 const correctPin = 1243;
 
 export default function Profile() {
+    const { userData } = useUserData();
     const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
     const [sensModalOpen, setSensModalOpen] = useState(false);
     const [enteredPin, setEnteredPin] = useState<string | number | null>(null);
     const navigate = useNavigate();
+
+    const profileProps = {
+        // "Display Name": userData?.displayName || "N/A",
+        "Email": userData?.email || "N/A",
+        // "Digipogs": userData?.digipogs || 0,
+        "ID": userData?.id || "N/A",
+
+        "Pog Meter": userData?.pogMeter && userData.pogMeter > 0 ? userData.pogMeter / 5 : 0,
+    }
 
     return (
         <>

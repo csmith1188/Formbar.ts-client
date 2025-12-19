@@ -23,13 +23,19 @@ export default function ControlPanelPoll({ classData, height }: { classData?: an
                 }
                 {
                     // Show unanswered portion if there are unanswered responses
-                    data?.poll.totalResponses < data?.poll.totalResponders ? (
+                    data?.poll.totalResponses < data?.poll.totalResponders && data.poll.responses.length > 0 ? (
                         <Tooltip title={`Unanswered: ${data.poll.totalResponders - data.poll.totalResponses} student${(data.poll.totalResponders - data.poll.totalResponses) !== 1 ? 's' : ''}`} placement="bottom">
                             <Flex style={{width: `${((data.poll.totalResponders - data.poll.totalResponses) / data.poll.totalResponders) * 100}%`, height:'100%', background: 'rgba(255, 255, 255, 0.2)', transition: 'width 0.3s ease', borderLeft: data?.poll.responses.length === 0 ? 'none' : data.poll.totalResponders - data.poll.totalResponses > 0 ? '2px solid #000' : 'none', fontSize: calculateFontSize(((data.poll.totalResponders - data.poll.totalResponses) / data.poll.totalResponders) * 100, 'Unanswered'), color: textColorForBackground('rgba(255, 255, 255, 0.2)')}} justify="center" align="center">
                                 Unanswered
                             </Flex>
                         </Tooltip>
                     ) : null
+                }
+
+                {
+                    !classData || classData.poll.responses.length === 0 && (
+                        <Flex style={{position: 'absolute', right: '5px', top: '2px', fontSize: '10px', background: '#000a', color: '#fff', padding: '2px 4px', borderRadius: '4px'}}></Flex>
+                    )
                 }
             </Flex>
         </>

@@ -3,10 +3,10 @@ import LoginPage from "./pages/Login.tsx"
 import ControlPanel from "./pages/ControlPanel.tsx"
 import Profile from "./pages/Profile.tsx"
 import Student from "./pages/Student.tsx"
-import SocketTestingPage from "./pages/SocketTesting.tsx";
 import InfoPage from "./pages/InfoPage.tsx";
 import NewsPage from "./pages/NewsPage.tsx";
 import StudentBar from "./pages/StudentBar.tsx";
+import ClassesPage from "./pages/Classes.tsx";
 
 type Page = {
     pageName: string,
@@ -36,11 +36,6 @@ const pages: Page[] = [
         page: Profile,
     },
     {
-        pageName: "Socket Test",
-        routePath: '/socket-test',
-        page: SocketTestingPage,
-    },
-    {
         pageName: "Student",
         routePath: '/student',
         page: Student,
@@ -59,6 +54,11 @@ const pages: Page[] = [
         pageName: "Home",
         routePath: '/',
         page: NewsPage,
+    },
+    {
+        pageName: "Classes",
+        routePath: '/classes',
+        page: ClassesPage,
     }
 ]
 

@@ -1,0 +1,18 @@
+- [ ] ~~changePassword~~ Unneeded
+- [x] classes `NEEDS BACKEND WORK`
+  - <pre>Needs backend work.<br>Classes are not able to be obtained, with the exception of <b>owned</b> classes.</pre>
+- [ ] ~~consent~~ Unneeded
+- [ ] controlPanel
+- [ ] links
+- [x] login
+  - <pre>Needs backend work.<br>Logging in is not possible outside of official Frontend.</pre>
+- [ ] logs 
+- [ ] managerPanel
+- [ ] ~~message~~ Unneeded
+- [x] news
+- [ ] pools
+- [x] profile `NEEDS BACKEND WORK`
+  - <pre>Needs backend work.<br>Information such as<br>- [user].displayName<br>- [user].pin<br>- [user].api<br>are not obtainable, even with [formbar]/api/me</pre>
+- [ ] results
+- [x] student / studentBar
+- [ ] transactions
