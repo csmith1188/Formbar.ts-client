@@ -42,28 +42,32 @@ export default function TestingPage({ userData }: { userData: UserData | null })
 			}
 		/></Flex>,
 
-		// <FullCircularPoll pollAnswers={[
-		// 	{
-		// 		responses: 2, color: "#FF0000",
-		// 		answer: "sdf",
-		// 		weight: 0
-		// 	},
-		// 	{
-		// 		responses: 223, color: "#00FF00",
-		// 		answer: "sdf",
-		// 		weight: 0
-		// 	},
-		// 	{
-		// 		responses: 225, color: "#0000FF",
-		// 		answer: "sdf",
-		// 		weight: 0
-		// 	},
-		// 	{
-		// 		responses: 252, color: "#FFFF00",
-		// 		answer: "ss",
-		// 		weight: 0
-		// 	},
-		// ]} size={150} />,
+		<FullCircularPoll pollAnswers={[
+			{
+				responses: 202,
+				color: "#FF0000",
+				answer: "sdf",
+				weight: 0
+			},
+			{
+				responses: 223,
+				color: "#00FF00",
+				answer: "sdf",
+				weight: 0
+			},
+			{
+				responses: 225,
+				color: "#0000FF",
+				answer: "sdf",
+				weight: 0
+			},
+			{
+				responses: 252,
+				color: "#FFFF00",
+				answer: "ss",
+				weight: 0
+			},
+		]} size={150} />,
 
 		<PollButton answerData={{
 			answer: 'PollButton',
@@ -76,6 +80,8 @@ export default function TestingPage({ userData }: { userData: UserData | null })
 			help: true,
 			break: false,
 			isGuest: false,
+			pollRes: { buttonRes: 'Yes', textRes: 'I agree' },
+			tags: ['Offline']
 		}} openModalId={null} setOpenModalId={() => {}} />,
 	]
 

@@ -1,19 +1,22 @@
-import { Menu, Flex, Col, Row, Typography, Card, Statistic, Splitter, Button } from "antd";
+import { Menu, Flex, Col, Row, Typography, Card, Statistic, Splitter, Button, Tooltip } from "antd";
 const { Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { isMobile, useClassData, useTheme } from "../main";
+import { useClassData, useTheme } from "../main";
 import { Activity, useEffect, useState, useRef } from "react";
 
 import Dashboard from "../components/ControlPanel/Dashboard";
 import PollsMenu from "../components/ControlPanel/PollsMenu";
 import SettingsMenu from "../components/ControlPanel/SettingsMenu";
+import PermissionsMenu from "../components/ControlPanel/PermissionsMenu";
+import ClassroomPage from "../components/ControlPanel/ClassroomPage";
 
 import { themeColors } from "../../themes/ThemeConfig";
 import { socket } from "../socket";
 import Log from "../debugLogger";
 import ControlPanelPoll from "../components/BarPoll";
+import Statistics from "../components/ControlPanel/StatisticsPage";
 
 
 const items = [
@@ -40,18 +43,32 @@ const items = [
 	},
 	{
 		key: "4",
+		icon: <IonIcon icon={IonIcons.statsChartOutline} />,
+		deselectedicon: <IonIcon icon={IonIcons.statsChartOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.statsChart} />,
+		label: "Statistics",
+	},
+	{
+		key: "5",
 		icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
 		deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
 		label: "Permissions",
 	},
 	{
-		key: "5",
+		key: "6",
 		icon: <IonIcon icon={IonIcons.settingsOutline} />,
 		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.settings} />,
 		label: "Settings",
 	},
+    {
+        key: "7",
+        icon: <IonIcon icon={IonIcons.schoolOutline} />,
+        deselectedicon: <IonIcon icon={IonIcons.schoolOutline} />,
+        selectedicon: <IonIcon icon={IonIcons.school} />,
+        label: "Classroom",
+    }
 ];
 
 export default function ControlPanel() {
@@ -100,11 +117,6 @@ export default function ControlPanel() {
 	const [menuItems, setMenuItems] = useState(items);
 	const [openModalId, setOpenModalId] = useState<number | null>(null);
 
-    const [ responseTime, setResponseTime ] = useState<number>(0);
-    const [ responses, setResponses ] = useState<number>(0);
-    const [ studentsOnBreak, setStudentsOnBreak ] = useState<number>(0);
-    const [ helpTickets, setHelpTickets ] = useState<number>(0);
-
     const [ classActive, setClassActive ] = useState<boolean>(() => !!classData?.isActive);
     //const [allStudents, setAllStudents] = useState<Student[]>(students);
 
@@ -145,43 +157,6 @@ export default function ControlPanel() {
 		});
 		setMenuItems(updatedItems);
 	}
-
-    const students = classData && classData.students ? Object.values(classData.students) as any[] : [];
-
-    useEffect(() => {
-        let totalResponseTimes: number[] = [];
-        
-        students.forEach((student) => {
-            if (student.pollRes && student.pollRes.time) {
-                // Convert ISO string to milliseconds
-                const studentResponseTimeMs = new Date(student.pollRes.time).getTime();
-                
-                // Poll start time is already in milliseconds
-                const pollStartTimeMs = classData?.poll.startTime;
-                
-                // Calculate difference in seconds (student time - poll start time)
-                const timeDifferenceMs = studentResponseTimeMs - (pollStartTimeMs ?? 0);
-                const timeDifferenceSeconds = timeDifferenceMs / 1000;
-                
-                // Only include if positive and reasonable (less than 1 hour)
-                if (timeDifferenceSeconds > 0) {
-                    totalResponseTimes.push(timeDifferenceSeconds);
-                }
-            }
-        });
-        
-        // Calculate average response time
-        const averageResponseTime = totalResponseTimes.length > 0 
-            ? totalResponseTimes.reduce((a, b) => a + b, 0) / totalResponseTimes.length 
-            : 0;
-            
-        if(classData?.poll.startTime !== undefined) setResponseTime(averageResponseTime);
-        else setResponseTime(0);
-
-        setResponses(totalResponseTimes.length);
-        setStudentsOnBreak(students.filter((s: any) => s.break).length);
-        setHelpTickets(students.filter((s: any) => s.help).length);
-    }, [students, classData]);
 
 	return (
 		<>
@@ -231,130 +206,29 @@ export default function ControlPanel() {
                     </Activity>
                 </Flex>
                 
-                <Splitter style={{height:'100%', width:'100%'}}>
-
-                    <Splitter.Panel min={'520'}>
-                        <div style={{ padding: '20px', height: '100%', flex: '1 1 auto'}}>
-                            <Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
-                                <Dashboard openModalId={openModalId} setOpenModalId={setOpenModalId}/>
-                            </Activity>
-                            <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
-                                <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />
-                            </Activity>
-                            <Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
-                                <SettingsMenu />
-                            </Activity>
-                        </div>
-                    </Splitter.Panel>
-
-                    <Splitter.Panel defaultSize={'480'}>
-                        {
-                            !isMobile() ? <Flex
-                            ref={statsPanelRef}
-                            style={{
-                                background: infoDivs.background,
-                                padding:'20px',
-                                width: 'calc(100% - 40px)',
-                                height: 'calc(100% - 40px)',
-                                borderRadius:'10px',
-                                margin: '20px',
-                                overflow: 'auto'
-                            }} vertical  justify='start' align='center' gap={20}>
-                                <Title style={{ marginBottom: 'auto' }}>Statistics</Title>
-                                <Row gutter={[16, 8]}>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic.Timer
-                                                
-                                                type="countup"
-                                                title="Poll Runtime"
-                                                value={classData?.poll.startTime == undefined ? Date.now() : classData?.poll.startTime}
-                                                format="H:mm:ss"
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Allowed to Vote"
-                                            value={students.filter((s: any) => !s.tags.includes('Offline')).length}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Response Time"
-                                            value={responseTime}
-                                            precision={2}
-                                            styles={{ content: { color: '#3f8600' } }}
-                                            prefix={<><IonIcon icon={IonIcons.arrowUp} style={{marginTop:'2px'}}/></>}
-                                            suffix="s"
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Responses"
-                                            value={responses}
-                                            suffix={`/ ${students.length}`}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Help Tickets"
-                                            value={helpTickets}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="On Break"
-                                            value={studentsOnBreak}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Other Statistic"
-                                            value={"N/A"}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Other Statistic"
-                                            value={"N/A"}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Other Statistic"
-                                            value={"N/A"}
-                                            />
-                                        </Card>
-                                    </Col>
-                                    <Col span={isSingleColumn ? 24 : 12}>
-                                        <Card variant="borderless">
-                                            <Statistic
-                                            title="Other Statistic"
-                                            value={"N/A"}
-                                            />
-                                        </Card>
-                                    </Col>
-                                </Row>
-                            </Flex> : null
-                        }
-                    </Splitter.Panel>
-                </Splitter>
+                <div style={{ padding: '20px', height: '100%', width: 'calc(100% - 250px)'}}>
+                    <Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
+                        <Dashboard openModalId={openModalId} setOpenModalId={setOpenModalId}/>
+                    </Activity>
+                    <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
+                        <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />
+                    </Activity>
+                    <Activity mode={currentMenu == "3" ? "visible" : "hidden"}>
+                        <div>Timer Menu</div>
+                    </Activity>
+                    <Activity mode={currentMenu == "4" ? "visible" : "hidden"}>
+                        <Statistics />
+                    </Activity>
+                    <Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
+                        <PermissionsMenu />
+                    </Activity>
+                    <Activity mode={currentMenu == "6" ? "visible" : "hidden"}>
+                        <SettingsMenu />
+                    </Activity>
+                    <Activity mode={currentMenu == "7" ? "visible" : "hidden"}>
+                        <ClassroomPage />
+                    </Activity>
+                </div>
             </Flex>
 		</>
 	);

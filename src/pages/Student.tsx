@@ -23,6 +23,7 @@ export default function Student() {
         }
         socket.emit('pollResp', response, '');
         Log({ message: `Responded with: ${response}`, level: 'info' });
+        
     }
 
     useEffect(() => {
@@ -48,19 +49,12 @@ export default function Student() {
 			setClassData(classData);
             Log({ message: "Class Update received.", data: classData, level: 'info' });
 
-            let answers = [];
-
-            for (let answer of classData.poll.responses) {
-                let percentage = (answer.responses / classData.poll.totalResponders) * 100;
-                answers.push({percentage: percentage, color: answer.color});
-            }
-
-            setAnswerState(answers);
+            setAnswerState(classData.poll.responses);
 		}
 
         socket.on('classUpdate', classUpdate);
         
-        socket.emit('classUpdate', '');
+        socket.emit('classUpdate', ''); // Initial request for class data
         return () => {
             socket.off('classUpdate', classUpdate);
         };

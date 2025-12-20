@@ -1,7 +1,7 @@
-import { StrictMode, createContext, useState, useContext, useEffect } from "react";
+import { StrictMode, createContext, useState, useEffect, useContext } from "react";
 import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
@@ -134,6 +134,7 @@ const ClassDataProvider = ({ children }: { children: ReactNode }) => {
 }
 
 const AppContent = () => {
+	const navigate = useNavigate();
 	const [isConnected, setIsConnected] = useState(socket?.connected || false);
 	const [socketErrorCount, setSocketErrorCount] = useState(0);
 	const [httpErrorCount, setHttpErrorCount] = useState(0);
@@ -182,6 +183,8 @@ const AppContent = () => {
 
 		if(!socket?.connected && localStorage.getItem('connectionUrl') && localStorage.getItem('connectionAPI')) {
 			loginSocket(localStorage.getItem('connectionUrl')!, localStorage.getItem('connectionAPI')!);
+		} else if(!localStorage.getItem('connectionUrl') || !localStorage.getItem('connectionAPI')) {
+			navigate('/login')
 		}
 		
 		function onConnect() {
@@ -244,34 +247,34 @@ const AppContent = () => {
 	}, []);
 
 	return (
-		<BrowserRouter>
-			<Routes>
-				{
-					pages.map(page => {
-						const Element = page.page;
-						return <Route key={page.routePath} path={page.routePath} element={
-							<>
-							<LoadingScreen socketErrors={socketErrorCount} httpErrors={httpErrorCount} isConnected={isConnected} />
-							<Element />
-							</>
-						} />
-					})
-				}
-			</Routes>
-		</BrowserRouter>
+		<Routes>
+			{
+				pages.map(page => {
+					const Element = page.page;
+					return <Route key={page.routePath} path={page.routePath} element={
+						<>
+						<LoadingScreen socketErrors={socketErrorCount} httpErrors={httpErrorCount} isConnected={isConnected} />
+						<Element />
+						</>
+					} />
+				})
+			}
+		</Routes>
 	);
 };
 
 function App() {
 	return (
 		<StrictMode>
-			<ThemeProvider>
-				<UserDataProvider>
-					<ClassDataProvider>
-						<AppContent />
-					</ClassDataProvider>
-				</UserDataProvider>
-			</ThemeProvider>
+			<BrowserRouter>
+				<ThemeProvider>
+					<UserDataProvider>
+						<ClassDataProvider>
+							<AppContent />
+						</ClassDataProvider>
+					</UserDataProvider>
+				</ThemeProvider>
+			</BrowserRouter>
 		</StrictMode>
 	);
 }

@@ -1,4 +1,5 @@
 import { Progress } from "antd";
+import type { PollAnswer } from "../types";
 
 type CircularPollProperties = {
     percentage: number;
@@ -7,17 +8,14 @@ type CircularPollProperties = {
     size?: number;
 };
 
-type PollAnswer = {
-    percentage: number;
-    color?: string;
-}
-
 type PollObjectProperties = {
     pollAnswers: Array<PollAnswer>;
     size?: number;
 };
 
 export default function FullCircularPoll({ pollAnswers, size = 400 }: PollObjectProperties) {
+
+    const totalResponses = pollAnswers.reduce((acc, curr) => acc + curr.responses, 0);
 
     return (
         <div style={{position: 'relative', width: `${size}px`, height: `${size}px` }}>
@@ -45,9 +43,9 @@ export default function FullCircularPoll({ pollAnswers, size = 400 }: PollObject
                     
                     <CircularPoll 
                         key={index}
-                        percentage={answer.percentage}
+                        percentage={answer.responses === 0 ? 0 : (answer.responses / totalResponses) * 100}
                         color={answer.color}
-                        offset={pollAnswers.slice(0, index).reduce((acc, curr) => acc + curr.percentage, 0)}
+                        offset={pollAnswers.slice(0, index).reduce((acc, curr) => acc + (curr.responses === 0 ? 0 : (curr.responses / totalResponses) * 100), 0)}
                         size={size}
                     />
                 ))
