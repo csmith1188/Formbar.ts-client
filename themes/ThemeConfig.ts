@@ -57,6 +57,14 @@ export const darkMode = {
             controlHeight: 42,
             colorBgContainer: "#01091fab",
             colorBorder: "#02031186",
+        },
+        Select: {
+            controlHeight: 42,
+            colorBgContainer: "#01091fab",
+            colorBorder: "#02031186",
+        },
+        SelectProps: {
+            colorBorder: "#ff0000",
         }
     }
 }

@@ -40,6 +40,7 @@ export default function StudentObject({ student, openModalId, setOpenModalId }: 
                             <Text italic type="secondary" style={{fontWeight:300, fontSize:'16px'}}>ID: {student.id}</Text>
                         </Flex>
                     } 
+                    zIndex={openModalId === student.id ? 1000 : -100}
                     open={openModalId === student.id} 
                     onCancel={() => setOpenModalId(null)} 
                     footer={null}

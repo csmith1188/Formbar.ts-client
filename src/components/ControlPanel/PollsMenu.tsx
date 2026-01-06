@@ -2,6 +2,7 @@ import { Button, Modal, Typography } from "antd";
 const { Text, Title } = Typography;
 import { textColorForBackground } from "../../CustomStyleFunctions";
 import { socket } from "../../socket";
+import { useClassData } from "../../main";
 
 const defaultPolls = [
     {
@@ -71,9 +72,15 @@ const defaultPolls = [
 ]
 
 export default function PollsMenu({ openModalId, setOpenModalId }: { openModalId: number | null, setOpenModalId: React.Dispatch<React.SetStateAction<number | null>> }) {
+    const { classData } = useClassData();
 
     function startPoll(id: number) {
         const poll = defaultPolls.filter(e => e.id == id)[0];
+
+        if(!classData?.isActive) {
+            alert("Cannot start poll when class is not active.");
+            return;
+        }
 
         socket?.emit('startPoll', poll);
         setOpenModalId(null);
