@@ -60,7 +60,7 @@ const items = [
 		icon: <IonIcon icon={IonIcons.settingsOutline} />,
 		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.settings} />,
-		label: "Settings",
+		label: "Settings & Links",
 	},
     {
         key: "7",
