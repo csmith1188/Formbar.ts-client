@@ -61,14 +61,7 @@ const items = [
 		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.settings} />,
 		label: "Settings & Links",
-	},
-    {
-        key: "7",
-        icon: <IonIcon icon={IonIcons.schoolOutline} />,
-        deselectedicon: <IonIcon icon={IonIcons.schoolOutline} />,
-        selectedicon: <IonIcon icon={IonIcons.school} />,
-        label: "Classroom",
-    }
+	}
 ];
 
 export default function ControlPanel() {
@@ -224,9 +217,6 @@ export default function ControlPanel() {
                     </Activity>
                     <Activity mode={currentMenu == "6" ? "visible" : "hidden"}>
                         <SettingsMenu />
-                    </Activity>
-                    <Activity mode={currentMenu == "7" ? "visible" : "hidden"}>
-                        <ClassroomPage />
                     </Activity>
                 </div>
             </Flex>
