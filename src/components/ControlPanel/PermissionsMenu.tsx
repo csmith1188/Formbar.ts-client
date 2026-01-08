@@ -1,5 +1,6 @@
 import { useClassData } from "../../main";
-import { Table } from 'antd';
+import { Table, Typography } from 'antd';
+const { Title } = Typography;
 import type { TableProps } from 'antd';
 
 
@@ -44,7 +45,7 @@ export default function PermissionsMenu() {
 
     const data = sortedPermissions.map(([permissionName, permissionLevel]) => {
         const row: any = {
-            key: permissionName,
+            key: permissionToName(permissionName),
             dataIndex: permissionName,
         };
         permissionOptions.forEach(option => {
@@ -54,6 +55,26 @@ export default function PermissionsMenu() {
     });
 
 	return (
-		<Table columns={columns} dataSource={data} bordered pagination={false} style={{width:'100%'}} />
+        <>
+            <Title style={{marginBottom:'50px'}}>Permissions</Title>
+
+		    <Table columns={columns} dataSource={data} bordered pagination={false} style={{ width:'80%', margin: '0 auto' }} />
+        </>
 	);
+}
+
+// Converts the internal permission name to a display name
+
+function permissionToName(permissionName: string):string {
+    let permissionNameChars = permissionName.split('');
+    permissionNameChars[0] = permissionNameChars[0].toUpperCase();
+
+    permissionNameChars.forEach((char, index) => {
+        if (char === char.toUpperCase() && index !== 0) {
+            permissionNameChars.splice(index, 0, ' ');
+        }
+    });
+
+    permissionName = permissionNameChars.join('');
+    return permissionName
 }

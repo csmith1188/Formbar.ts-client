@@ -133,6 +133,14 @@ const ClassDataProvider = ({ children }: { children: ReactNode }) => {
 	);
 }
 
+const PageWrapper = ({ pageName, children }: { pageName: string; children: ReactNode }) => {
+	useEffect(() => {
+		document.title = `${pageName} - Formbar`;
+	}, [pageName]);
+
+	return <>{children}</>;
+};
+
 const AppContent = () => {
 	const navigate = useNavigate();
 	const [isConnected, setIsConnected] = useState(socket?.connected || false);
@@ -252,10 +260,10 @@ const AppContent = () => {
 				pages.map(page => {
 					const Element = page.page;
 					return <Route key={page.routePath} path={page.routePath} element={
-						<>
-						<LoadingScreen socketErrors={socketErrorCount} httpErrors={httpErrorCount} isConnected={isConnected} />
-						<Element />
-						</>
+						<PageWrapper pageName={page.pageName}>
+							<LoadingScreen socketErrors={socketErrorCount} httpErrors={httpErrorCount} isConnected={isConnected} />
+							<Element />
+						</PageWrapper>
 					} />
 				})
 			}

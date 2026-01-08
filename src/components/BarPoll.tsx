@@ -11,7 +11,12 @@ export default function ControlPanelPoll({ classData, height }: { classData?: an
         <>
             <Flex style={{width: '100%', height:height || '20px', background:"#fff3", borderBottom:'2px solid #000', boxSizing:'border-box', overflow:'hidden'}}>
                 {
-                    data?.poll.responses.map((resp: any, index: number) => (
+                    data === null || data?.poll.responses.length === 0 ? (
+                        <Flex style={{width: '100%', height:'100%', background: 'rgba(255, 255, 255, 0.2)'}} justify="center" align="center"></Flex>
+                    ) : null
+                }
+                {
+                    data && data?.poll.responses.map((resp: any, index: number) => (
                         <Tooltip color={resp.color} key={index} title={`${resp.answer}: ${resp.responses} vote${resp.responses !== 1 ? 's' : ''}`} placement="bottom">
                             <Flex key={index} style={{width: resp.responses !== 0 ? `${(resp.responses / data.poll.totalResponders) * 100}%` : '0%', height:'100%', background: resp.color, transition: 'width 0.3s ease', borderLeft: index === 0 ? 'none' : resp.responses > 0 ? '2px solid #000' : 'none', fontSize: calculateFontSize((resp.responses / data.poll.totalResponders) * 100, resp.answer), color: textColorForBackground(resp.color)}} justify="center" align="center">
                                 {resp.responses > 0 ? resp.answer : ' '}
@@ -30,12 +35,6 @@ export default function ControlPanelPoll({ classData, height }: { classData?: an
                             </Flex>
                         </Tooltip>
                     ) : null
-                }
-
-                {
-                    !classData || classData.poll.responses.length === 0 && (
-                        <Flex style={{position: 'absolute', right: '5px', top: '2px', fontSize: '10px', background: '#000a', color: '#fff', padding: '2px 4px', borderRadius: '4px'}}></Flex>
-                    )
                 }
             </Flex>
         </>

@@ -7,6 +7,7 @@ import InfoPage from "./pages/InfoPage.tsx";
 import NewsPage from "./pages/NewsPage.tsx";
 import StudentBar from "./pages/StudentBar.tsx";
 import ClassesPage from "./pages/Classes.tsx";
+import PogPools from "./pages/PogPools.tsx";
 
 type Page = {
     pageName: string,
@@ -41,12 +42,12 @@ const pages: Page[] = [
         page: Student,
     },
     {
-        pageName: "StudentBar",
+        pageName: "Student Bar",
         routePath: '/studentbar',
         page: StudentBar,
     },
     {
-        pageName: "InfoPage",
+        pageName: "Info Page",
         routePath: '/info',
         page: InfoPage
     },
@@ -59,6 +60,11 @@ const pages: Page[] = [
         pageName: "Classes",
         routePath: '/classes',
         page: ClassesPage,
+    }, 
+    {
+        pageName: "Pog Pools",
+        routePath: '/pools',
+        page: PogPools,
     }
 ]
 
