@@ -8,6 +8,8 @@ import NewsPage from "./pages/NewsPage.tsx";
 import StudentBar from "./pages/StudentBar.tsx";
 import ClassesPage from "./pages/Classes.tsx";
 import PogPools from "./pages/PogPools.tsx";
+import Transactions from "./pages/Transactions.tsx";
+import ManagerPanel from "./pages/ManagerPanel.tsx";
 
 type Page = {
     pageName: string,
@@ -65,6 +67,16 @@ const pages: Page[] = [
         pageName: "Pog Pools",
         routePath: '/pools',
         page: PogPools,
+    },
+    {
+        pageName: 'Transactions',
+        routePath: '/profile/transactions',
+        page: Transactions,
+    },
+    {
+        pageName: "Manager Panel",
+        routePath: '/managerpanel',
+        page: ManagerPanel,
     }
 ]
 

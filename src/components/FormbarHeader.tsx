@@ -117,7 +117,7 @@ const styles = {
         top: 0,
         left: 0,
         width: '100%',
-        height: '63px',
+        height: '64px',
         padding: '0 32px',
 
         zIndex: 2,

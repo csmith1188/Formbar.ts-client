@@ -10,9 +10,11 @@
 - [ ] managerPanel
 - [ ] ~~message~~ Unneeded
 - [x] news
-- [ ] pools
+- [x] pools `NEEDS BACKEND WORK`
+  - <pre>Needs backend work.<br>Pools are not obtainable via api.</pre>
 - [x] profile `NEEDS BACKEND WORK`
   - <pre>Needs backend work.<br>Information such as<br>- [user].displayName<br>- [user].pin<br>- [user].api<br>are not obtainable, even with [formbar]/api/me</pre>
 - [ ] results
 - [x] student / studentBar
-- [ ] transactions
+- [x] transactions `NEEDS BACKEND WORK`
+  - <pre>Needs backend work.<br>Transaction are not obtainable via api.</pre>

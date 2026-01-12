@@ -16,7 +16,7 @@ export type Student = {
     isGuest: boolean;
 };
 
-export type UserData = {
+export type CurrentUserData = {
     loggedIn: boolean,
     id: number,
     email: string,
@@ -26,6 +26,14 @@ export type UserData = {
     break: boolean | string,
     pogMeter: number,
     classId: number | null,
+}
+
+export type UserData = {
+    displayName: string
+    email: string
+    id: number
+    permissions: number
+    verified: number
 }
 
 export type ClassData = {
@@ -82,3 +90,30 @@ export type PollAnswer = {
     responses: number;
     weight: number;
 }
+
+export type Transaction = {
+    amount: number
+    date: string
+    from_user: number | null
+    pool: number | null
+    reason: string
+    to_user: number | null
+}
+
+export enum Permissions {
+    MANAGER = 5,
+    TEACHER = 4,
+    MOD = 3,
+    STUDENT = 2,
+    GUEST = 1,
+    BANNED = 0
+}
+
+export const PermissionLevels: { [key: number]: string } = {
+    [Permissions.BANNED]: "Banned",
+    [Permissions.GUEST]: "Guest",
+    [Permissions.STUDENT]: "Student",
+    [Permissions.MOD]: "Mod",
+    [Permissions.TEACHER]: "Teacher",
+    [Permissions.MANAGER]: "Manager"
+};

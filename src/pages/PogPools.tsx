@@ -29,6 +29,22 @@ const testPools = [
         members: [1, 3, 7, 8, 9],
         description: 'Rewards pool for development contributions.',
         amount: 8750,
+    },
+    {
+        id: 2,
+        name: 'Development Rewards',
+        owner: 3,
+        members: [1, 3, 7, 8, 9],
+        description: 'Rewards pool for development contributions.',
+        amount: 8750,
+    },
+    {
+        id: 2,
+        name: 'Development Rewards',
+        owner: 3,
+        members: [1, 3, 7, 8, 9],
+        description: 'Rewards pool for development contributions.',
+        amount: 8750,
     }
 ]
 
@@ -56,14 +72,27 @@ export default function PogPools() {
                                         },
                                         body: {
                                             textAlign: 'center',
+                                            height: pool.owner === userData?.id ? undefined : 'calc(100% - 64px)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'center',
+                                        },
+                                        root: {
+                                            height: '100%',
                                         }
                                     }
                                 }
 
                                 actions={pool.owner === userData?.id ? [
-                                    <IonIcon icon={IonIcons.cashOutline} style={{ fontSize: '32px' }} key="payout" />,
-                                    <IonIcon icon={IonIcons.personOutline} style={{ fontSize: '32px' }} key="addmember" />,
-                                    <IonIcon icon={IonIcons.trashOutline} style={{ fontSize: '32px' }} key="delete" />,
+                                    <Tooltip title="Payout Funds" key="payout" placement="top">
+                                        <IonIcon icon={IonIcons.cashOutline} style={{ fontSize: '32px' }} key="payout" />
+                                    </Tooltip>,
+                                    <Tooltip title="Add or Remove Members" key="addmember" placement="top">
+                                        <IonIcon icon={IonIcons.personOutline} style={{ fontSize: '32px' }} key="addmember" />
+                                    </Tooltip>,
+                                    <Tooltip title="Delete Pool" key="delete" placement="top" color="red">
+                                        <IonIcon icon={IonIcons.trashOutline} style={{ fontSize: '32px' }} key="delete" />
+                                    </Tooltip>
                                 ] : []}
                                 
                                 
