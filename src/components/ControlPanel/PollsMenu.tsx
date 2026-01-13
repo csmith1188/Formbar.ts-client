@@ -68,6 +68,23 @@ const defaultPolls = [
         indeterminate: [],
         allowTextResponses: false,
         allowMultipleResponses: false,
+    },
+    {
+        id: 5,
+        prompt: 'Text Response',
+        answers: [
+            {"answer":"A","weight":1,"color":"#FF0000"},
+            {"answer":"B","weight":1,"color":"#0000FF"},
+            {"answer":"C","weight":1,"color":"#FFFF00"},
+            {"answer":"D","weight":1,"color":"#00FF00"}
+        ],
+
+        blind: false,
+        allowVoteChanges: true,
+        excludedRespondents: [],
+        indeterminate: [],
+        allowTextResponses: true,
+        allowMultipleResponses: false,
     }
 ]
 

@@ -10,7 +10,10 @@ export type Student = {
         textRes: string;
         time: number;
     };
-    help: boolean;
+    help: {
+        reason: string;
+        time: number;
+    };
     break: boolean | string;
     pogMeter: number;
     isGuest: boolean;
