@@ -11,10 +11,15 @@ import PogPools from "./pages/PogPools.tsx";
 import Transactions from "./pages/Transactions.tsx";
 import ManagerPanel from "./pages/ManagerPanel.tsx";
 
+import {
+    Permissions
+} from "./types.ts";
+
 type Page = {
     pageName: string,
     routePath: string,
     page: any,
+    permissions?: Permissions
 }
 
 const pages: Page[] = [
@@ -32,6 +37,7 @@ const pages: Page[] = [
         pageName: "Control Panel",
         routePath: '/panel',
         page: ControlPanel,
+        permissions: Permissions.TEACHER,
     },
     {
         pageName: "Profile",

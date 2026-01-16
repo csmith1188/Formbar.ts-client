@@ -29,7 +29,7 @@ export default function StudentObject({ student, openModalId, setOpenModalId }: 
                         </Badge.Ribbon>
                     ) : (
                         <Button type="primary" style={{padding:'10px', width:'100%'}} onClick={() => setOpenModalId(student.id)}>
-                            <Text strong>{student.displayName}{student.pollRes.buttonRes !== '' ? ` - ${student.pollRes.buttonRes}` : ''}</Text>
+                            <Text strong>{student.displayName}<span>{student.pollRes.buttonRes !== '' ? ` - ${student.pollRes.buttonRes}` : ''}</span></Text>
                         </Button>
                     )
                 }

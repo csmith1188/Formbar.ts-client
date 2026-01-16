@@ -2,9 +2,9 @@ import { socket } from "../socket";
 
 import FormbarHeader from "../components/FormbarHeader";
 import FullCircularPoll from "../components/CircularPoll";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useMobileDetect } from "../main";
-import { Typography, Flex } from "antd";
+import { Typography, Flex, Input } from "antd";
 import PollButton from "../components/PollButton";
 import Log from "../debugLogger";
 const { Title } = Typography;
@@ -13,6 +13,10 @@ export default function Student() {
     const [classData, setClassData] = useState<any>(null);
     const [answerState, setAnswerState] = useState<any>([]);
     const isMobileView = useMobileDetect();
+    const [lastPollData, setLastPollData] = useState<any>(null);
+
+    const [textResponse, setTextResponse] = useState<string>("");
+    const lastPollDataRef = useRef<any>(null);
 
     const [pollWidth, setPollWidth] = useState<number>(!isMobileView ? Math.min(window.innerWidth / 2 - 20, window.innerHeight - 200) : Math.min(window.innerWidth - 40, window.innerHeight / 2 - 100));
 
@@ -21,9 +25,9 @@ export default function Student() {
             Log({ message: 'Socket not connected, cannot send response', level: 'warn' });
             return;
         }
-        socket.emit('pollResp', response, '');
+        let resTextResponse = classData?.poll.allowTextResponses ? textResponse.trim() : '';
+        socket.emit('pollResp', response, resTextResponse);
         Log({ message: `Responded with: ${response}`, level: 'info' });
-        
     }
 
     useEffect(() => {
@@ -46,11 +50,19 @@ export default function Student() {
         if (!socket) return; // Don't set up listener if socket isn't ready
 
         function classUpdate(classData: any) {
-			setClassData(classData);
+            console.log(classData.poll)
+            console.log(lastPollDataRef.current)
+            if(classData.poll.startTime !== lastPollDataRef.current?.startTime) {
+                setTextResponse("");
+            }
+
+            setClassData(classData);
+            lastPollDataRef.current = classData.poll;
+            setLastPollData(classData.poll);
             Log({ message: "Class Update received.", data: classData, level: 'info' });
 
             setAnswerState(classData.poll.responses);
-		}
+        }
 
         socket.on('classUpdate', classUpdate);
         
@@ -91,6 +103,11 @@ export default function Student() {
                             style={isMobileView ? {width:'100%', height:'50%'} : {width:'50%', padding:'0 20px'}}
                             gap={10}
                         >
+                            {
+                                classData?.poll.allowTextResponses ? (
+                                    <Input.TextArea style={{width:'50%', resize:'none', height:'200px',textAlign:'center'}} value={textResponse} onChange={e => setTextResponse(e.target.value)}></Input.TextArea>
+                                ) : null
+                            }
                             <Flex 
                                 gap={10}
                                 style={{width:'100%'}}
