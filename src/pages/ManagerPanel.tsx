@@ -5,17 +5,9 @@ const { Title, Text } = Typography;
 
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { Activity, useState } from "react";
+import { Activity, useEffect, useState } from "react";
 import { accessToken, formbarUrl } from "../socket";
-
-const users: UserData[] = [
-    { displayName: 'Alice', email: 'alice@example.com', id: 1, permissions: 5, verified: 1 },
-    { displayName: 'Bob', email: 'bob@example.com', id: 2, permissions: 3, verified: 0 },
-    { displayName: 'Charlie', email: 'charlie@example.com', id: 3, permissions: 2, verified: 1 },
-    { displayName: 'Diana', email: 'diana@example.com', id: 4, permissions: 4, verified: 1 },
-    { displayName: 'Eve', email: 'eve@example.com', id: 5, permissions: 1, verified: 0 },
-    { displayName: 'Frank', email: 'frank@example.com', id: 6, permissions: 2, verified: 1 },
-]
+import { useUserData } from "../main";
 
 const bannedUsers: UserData[] = [
     { displayName: 'George', email: 'george@example.com', id: 7, permissions: 1, verified: 0 },
@@ -30,20 +22,29 @@ const bannedUsers: UserData[] = [
 
 export default function ManagerPanel() {
     const [listCategory, setListCategory] = useState<"Users" | "IP Addresses" | "Banned Users">("Users");
+    const [users, setUsers] = useState<Record<string, UserData>>({});
+    const [classrooms, setClassrooms] = useState<any[]>([]);
 
-    fetch(`${formbarUrl}/api/v1/manager/`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `${accessToken}`,
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log('Manager panel data:', data);
-    })
-    .catch(err => {
-        console.error('Error fetching manager panel data:', err);
-    });
+    useEffect(() => {
+        if (!accessToken) return;
+        
+        fetch(`${formbarUrl}/api/v1/manager/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `${accessToken}`,
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+            setUsers(data.users);
+            setClassrooms(data.classrooms);
+            console.log(data)
+        })
+        .catch(err => {
+            console.error('Error fetching manager panel data:', err);
+        });
+    }, [accessToken])
 
     return (
         <>
@@ -80,7 +81,7 @@ export default function ManagerPanel() {
 
                 <Row gutter={[8, 8]} style={{ margin: '10px' }}>
                     {
-                        users.map((user) => (
+                        Object.values(users).map((user) => (
                             <Col span={4} key={user.id}>
                                 <Card 
                                     title={user.displayName}

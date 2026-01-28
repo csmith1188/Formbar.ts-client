@@ -50,9 +50,8 @@ export default function FormbarHeader() {
                     </Tooltip>
                 </Flex>
                 ) : (
-                    <h1 style={{ ...styles.formbarHeader.text, color: primaryTextColor }}>
+                    <h1 style={{ ...styles.formbarHeader.text, color: primaryTextColor, cursor: 'pointer' }} onClick={() => navigate('/')}>
                         Formbar
-                        <span style={{ ...styles.formbarHeader.version, color: secondaryTextColor }}>v{version}</span>
                     </h1>
                 )
             }

@@ -23,12 +23,12 @@ type Page = {
 }
 
 const pages: Page[] = [
-	{
+    {
         pageName: "Testing",
         routePath: '/testing',
         page: TestingPage,
     },
-	{
+    {
         pageName: "Login",
         routePath: '/login',
         page: LoginPage,
@@ -38,11 +38,6 @@ const pages: Page[] = [
         routePath: '/panel',
         page: ControlPanel,
         permissions: Permissions.TEACHER,
-    },
-    {
-        pageName: "Profile",
-        routePath: '/profile',
-        page: Profile,
     },
     {
         pageName: "Student",
@@ -75,15 +70,20 @@ const pages: Page[] = [
         page: PogPools,
     },
     {
-        pageName: 'Transactions',
-        routePath: '/profile/transactions',
-        page: Transactions,
-    },
-    {
         pageName: "Manager Panel",
         routePath: '/managerpanel',
         page: ManagerPanel,
-    }
-]
+    },
+    {
+        pageName: "Profile",
+        routePath: '/profile/:id?',
+        page: Profile,
+    },
+    {
+        pageName: 'Transactions',
+        routePath: '/profile/:id?/transactions',
+        page: Transactions,
+    },
+];
 
 export default pages;

@@ -159,7 +159,7 @@ const AppContent = () => {
 			attempts++;
 			setHttpErrorCount(attempts - 1);
 
-			fetch(`${prodUrl}`, { method: 'GET' })
+			fetch(`${formbarUrl}/api/v1/certs`, { method: 'GET' })
 			.then(res => {
 				if (res.ok) {
 					Log({ message: 'Ping successful.', level: 'info' });

@@ -3,9 +3,10 @@ import { Collapse, Card, Flex, Progress, Tooltip, Modal, InputNumber, Typography
 const { Text, Link } = Typography;
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useUserData, isMobile } from "../main";
+import { accessToken, formbarUrl } from "../socket";
 
 const correctPin = 1243;
 
@@ -16,14 +17,34 @@ export default function Profile() {
     const [enteredPin, setEnteredPin] = useState<string | number | null>(null);
     const navigate = useNavigate();
 
-    const profileProps = {
-        "Display Name": userData?.displayName || "N/A",
-        "Email": userData?.email || "N/A",
-        // "Digipogs": userData?.digipogs || 0,
-        "ID": userData?.id || "N/A",
+    const [profileProps, setProfileProps] = useState<{ [key: string]: string | number | undefined }>({});
+    
+    const { id } = useParams<{ id?: string }>();
 
-        "Pog Meter": userData?.pogMeter && userData.pogMeter > 0 ? userData.pogMeter / 5 : 0,
-    }
+    useEffect(() => {
+        if (!userData?.id && !id) return;
+        
+        fetch(`${formbarUrl}/api/v1/user/${id ? id : userData?.id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `${accessToken}`
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            setProfileProps({
+                "Display Name": data.displayName || "N/A",
+                "Email": id === String(userData?.id) || !id ? userData?.email : "N/A",
+                "Digipogs": data.digipogs || data.digipogs == 0 ? data.digipogs : "N/A",
+                "ID": data.id || "N/A",
+
+                "Pog Meter": data.pogMeter && data.pogMeter > 0 ? data.pogMeter / 5 : 0,
+            });
+        })
+        .catch(err => {
+            console.error('Error fetching profile data:', err);
+        });
+    }, [userData, id, accessToken]);
 
     return (
         <>
@@ -32,7 +53,7 @@ export default function Profile() {
             <Flex align="center" justify="center" style={{ padding: '20px', height: '100%', width: '100%' }}>
 
                 {
-                    <Card style={{ width: '300px', position: 'absolute', top: '80px', left: '50%', transform: 'translateX(-50%)' }}>
+                    <Card style={{ width: '300px', position: 'absolute', top: '80px', left: '50%', transform: 'translateX(-50%)' }} loading={profileProps["Pog Meter"] === undefined}>
                         {
                             profileProps["Pog Meter"] !== undefined && (
                                 <Flex vertical gap={10} style={{ textAlign: 'center' as 'center' }}>
@@ -65,7 +86,7 @@ export default function Profile() {
                     </Card>
                 }
 
-                <Card style={{ margin: '20px', width: '600px' }}>
+                <Card style={{ margin: '20px', width: '600px' }} loading={!profileProps["Display Name"]}>
                     <Flex vertical align="center" justify="center" style={{ padding: '10px', minWidth: isMobile() ? '300px' : '500px' }} gap={15}>
                         <h2 style={{display:'flex', flexDirection:'row', alignItems:'center', justifyContent:'space-between', gap:'10px', width:'100%'}}>
                             <Button variant="solid" color="blue" onClick={() => navigate('/profile/transactions')} style={{ width:'130px'}}>
@@ -79,7 +100,7 @@ export default function Profile() {
 
                         {
                             Object.entries(profileProps).map(([key, value]) => (
-                                key == "Pog Meter" ? null :
+                                key == "Pog Meter" || value == 'N/A' ? null :
                                 (
                                     <p key={key} style={infoStyle}>
                                         <strong>{key}:</strong>
