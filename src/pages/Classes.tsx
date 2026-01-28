@@ -4,6 +4,7 @@ import FormbarHeader from "../components/FormbarHeader";
 import { useUserData } from "../main";
 import type { CardStylesType } from "antd/es/card/Card";
 import { useMobileDetect } from "../main";
+import { accessToken, formbarUrl } from "../socket";
 
 export default function ClassesPage() {
     const { userData } = useUserData();
@@ -12,6 +13,37 @@ export default function ClassesPage() {
     let cardStyle = { width: '350px', height: '230px' };
     if (isMobileView) {
         cardStyle = { width: '300px', height: '200px' };
+    }
+
+    fetch(`${formbarUrl}/api/v1/selectClass`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `${accessToken}`,
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Classes data:', data);
+    })
+    .catch(err => {
+        console.error('Error fetching classes data:', err);
+    });
+
+
+    if (userData?.id) {
+        fetch(`${formbarUrl}/api/v1/user/${userData.id}/ownedClasses`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `${accessToken}`,
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Owned classes data:', data);
+        })
+        .catch(err => {
+            console.error('Error fetching classes data:', err);
+        });
     }
 
     return (

@@ -43,7 +43,7 @@ export default function Dashboard({ openModalId, setOpenModalId }: { openModalId
             <Segmented options={
                     [
                         'Dashboard',
-                        'Classroom View',
+                        // 'Classroom View',
                     ]
                 } 
                 onChange={(e) => {
@@ -104,7 +104,7 @@ export default function Dashboard({ openModalId, setOpenModalId }: { openModalId
                                     <Button type='primary' style={{height:'60%'}}><IonIcon icon={IonIcons.swapVertical} /></Button>
                                 </Popover>
                             </Tooltip>
-                            <Input.Search placeholder="Search students" style={{height:'60%', width:'300px'}} enterButton={<IonIcon icon={IonIcons.search} />} size='large'styles={{button:{root:{height:'100%'}}}} onChange={(e) => setSearchQuery(e.target.value)} />
+                            <Input placeholder="Search students" style={{height:'60%', width:'300px'}} size='large' onChange={(e) => setSearchQuery(e.target.value)} />
                         </Flex>
                         <div style={{
                             display: 'grid',

@@ -6,6 +6,7 @@ const { Title, Text } = Typography;
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { Activity, useState } from "react";
+import { accessToken, formbarUrl } from "../socket";
 
 const users: UserData[] = [
     { displayName: 'Alice', email: 'alice@example.com', id: 1, permissions: 5, verified: 1 },
@@ -29,6 +30,20 @@ const bannedUsers: UserData[] = [
 
 export default function ManagerPanel() {
     const [listCategory, setListCategory] = useState<"Users" | "IP Addresses" | "Banned Users">("Users");
+
+    fetch(`${formbarUrl}/api/v1/manager/`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `${accessToken}`,
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Manager panel data:', data);
+    })
+    .catch(err => {
+        console.error('Error fetching manager panel data:', err);
+    });
 
     return (
         <>

@@ -5,14 +5,14 @@ import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
-import { socket, registerSocketEventHandlers, connectionUrl, connectionAPI, prodUrl, loginSocket } from './socket';
+import { socket, registerSocketEventHandlers, formbarUrl, prodUrl, socketLogin, accessToken } from './socket';
 
 import { darkMode, lightMode, showMobileIfVertical, themeColors } from "../themes/ThemeConfig";
 
 import "./assets/css/index.css";
 
 import pages from "./pages";
-import type { ClassData, UserData } from "./types";
+import type { ClassData, CurrentUserData, UserData } from "./types";
 import Log from "./debugLogger";
 
 type ThemeContextType = {
@@ -21,8 +21,8 @@ type ThemeContextType = {
 }
 
 type UserDataContextType = {
-	userData: UserData | null;
-	setUserData: (data: UserData | null) => void;
+	userData: CurrentUserData | null;
+	setUserData: (data: CurrentUserData | null) => void;
 }
 
 type ClassDataContextType = {
@@ -115,7 +115,7 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
 };
 
 const UserDataProvider = ({ children }: { children: ReactNode }) => {
-	const [userData, setUserData] = useState<UserData | null>(null);
+	const [userData, setUserData] = useState<CurrentUserData | null>(null);
 
 	return (
 		<UserDataContext.Provider value={{ userData, setUserData }}>
@@ -159,7 +159,7 @@ const AppContent = () => {
 			attempts++;
 			setHttpErrorCount(attempts - 1);
 
-			fetch(`${prodUrl}/certs`, { method: 'GET' })
+			fetch(`${prodUrl}`, { method: 'GET' })
 			.then(res => {
 				if (res.ok) {
 					Log({ message: 'Ping successful.', level: 'info' });
@@ -189,9 +189,9 @@ const AppContent = () => {
 
 	useEffect(() => {
 
-		if(!socket?.connected && localStorage.getItem('connectionUrl') && localStorage.getItem('connectionAPI')) {
-			loginSocket(localStorage.getItem('connectionUrl')!, localStorage.getItem('connectionAPI')!);
-		} else if(!localStorage.getItem('connectionUrl') || !localStorage.getItem('connectionAPI')) {
+		if(!socket?.connected && localStorage.getItem('refreshToken')) {
+			socketLogin(localStorage.getItem('refreshToken')!);
+		} else if(!localStorage.getItem('refreshToken')) {
 			navigate('/login')
 		}
 		
@@ -199,15 +199,18 @@ const AppContent = () => {
 			setSocketErrorCount(0); // Reset on successful connection
 			Log({ message: 'Connected to server.', level: 'info' });
 
-			fetch(`${connectionUrl}/api/me`, {
+			fetch(`${formbarUrl}/api/v1/user/me`, {
 				method: 'GET',
 				headers: {
-					"api": connectionAPI,
+					'Authorization': `${accessToken}`,
 				}
 			})
 			.then(res => res.json())
 			.then(data => {
 				Log({ message: 'User data fetched successfully.', data, level: 'info' });
+				if (window.location.pathname === '/login') {
+					navigate('/');
+				}
 				setUserData(data);
 			})
 			.catch(err => {

@@ -17,7 +17,7 @@ export default function Profile() {
     const navigate = useNavigate();
 
     const profileProps = {
-        // "Display Name": userData?.displayName || "N/A",
+        "Display Name": userData?.displayName || "N/A",
         "Email": userData?.email || "N/A",
         // "Digipogs": userData?.digipogs || 0,
         "ID": userData?.id || "N/A",
@@ -37,7 +37,7 @@ export default function Profile() {
                             profileProps["Pog Meter"] !== undefined && (
                                 <Flex vertical gap={10} style={{ textAlign: 'center' as 'center' }}>
                                     <strong>Pog Meter:</strong>
-                                    <p style={infoStyle}>
+                                    <div style={infoStyle}>
                                     <Tooltip title={`${profileProps["Pog Meter"]}%`} placement="top" color="#aa68d0">
                                         <Progress
                                             percent={profileProps["Pog Meter"] as number}
@@ -58,7 +58,7 @@ export default function Profile() {
                                             
                                         />
                                     </Tooltip>
-                                    </p>
+                                    </div>
                                 </Flex>
                             )
                         }

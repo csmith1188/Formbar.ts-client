@@ -34,13 +34,13 @@ const items = [
 		selectedicon: <IonIcon icon={IonIcons.barChart} />,
 		label: "Polls",
 	},
-	{
-		key: "3",
-		icon: <IonIcon icon={IonIcons.timerOutline} />,
-		deselectedicon: <IonIcon icon={IonIcons.timerOutline} />,
-		selectedicon: <IonIcon icon={IonIcons.timer} />,
-		label: "Timer",
-	},
+	// {
+	// 	key: "3",
+	// 	icon: <IonIcon icon={IonIcons.timerOutline} />,
+	// 	deselectedicon: <IonIcon icon={IonIcons.timerOutline} />,
+	// 	selectedicon: <IonIcon icon={IonIcons.timer} />,
+	// 	label: "Timer",
+	// },
 	{
 		key: "4",
 		icon: <IonIcon icon={IonIcons.statsChartOutline} />,
@@ -48,20 +48,20 @@ const items = [
 		selectedicon: <IonIcon icon={IonIcons.statsChart} />,
 		label: "Statistics",
 	},
-	{
-		key: "5",
-		icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
-		deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
-		selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
-		label: "Permissions",
-	},
-	{
-		key: "6",
-		icon: <IonIcon icon={IonIcons.settingsOutline} />,
-		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
-		selectedicon: <IonIcon icon={IonIcons.settings} />,
-		label: "Settings & Links",
-	}
+	// {
+	// 	key: "5",
+	// 	icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
+	// 	deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
+	// 	selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
+	// 	label: "Permissions",
+	// },
+	// {
+	// 	key: "6",
+	// 	icon: <IonIcon icon={IonIcons.settingsOutline} />,
+	// 	deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
+	// 	selectedicon: <IonIcon icon={IonIcons.settings} />,
+	// 	label: "Settings & Links",
+	// }
 ];
 
 export default function ControlPanel() {
@@ -115,6 +115,7 @@ export default function ControlPanel() {
 
     function startClass() {
         socket?.emit('startClass')
+        socket?.emit('classUpdate', '');
         setClassActive(true);
     }
 

@@ -35,7 +35,7 @@ export default function FormbarHeader() {
     );
 
     function logoutHandler() {
-        localStorage.removeItem('connectionUrl');
+        localStorage.removeItem('formbarUrl');
         localStorage.removeItem('connectionAPI');
         socket?.disconnect();
         navigate('/login');

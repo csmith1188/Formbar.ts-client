@@ -3,10 +3,10 @@ import FormbarHeader from "../components/FormbarHeader"
 import { useState } from "react";
 const { Title } = Typography;
 import { useEffect } from "react";
-import { socket } from '../socket';
+import { socket, socketLogin } from '../socket';
 
 import { useMobileDetect, useUserData } from '../main';
-import { loginSocket, connectionUrl } from "../socket";
+import { formbarUrl } from "../socket";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
@@ -21,10 +21,7 @@ export default function LoginPage() {
     const [username, setUsername] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    const [dev__api, setDevApi] = useState('');
-    const [dev__url, setDevUrl] = useState('');
-
-    function handleSubmit() {
+    async function handleSubmit() {
         // Handle form submission based on mode
         switch (mode) {
             case 'Login':
@@ -35,27 +32,34 @@ export default function LoginPage() {
                 formData.append('password', password);
                 formData.append('loginType', 'login');
 
-                fetch(`${connectionUrl}/login`, {
+                const loginResponse = await fetch(`${formbarUrl}/api/v1/auth/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: formData.toString(),
-                    redirect: 'manual'
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if (!loginResponse.ok) {
+                    throw new Error('Login failed');
+                }
+                const loginData = await loginResponse.json();
+                let { accessToken, refreshToken } = loginData;
+                console.log('Login successful:', loginData);
+
+                // 2. Make authenticated requests
+                const data = await fetch(`${formbarUrl}/api/v1/user/me`, {
+                    headers: { 'Authorization': accessToken }
                 })
-                .then(response => {
-                    if(response.status === 0) {
-                        console.log('Login successful, redirecting...');
-                    } else {
-                        console.error('Login failed with status:', response.status);
-                    }
+                .then(res => res.json())
+                .then(data => {
+                    console.log('User data:', data);
+
+                    socketLogin(refreshToken);
+
+                    return data;
                 })
-                .catch(error => {
-                    console.error('Error during login:', error);
-                    // Handle login error (e.g., show error message)
+                .catch(err => {
+                    console.error('Error fetching user data:', err);
                 });
                 break;
-
             case 'Sign Up':
                 console.log('Signing up with:', { username, email, password, confirmPassword });
                 // Add sign-up logic here
@@ -64,12 +68,6 @@ export default function LoginPage() {
             case 'Guest':
                 console.log('Continuing as guest with username:', { username });
                 // Add guest logic here
-                break;
-
-            case 'Developer':
-                console.log('Developer login with:', { dev__url, dev__api });
-                loginSocket(dev__url, dev__api);
-                navigate('/');
                 break;
         }
     }
@@ -128,8 +126,7 @@ export default function LoginPage() {
                             [
                                 'Login',
                                 'Sign Up',
-                                'Guest',
-                                'Developer'
+                                'Guest'
                             ]
                         } 
                         onChange={setMode}
@@ -138,8 +135,8 @@ export default function LoginPage() {
 
                     <Card title={mode}>
                         {
-                            mode !== 'Developer' ? (
-                                <>
+                            
+                            <>
                                 {
                                     (mode === 'Guest' || mode === 'Sign Up') && (
                                         <Input placeholder="Username" style={{ marginBottom: '10px' }} value={username} onChange={e => setUsername(e.target.value)} />
@@ -160,13 +157,7 @@ export default function LoginPage() {
                                         <Input.Password placeholder="Confirm Password" style={{ marginBottom: '10px' }} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                                     )
                                 }
-                                </>
-                            ) : (
-                                <>
-                                <Input placeholder="URL" style={{ marginBottom: '10px' }} value={dev__url} onChange={e => setDevUrl(e.target.value)} />
-                                <Input.Password placeholder="API Key" style={{ marginBottom: '10px' }} value={dev__api} onChange={e => setDevApi(e.target.value)} />
-                                </>
-                            )
+                            </>
                         }
 
                         <Button type="primary" style={{ marginTop: '10px', width: '100%' }} onClick={handleSubmit}>
