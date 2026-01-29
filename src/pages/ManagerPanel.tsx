@@ -1,13 +1,13 @@
 import FormbarHeader from "../components/FormbarHeader";
-import { Segmented, Typography, Row, Col, Card, Button, Flex, Select, Tooltip, Input } from "antd";
-import { PermissionLevels, type UserData } from "../types";
+import { Segmented, Typography, Row, Col, Card, Button, Flex, Select, Tooltip, Input, Spin, Skeleton } from "antd";
+import { type UserData } from "../types";
+import { LoadingOutlined } from '@ant-design/icons';
 const { Title, Text } = Typography;
 
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { Activity, useEffect, useState } from "react";
 import { accessToken, formbarUrl } from "../socket";
-import { useUserData } from "../main";
 
 const bannedUsers: UserData[] = [
     { displayName: 'George', email: 'george@example.com', id: 7, permissions: 1, verified: 0 },
@@ -81,7 +81,7 @@ export default function ManagerPanel() {
 
                 <Row gutter={[8, 8]} style={{ margin: '10px' }}>
                     {
-                        Object.values(users).map((user) => (
+                        Object.keys(users).length > 0 ? Object.values(users).map((user) => (
                             <Col span={4} key={user.id}>
                                 <Card 
                                     title={user.displayName}
@@ -137,7 +137,13 @@ export default function ManagerPanel() {
                                     </Flex>
                                 </Card>
                             </Col>
-                        ))
+                        )) : (
+                            <Flex justify="center" style={{width: '100%'}}>
+                                <Skeleton>
+                                    
+                                </Skeleton>
+                            </Flex>
+                        )
                     }
                 </Row>
             </Activity>

@@ -4,6 +4,10 @@ const { Title } = Typography;
 
 import TransactionItem from "../components/TransactionItem";
 import type { Transaction } from "../types";
+import { useUserData } from "../main";
+import { useEffect, useState } from "react";
+import { accessToken, formbarUrl } from "../socket";
+import { useParams } from "react-router-dom";
 
 const testTransactions: Transaction[] = [
     {from_user: 1, to_user: 2, amount: 100, date: '2024-01-15', reason: 'completed', pool: null},
@@ -20,6 +24,33 @@ const testTransactions: Transaction[] = [
     
 
 export default function Transactions() {
+    const { userData } = useUserData();
+    const { id } = useParams<{ id?: string }>();
+
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+    useEffect(() => {
+        // Fetch transactions from API when userData is available
+        if(!userData) return;
+
+        fetch(`${formbarUrl}/api/v1/profile/transactions/${id ? id : userData?.id}`, {
+
+            method: 'GET',
+            headers: {
+                'Authorization': `${accessToken}`,
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Transactions data:', data);
+            setTransactions(data.transactions);
+        })
+        .catch(err => {
+            console.error('Error fetching transactions data:', err);
+        });
+
+    }, [userData]);
+
     return (
         <>
             <Flex vertical style={{height:'100vh'}}>
@@ -29,8 +60,8 @@ export default function Transactions() {
 
                 <Flex vertical gap={10} style={{width:'80%', height:'100%', margin:'0px auto',  marginBottom:'64px', padding:'0 20px', paddingBottom: '20px', overflowY:'auto'}}>
                 {
-                    testTransactions.map((transaction, index) => (
-                        <TransactionItem key={index} transaction={transaction} />
+                    transactions.map((transaction, index) => (
+                        <TransactionItem key={index} transaction={transaction} userId={id ? Number(id) : userData?.id} />
                     ))
                 }
                 </Flex>

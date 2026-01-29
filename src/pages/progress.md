@@ -5,7 +5,6 @@
 - [ ] controlPanel
 - [ ] links
 - [x] login
-  - <pre>Needs backend work.<br>Logging in is not possible outside of official Frontend.</pre>
 - [ ] logs 
 - [ ] managerPanel
 - [ ] ~~message~~ Unneeded
@@ -16,5 +15,4 @@
   - <pre>Needs backend work.<br>Information such as<br>- [user].displayName<br>- [user].pin<br>- [user].api<br>are not obtainable, even with [formbar]/api/me</pre>
 - [ ] results
 - [x] student / studentBar
-- [x] transactions `NEEDS BACKEND WORK`
-  - <pre>Needs backend work.<br>Transaction are not obtainable via api.</pre>
+- [x] transactions
