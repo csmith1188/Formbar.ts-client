@@ -1,6 +1,6 @@
 import FormbarHeader from "../components/FormbarHeader";
 import { Flex, Typography } from "antd";
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 import TransactionItem from "../components/TransactionItem";
 import type { Transaction } from "../types";
@@ -28,6 +28,7 @@ export default function Transactions() {
     const { id } = useParams<{ id?: string }>();
 
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         // Fetch transactions from API when userData is available
@@ -43,7 +44,15 @@ export default function Transactions() {
         .then(res => res.json())
         .then(data => {
             console.log('Transactions data:', data);
+            if(data.error) {
+                console.error('Error fetching transactions:', data.error);
+                setTransactions([]);
+                setError(typeof data.error === 'string' ? data.error : data.error.message || 'Unknown error');
+                return;
+            }
+
             setTransactions(data.transactions);
+            setError(null);
         })
         .catch(err => {
             console.error('Error fetching transactions data:', err);
@@ -60,9 +69,21 @@ export default function Transactions() {
 
                 <Flex vertical gap={10} style={{width:'80%', height:'100%', margin:'0px auto',  marginBottom:'64px', padding:'0 20px', paddingBottom: '20px', overflowY:'auto'}}>
                 {
-                    transactions.map((transaction, index) => (
+                    transactions && transactions.map((transaction, index) => (
                         <TransactionItem key={index} transaction={transaction} userId={id ? Number(id) : userData?.id} />
                     ))
+                }
+
+                {
+                    transactions && !error && transactions.length === 0 && (
+                        <Text style={{textAlign:'center', marginTop:'20px', color:'#888'}}>No transactions found.</Text>
+                    )
+                }
+
+                {
+                    error && (
+                        <Text style={{textAlign:'center', marginTop:'20px', color:'red'}}>Error: {error}</Text>
+                    )
                 }
                 </Flex>
                 
