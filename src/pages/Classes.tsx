@@ -127,6 +127,7 @@ export default function ClassesPage() {
                                             </Select.OptGroup>
                                         )
                                     }
+
                                     {
                                         joinedClasses.length > 0 && (
                                             <Select.OptGroup label="Joined Classes">

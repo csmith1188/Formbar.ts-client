@@ -1,9 +1,9 @@
-import { Button, Flex, Tooltip, Popconfirm, Select, Popover } from 'antd'
+import { Button, Flex, Tooltip, Popconfirm } from 'antd'
 import { IonIcon } from '@ionic/react';
 import * as IonIcons from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
 
-import { useMobileDetect, useTheme } from '../main';
+import { useMobileDetect, useTheme, useUserData } from '../main';
 import { themeColors, version } from '../../themes/ThemeConfig';
 
 import pages from '../pages';
@@ -13,6 +13,7 @@ export default function FormbarHeader() {
     const { isDark, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const isMobileView = useMobileDetect();
+    const { userData } = useUserData();
 
     const headerStyles = {
         ...styles.formbarHeader,
@@ -56,39 +57,54 @@ export default function FormbarHeader() {
                 )
             }
             <Flex align="center" justify="center" gap={10}>
-                <Popover placement="bottomRight" trigger='click' content={
-                    <>
-                        <Select defaultValue="Pages" style={{ width: 360 }} variant='borderless' onChange={(value) => navigate(value.replaceAll('*',''))} size='small' showSearch={{
-                        optionFilterProp: 'label',
-                        filterSort: (optionA, optionB) =>
-                            (String(optionA?.label) ?? '').toLowerCase().localeCompare((String(optionB?.label) ?? '').toLowerCase()),
-                        }}>
-                            {
-                                sortedPages.map((page, index) => (
-                                    <Select.Option key={index} value={page.routePath}>{page.pageName} - {page.routePath}</Select.Option>
-                                ))
-                            }
-                        </Select>
-                    </>
-                } arrow={{pointAtCenter: true}} color="red">
-                    <Button type='default' variant='solid' color='red' size='large' style={styles.headerButton}>
-                        <IonIcon icon={IonIcons.layers} size='large' />
-                    </Button>
-                </Popover>
+                {
+                    userData && userData.activeClass && userData.classPermissions && userData.classPermissions < 4 ? (
+                        <Tooltip placement="bottomRight" title={"Back to Class"} arrow={{pointAtCenter: true}} color="red">
+                            <Button type='primary' variant='solid' color='red' size='large' style={styles.headerButton} onClick={() => navigate(`/student`)}>
+                                <IonIcon icon={IonIcons.pieChart} size='large' />
+                            </Button>
+                        </Tooltip>
+                    ) : userData && userData.activeClass && userData.classPermissions && userData.classPermissions >= 4 ? (
+                        <Tooltip placement="bottomRight" title={"Teacher Panel"} arrow={{pointAtCenter: true}} color="pink">
+                            <Button type='primary' variant='solid' color='pink' size='large' style={styles.headerButton} onClick={() => navigate('/controlpanel')}>
+                                <IonIcon icon={IonIcons.pieChart} size='large' />
+                            </Button>
+                        </Tooltip>
+                    ) : null
+                }
+                
+                {
+                    userData && userData.permissions && userData.permissions >= 4 && (
+                        <Tooltip placement="bottomRight" title={"Manager Panel"} arrow={{pointAtCenter: true}} color="cyan">
+                            <Button type='primary' variant='solid' color='cyan' size='large' style={styles.headerButton} onClick={() => navigate('/manager')}>
+                                <IonIcon icon={IonIcons.briefcase} size='large' />
+                            </Button>
+                        </Tooltip>
+                    )
+                }
 
-                <Tooltip placement="bottomRight" title={isDark ? "Light Mode" : "Dark Mode"} arrow={{pointAtCenter: true}} color="blue">
-                    <Button type='primary' color='blue' onClick={toggleTheme} size='large' style={styles.headerButton}>
+                <Tooltip placement="bottomRight" title={"Classes"} arrow={{pointAtCenter: true}} color="blue">
+                    <Button type='primary' variant='solid' color='blue' size='large' style={styles.headerButton} onClick={() => navigate('/classes')}>
+                        <IonIcon icon={IonIcons.easel} size='large' />
+                    </Button>
+                </Tooltip>
+
+                <div style={{ borderRight: `2px solid ${isDark ? '#fff3' : '#0003'}`, borderRadius:'999px', height:'30px' }}/>
+
+                <Tooltip placement="bottomRight" title={isDark ? "Light Mode" : "Dark Mode"} arrow={{pointAtCenter: true}} color={isDark ? '#aac' : '#222'}
+                >
+                    <Button variant='solid' onClick={toggleTheme} size='large' style={{...styles.headerButton, backgroundColor: isDark ? '#aac' : '#222', color: isDark ? '#222' : '#ddd'}}>
                         <IonIcon icon={isDark ? IonIcons.sunny : IonIcons.moon} size='large' />
                     </Button>
                 </Tooltip>
 
-                <Tooltip placement="bottomRight" title="Profile" arrow={{pointAtCenter: true}} color='blue'>
-                    <Button type='primary' color='blue' size='large' style={styles.headerButton} onClick={() => navigate('/profile')}>
+                <Tooltip placement="bottomRight" title="Profile" arrow={{pointAtCenter: true}} color='purple'>
+                    <Button type='primary' variant='solid' color='purple' size='large' style={styles.headerButton} onClick={() => navigate('/profile')}>
                         <IonIcon icon={IonIcons.person} size='large' />
                     </Button>
                 </Tooltip>
 
-                <Tooltip placement="bottomRight" title="Log Out" arrow={{pointAtCenter: true}} color='blue'>
+                <Tooltip placement="bottomRight" title="Log Out" arrow={{pointAtCenter: true}} color='magenta'>
                     <Popconfirm
                         placement='bottomRight'
                         title={"Wait! Are you sure you would like to log out?"}
@@ -99,7 +115,7 @@ export default function FormbarHeader() {
                         onConfirm={() => {logoutHandler()}}
                     >
                         
-                            <Button type='primary' color='blue' size='large' style={styles.headerButton}>
+                            <Button type='primary' variant='solid' color='magenta' size='large' style={styles.headerButton}>
                                 <IonIcon icon={IonIcons.logOut} size='large' />
                             </Button>
                     </Popconfirm>
@@ -142,6 +158,12 @@ const styles = {
     },
 
     headerButton: {
+        border: 'none',
         padding: '0 20px',
+        boxShadow: '0 2px 0px rgba(0,0,0,0.2)',
+    },
+
+    headerButtonHover: {
+        filter: 'brightness(1.1)',
     }
 };

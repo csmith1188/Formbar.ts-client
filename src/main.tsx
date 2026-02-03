@@ -15,6 +15,8 @@ import pages from "./pages";
 import type { ClassData, CurrentUserData, UserData } from "./types";
 import Log from "./debugLogger";
 
+export const isDev: boolean = !import.meta.env.PROD;
+
 type ThemeContextType = {
 	isDark: boolean;
 	toggleTheme: () => void;
@@ -163,7 +165,6 @@ const AppContent = () => {
 			.then(res => {
 				if (res.ok) {
 					Log({ message: 'Ping successful.', level: 'info' });
-					setIsConnected(true);
 					setHttpErrorCount(0);
 				} else {
 					console.error('Ping failed with status:', res.status);
@@ -212,6 +213,7 @@ const AppContent = () => {
 					navigate('/');
 				}
 				setUserData(data);
+				setIsConnected(true);
 			})
 			.catch(err => {
 				console.error('Error fetching user data:', err);

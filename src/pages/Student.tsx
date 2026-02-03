@@ -100,9 +100,9 @@ export default function Student() {
                 <>
                     <Flex 
                         style={!isMobileView ? {width:'100%', height:'100%'} : {width:'100%', height:'100%'}}
-                        justify="space-around"
+                        justify={classData?.poll.status ? "space-around" : "center"}
                         align="center"
-                        vertical={isMobileView}
+                        vertical={isMobileView || !classData?.poll.status}
                         >
 
                         {

@@ -1,4 +1,3 @@
-import TestingPage from "./pages/TestingPage.tsx";
 import LoginPage from "./pages/Login.tsx"
 import ControlPanel from "./pages/ControlPanel.tsx"
 import Profile from "./pages/Profile.tsx"
@@ -23,11 +22,6 @@ type Page = {
 }
 
 const pages: Page[] = [
-    {
-        pageName: "Testing",
-        routePath: '/testing',
-        page: TestingPage,
-    },
     {
         pageName: "Login",
         routePath: '/login',
@@ -71,7 +65,7 @@ const pages: Page[] = [
     },
     {
         pageName: "Manager Panel",
-        routePath: '/managerpanel',
+        routePath: '/manager',
         page: ManagerPanel,
     },
     {
