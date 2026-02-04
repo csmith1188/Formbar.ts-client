@@ -4,6 +4,8 @@ import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useUserData } from "../main";
+import { useEffect } from "react";
+import { accessToken, formbarUrl } from "../socket";
 
 const testPools = [
     {
@@ -51,6 +53,25 @@ const testPools = [
 export default function PogPools() {
 
     const { userData } = useUserData();
+
+    useEffect(() => {
+        if(!userData) return;
+
+        fetch(`${formbarUrl}/api/v1/user/pools`, {
+            headers: {
+                'Authorization': accessToken,
+                'Content-Type': 'application/json',
+            },
+            method: 'GET',
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Fetched pools:', data);
+        })
+        .catch(err => {
+            console.error('Error fetching pools:', err);
+        })
+    }, [userData]);
 
     return (
         <>

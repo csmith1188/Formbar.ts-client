@@ -23,6 +23,11 @@ type Page = {
 
 const pages: Page[] = [
     {
+        pageName: "404",
+        routePath: '*',
+        page: () => { return <h1>404</h1> },
+    },
+    {
         pageName: "Login",
         routePath: '/login',
         page: LoginPage,

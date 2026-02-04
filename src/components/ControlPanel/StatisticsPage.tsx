@@ -106,7 +106,7 @@ export default function Statistics() {
                     </Flex>
                     
                     <Flex vertical gap={10} style={categoryStyle} justify="center" align="center">
-                        <Title level={3} style={{textAlign:'center'}}>Current Poll</Title>
+                        <Title level={3} style={{textAlign:'center'}}>Users</Title>
                         <div style={gridStyle}>
                             <Card variant="borderless">
                                 <Statistic
@@ -125,8 +125,8 @@ export default function Statistics() {
                             
                             <Card variant="borderless">
                                 <Statistic
-                                title="N/A"
-                                value={"N/A"}
+                                title="Total Students"
+                                value={students.filter((s: any) => s.id !== classData?.owner).length}
                                 />
                             </Card>
                         

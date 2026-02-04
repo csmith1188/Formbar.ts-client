@@ -4,12 +4,16 @@ import FormbarHeader from "../components/FormbarHeader";
 import { useUserData } from "../main";
 import type { CardStylesType } from "antd/es/card/Card";
 import { useMobileDetect } from "../main";
-import { accessToken, formbarUrl } from "../socket";
+import { accessToken, formbarUrl, socket } from "../socket";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function ClassesPage() {
+    const navigate = useNavigate();
     const { userData } = useUserData();
     const isMobileView = useMobileDetect();
+
+    const [joinClassCode, setJoinClassCode] = useState<string>("");
 
     const [joinedClasses, setJoinedClasses] = useState<Array<{ id: number; name: string }>>([]);
     const [ownedClasses, setOwnedClasses] = useState<Array<{ id: number; name: string }>>([]);
@@ -63,6 +67,7 @@ export default function ClassesPage() {
             console.error('No class selected');
             return;
         }
+        console.log(selectedClass)
         fetch(`${formbarUrl}/api/v1/class/${selectedClass}/join`, {
             method: 'POST',
             headers: {
@@ -73,6 +78,7 @@ export default function ClassesPage() {
         .then(data => {
             console.log('Entered class:', data);
             // Handle successful class entry (e.g., navigate to class page)
+            if(data.success) navigate('/student');
         })
         .catch(err => {
             console.error('Error entering class:', err);
@@ -99,6 +105,29 @@ export default function ClassesPage() {
         })
         .catch(err => {
             console.error('Error creating class:', err);
+        });
+    }
+
+    function joinClass() {
+        if (joinClassCode.trim() === "") {
+            console.error('Class code cannot be empty');
+            return;
+        }
+        fetch(`${formbarUrl}/api/v1/room/${joinClassCode}/join`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Joined class with code:', data);
+            // Handle successful class join (e.g., navigate to class page)
+            // if(data.success) navigate('/student');
+        })
+        .catch(err => {
+            console.error('Error joining class with code:', err);
         });
     }
 
@@ -136,7 +165,6 @@ export default function ClassesPage() {
                                                         <Select.Option key={cls.id} value={cls.id}>{cls.name}</Select.Option>
                                                     ))
                                                 }
-                                                <Select.Option value={3543}>--------------------</Select.Option>
 
                                             </Select.OptGroup>
                                         )
@@ -156,8 +184,8 @@ export default function ClassesPage() {
                     </Card>
                     <Card title="Join a Class" style={cardStyle} styles={cardStyles} loading={!(userData)}>
                         <Flex vertical gap={20} align="center" justify="center" style={{height:'100%'}}>
-                            <Input style={{width:'100%'}} placeholder="Class Code" />
-                            <Button type="primary" style={{ width:'100%'}}>Join{isMobileView ? "" : " Class"}</Button>
+                            <Input style={{width:'100%'}} placeholder="Class Code" value={joinClassCode} onChange={(e) => setJoinClassCode(e.target.value)} />
+                            <Button type="primary" style={{ width:'100%'}} onClick={joinClass}>Join{isMobileView ? "" : " Class"}</Button>
                         </Flex>
                     </Card>
                 </Flex>

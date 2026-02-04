@@ -1,7 +1,7 @@
 import { StrictMode, createContext, useState, useEffect, useContext } from "react";
 import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
@@ -145,10 +145,40 @@ const PageWrapper = ({ pageName, children }: { pageName: string; children: React
 
 const AppContent = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [isConnected, setIsConnected] = useState(socket?.connected || false);
 	const [socketErrorCount, setSocketErrorCount] = useState(0);
 	const [httpErrorCount, setHttpErrorCount] = useState(0);
 	const { setUserData } = useUserData();
+
+	const fetchUserData = () => {
+		if (!accessToken) return;
+		
+		fetch(`${formbarUrl}/api/v1/user/me`, {
+			method: 'GET',
+			headers: {
+				'Authorization': `${accessToken}`,
+			}
+		})
+		.then(res => res.json())
+		.then(data => {
+			Log({ message: 'User data fetched successfully.', data, level: 'info' });
+			setUserData(data);
+		})
+		.catch(err => {
+			console.error('Error fetching user data:', err);
+			setHttpErrorCount(prev => prev + 1);
+		});
+	};
+
+	/*
+	* Re-fetch user data on every page navigation
+	*/
+	useEffect(() => {
+		if (socket?.connected && location.pathname !== '/login') {
+			fetchUserData();
+		}
+	}, [location.pathname]);
 
 	/*
 	* This effect handles initial HTTP connection and pinging the server
@@ -194,31 +224,18 @@ const AppContent = () => {
 			socketLogin(localStorage.getItem('refreshToken')!);
 		} else if(!localStorage.getItem('refreshToken')) {
 			navigate('/login')
+			setIsConnected(true);
 		}
 		
 		function onConnect() {
 			setSocketErrorCount(0); // Reset on successful connection
 			Log({ message: 'Connected to server.', level: 'info' });
 
-			fetch(`${formbarUrl}/api/v1/user/me`, {
-				method: 'GET',
-				headers: {
-					'Authorization': `${accessToken}`,
-				}
-			})
-			.then(res => res.json())
-			.then(data => {
-				Log({ message: 'User data fetched successfully.', data, level: 'info' });
-				if (window.location.pathname === '/login') {
-					navigate('/');
-				}
-				setUserData(data);
-				setIsConnected(true);
-			})
-			.catch(err => {
-				console.error('Error fetching user data:', err);
-				setHttpErrorCount(prev => prev + 1);
-			})
+			fetchUserData();
+			if (window.location.pathname === '/login') {
+				navigate('/');
+			}
+			setIsConnected(true);
 		}
 
 		function onSetClass(classID: number) {

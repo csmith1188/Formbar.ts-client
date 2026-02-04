@@ -9,17 +9,6 @@ import * as IonIcons from "ionicons/icons";
 import { Activity, useEffect, useState } from "react";
 import { accessToken, formbarUrl } from "../socket";
 
-const bannedUsers: UserData[] = [
-    { displayName: 'George', email: 'george@example.com', id: 7, permissions: 1, verified: 0 },
-    { displayName: 'Hannah', email: 'hannah@example.com', id: 8, permissions: 2, verified: 1 },
-    { displayName: 'Ivan', email: 'ivan@example.com', id: 9, permissions: 3, verified: 0 },
-    { displayName: 'Julia', email: 'julia@example.com', id: 10, permissions: 2, verified: 1 },
-    { displayName: 'Kevin', email: 'kevin@example.com', id: 11, permissions: 1, verified: 0 },
-    { displayName: 'Laura', email: 'laura@example.com', id: 12, permissions: 4, verified: 1 },
-    { displayName: 'Kevin', email: 'kevin@example.com', id: 11, permissions: 1, verified: 0 },
-    { displayName: 'Laura', email: 'laura@example.com', id: 12, permissions: 4, verified: 1 },
-]
-
 export default function ManagerPanel() {
     const [listCategory, setListCategory] = useState<"Users" | "IP Addresses" | "Banned Users">("Users");
     const [users, setUsers] = useState<Record<string, UserData>>({});
@@ -45,6 +34,22 @@ export default function ManagerPanel() {
             console.error('Error fetching manager panel data:', err);
         });
     }, [accessToken])
+
+    function handleVerify(userId: number) {
+        fetch(`${formbarUrl}/api/v1/user/${userId}/verify`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `${accessToken}`,
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('User verified:', data);
+        })
+        .catch(err => {
+            console.error('Error verifying user:', err);
+        });
+    }
 
     return (
         <>
@@ -118,7 +123,7 @@ export default function ManagerPanel() {
                                         {
                                             user.verified === 0 ? (
                                                 <Tooltip title={"Verify User"} color="green">
-                                                    <Button variant="solid" color='green' size='large' style={{padding: '0 20px',}}>
+                                                    <Button variant="solid" color='green' size='large' style={{padding: '0 20px',}} onClick={() => handleVerify(user.id)}>
                                                         <IonIcon icon={IonIcons.checkmarkCircle} size='large' />
                                                     </Button>
                                                 </Tooltip>
@@ -153,41 +158,42 @@ export default function ManagerPanel() {
             <Activity mode={listCategory === "Banned Users" ? "visible" : "hidden"}>
                 <Row gutter={[8, 8]} style={{ margin: '10px' }}>
                 {
-                    bannedUsers.map((user) => (
-                        <Col span={3} key={user.id}>
-                            <Card 
-                                title={user.displayName}
+                    <p>endpoint needed</p>
+                    // bannedUsers.map((user) => (
+                    //     <Col span={3} key={user.id}>
+                    //         <Card 
+                    //             title={user.displayName}
 
-                                styles={
-                                    {
-                                        title: {
-                                            textAlign: 'center',
-                                        },
-                                        body: {
-                                            textAlign: 'center',
-                                        },
-                                        root: {
-                                            height: '100%',
-                                        }
-                                    }
-                                }
+                    //             styles={
+                    //                 {
+                    //                     title: {
+                    //                         textAlign: 'center',
+                    //                     },
+                    //                     body: {
+                    //                         textAlign: 'center',
+                    //                     },
+                    //                     root: {
+                    //                         height: '100%',
+                    //                     }
+                    //                 }
+                    //             }
                                 
                                 
 
-                                >
-                                <Flex vertical style={{marginBottom:'10px'}}>
-                                    <Text type='secondary' style={{fontSize:'16px'}}>{user.email}</Text>
-                                </Flex>
-                                <Flex gap={10} justify="space-evenly" style={{marginTop:'10px'}} wrap>
-                                    <Tooltip title={"Unban User"} color="unban">
-                                        <Button variant="solid" color='green' size='large' style={{padding: '0 20px',}}>
-                                            <IonIcon icon={IonIcons.checkmarkCircle} size='large' />
-                                        </Button>
-                                    </Tooltip>
-                                </Flex>
-                            </Card>
-                        </Col>
-                    ))
+                    //             >
+                    //             <Flex vertical style={{marginBottom:'10px'}}>
+                    //                 <Text type='secondary' style={{fontSize:'16px'}}>{user.email}</Text>
+                    //             </Flex>
+                    //             <Flex gap={10} justify="space-evenly" style={{marginTop:'10px'}} wrap>
+                    //                 <Tooltip title={"Unban User"} color="unban">
+                    //                     <Button variant="solid" color='green' size='large' style={{padding: '0 20px',}}>
+                    //                         <IonIcon icon={IonIcons.checkmarkCircle} size='large' />
+                    //                     </Button>
+                    //                 </Tooltip>
+                    //             </Flex>
+                    //         </Card>
+                    //     </Col>
+                    // ))
                 }
                 </Row>
             </Activity>

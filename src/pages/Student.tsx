@@ -3,14 +3,17 @@ import { formbarUrl, socket } from "../socket";
 import FormbarHeader from "../components/FormbarHeader";
 import FullCircularPoll from "../components/CircularPoll";
 import { useEffect, useState, useRef } from "react";
-import { useMobileDetect } from "../main";
+import { useMobileDetect, useUserData } from "../main";
 import { Typography, Flex, Input } from "antd";
 import PollButton from "../components/PollButton";
 import Log from "../debugLogger";
 import StudentMenu from "../components/StudentMenu";
+import { useNavigate } from "react-router-dom";
 const { Title, Text } = Typography;
 
 export default function Student() {
+    const navigate = useNavigate();
+    const { userData: initialUserData } = useUserData();
     const [userData, setUserData] = useState<any>(null);
     const [classData, setClassData] = useState<any>(null);
     const [answerState, setAnswerState] = useState<any>([]);
@@ -30,6 +33,7 @@ export default function Student() {
         let resTextResponse = classData?.poll.allowTextResponses ? textResponse.trim() : '';
         socket.emit('pollResp', response, resTextResponse);
         Log({ message: `Responded with: ${response}`, level: 'info' });
+        socket.emit('classUpdate', ''); // Request updated class data after responding
     }
 
     useEffect(() => {
@@ -47,6 +51,13 @@ export default function Student() {
             window.removeEventListener('resize', handleResize);
         }
     }, [isMobileView])
+
+    useEffect(() => {
+        if(!initialUserData) return;
+
+        // if(initialUserData.activeClass === null) navigate('/classes');
+
+    }, [initialUserData]);
 
     useEffect(() => {
         if (!socket) return; // Don't set up listener if socket isn't ready

@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Input, Segmented, Typography } from "antd";
+import { Button, Card, Flex, Input, Segmented, Typography, notification } from "antd";
 import FormbarHeader from "../components/FormbarHeader"
 import { useState } from "react";
 const { Title } = Typography;
@@ -15,13 +15,30 @@ export default function LoginPage() {
 
     const [mode, setMode] = useState('Login');
     const isMobileView = useMobileDetect();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+    // Login and Sign Up modes only
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
+
+    // Guest and Sign Up modes only
+    const [displayName, setDisplayName] = useState('');
+
+    // Sign Up mode only
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    async function handleSubmit() {
+    const [api, contextHolder] = notification.useNotification();
+
+    const showErrorNotification = (message: string) => {
+        api['error']({
+            title: 'Error',
+            description: message,
+            placement: 'bottom',
+        })
+    };
+
+    async function handleSubmit(e?: React.FormEvent) {
+        e?.preventDefault();
         // Handle form submission based on mode
         switch (mode) {
             case 'Login':
@@ -38,6 +55,8 @@ export default function LoginPage() {
                     body: JSON.stringify({ email, password })
                 });
                 if (!loginResponse.ok) {
+                    const errorData = await loginResponse.json();
+                    showErrorNotification(errorData.error.message || 'Login failed');
                     throw new Error('Login failed');
                 }
                 const loginData = await loginResponse.json();
@@ -45,7 +64,7 @@ export default function LoginPage() {
                 console.log('Login successful:', loginData);
 
                 // 2. Make authenticated requests
-                const data = await fetch(`${formbarUrl}/api/v1/user/me`, {
+                await fetch(`${formbarUrl}/api/v1/user/me`, {
                     headers: { 'Authorization': accessToken }
                 })
                 .then(res => res.json())
@@ -61,12 +80,44 @@ export default function LoginPage() {
                 });
                 break;
             case 'Sign Up':
-                console.log('Signing up with:', { username, email, password, confirmPassword });
-                // Add sign-up logic here
+                console.log('Signing up with:', { displayName, email, password, confirmPassword });
+
+                if(displayName.length < 4) return console.error('displayName must be at least 4 characters long');
+                if(!emailRegex.test(email)) return console.error('Invalid email format');
+                if(password !== confirmPassword) return console.error('Passwords do not match');
+
+
+                const signupResponse = await fetch(`${formbarUrl}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, displayName })
+                });
+                if (!signupResponse.ok) {
+                    const errorData = await signupResponse.json();
+                    showErrorNotification(errorData.error.message || 'Signup failed');
+                    throw new Error('Signup failed', errorData.error.message);
+                }
+                const signUpData = await signupResponse.json();
+                console.log('Signup successful:', signUpData);
+
+                await fetch(`${formbarUrl}/api/v1/user/me`, {
+                    headers: { 'Authorization': signUpData.accessToken }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log('User data:', data);
+
+                    socketLogin(signUpData.refreshToken);
+
+                    return data;
+                })
+                .catch(err => {
+                    console.error('Error fetching user data:', err);
+                });
                 break;
 
             case 'Guest':
-                console.log('Continuing as guest with username:', { username });
+                console.log('Continuing as guest with displayName:', { displayName });
                 // Add guest logic here
                 break;
         }
@@ -81,6 +132,7 @@ export default function LoginPage() {
 
     return (
         <>
+            {contextHolder}
             <FormbarHeader />
             <Flex vertical justify="center" align="center" style={{ height: '100%', margin:'auto' }}>
                 <Flex
@@ -126,7 +178,7 @@ export default function LoginPage() {
                             [
                                 'Login',
                                 'Sign Up',
-                                'Guest'
+                                // 'Guest'
                             ]
                         } 
                         onChange={setMode}
@@ -134,35 +186,56 @@ export default function LoginPage() {
                     />
 
                     <Card title={mode}>
-                        {
-                            
-                            <>
-                                {
-                                    (mode === 'Guest' || mode === 'Sign Up') && (
-                                        <Input placeholder="Username" style={{ marginBottom: '10px' }} value={username} onChange={e => setUsername(e.target.value)} />
-                                    )
-                                }
+                        <form onSubmit={handleSubmit}>
+                            {
                                 
-                                {
-                                    mode !== 'Guest' && (
-                                        <>
-                                            <Input placeholder="Email" style={{ marginBottom: '10px' }} value={email} onChange={e => setEmail(e.target.value)} />
-                                            <Input.Password placeholder="Password" style={{ marginBottom: '10px' }} value={password} onChange={e => setPassword(e.target.value)} />
-                                        </>
-                                    )
-                                }
+                                <>
+                                    {
+                                        (mode === 'Guest' || mode === 'Sign Up') && (
+                                            <Input placeholder="Display Name" style={{ marginBottom: '10px', color: 
+                                                displayName.length > 3 ? 'white' : 'red'
+                                            }} value={displayName} onChange={e => setDisplayName(e.target.value)} />
+                                        )
+                                    }
+                                    
+                                    {
+                                        mode !== 'Guest' && (
+                                            <>
+                                                <Input placeholder="Email" style={{ marginBottom: '10px', color: 
+                                                    emailRegex.test(email) || email.length === 0 ? 'white' : 'red'
+                                                }} value={email} onChange={e => setEmail(e.target.value)} />
+                                                <Input.Password placeholder="Password" style={{ marginBottom: '10px', color: 
+                                                password.length >= 5 ? 'white' : 'red' }} value={password} onChange={e => setPassword(e.target.value)} />
+                                            </>
+                                        )
+                                    }
 
-                                {
-                                    mode === 'Sign Up' && (
-                                        <Input.Password placeholder="Confirm Password" style={{ marginBottom: '10px' }} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-                                    )
-                                }
-                            </>
-                        }
+                                    {
+                                        mode === 'Sign Up' && (
+                                            <Input.Password placeholder="Confirm Password" style={{ marginBottom: '10px' }} value={confirmPassword} styles={{
+                                                root: {
+                                                    color: password == confirmPassword && confirmPassword.length >= 5 ? 'white' : 'red'
+                                                }
+                                            }} onChange={
+                                                (e) => { 
+                                                    setConfirmPassword(e.target.value);
+                                                    
+                                                }
+                                            } />
+                                        )
+                                    }
+                                </>
+                            }
 
-                        <Button type="primary" style={{ marginTop: '10px', width: '100%' }} onClick={handleSubmit}>
-                            {mode === "Guest" ? "Continue as Guest" : mode}
-                        </Button>
+                            <Button htmlType="submit" type="primary" style={{ marginTop: '10px', width: '100%' }} disabled={
+                                mode === 'Login' ? !(email && password && emailRegex.test(email) && password.length >= 5) :
+                                mode === 'Sign Up' ? !(displayName && email && emailRegex.test(email) && password && confirmPassword && password === confirmPassword && displayName.length > 3 && password.length >= 5 && confirmPassword.length >= 5) :
+                                mode === 'Guest' ? !(displayName && displayName.length > 3) :
+                                true
+                            }>
+                                {mode === "Guest" ? "Continue as Guest" : mode}
+                            </Button>
+                        </form>
                     </Card>
                 </Flex>
 

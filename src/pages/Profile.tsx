@@ -113,7 +113,7 @@ export default function Profile() {
                                         Transactions
                                     </Button>
                                     Your Profile
-                                    <Button variant="solid" color="blue" onClick={() => navigate('/pools')} style={{ width:'130px'}}>
+                                    <Button variant="solid" color="blue" onClick={() => navigate('/pools')} style={{ width:'130px'}} disabled>
                                         Pog Pools
                                     </Button>
                                 </h2>

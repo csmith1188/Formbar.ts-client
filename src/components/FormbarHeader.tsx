@@ -7,7 +7,7 @@ import { useMobileDetect, useTheme, useUserData } from '../main';
 import { themeColors, version } from '../../themes/ThemeConfig';
 
 import pages from '../pages';
-import { socket } from '../socket';
+import { accessToken, formbarUrl, socket } from '../socket';
 
 export default function FormbarHeader() {
     const { isDark, toggleTheme } = useTheme();
@@ -36,10 +36,34 @@ export default function FormbarHeader() {
     );
 
     function logoutHandler() {
-        localStorage.removeItem('formbarUrl');
-        localStorage.removeItem('connectionAPI');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         socket?.disconnect();
         navigate('/login');
+    }
+
+    function leaveClass() {
+        if(!userData || !userData.activeClass) {
+            navigate('/classes');
+            return;
+        }
+        const confirmLeave = window.confirm("Are you sure you want to leave the current class?");
+        if (!confirmLeave) return;
+
+        fetch(`${formbarUrl}/api/v1/class/${userData?.activeClass}/leave`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `${accessToken}`,
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('Left class:', data);
+            navigate('/classes');
+        })
+        .catch(err => {
+            console.error('Error leaving class:', err);
+        });
     }
 
     return (
@@ -66,7 +90,7 @@ export default function FormbarHeader() {
                         </Tooltip>
                     ) : userData && userData.activeClass && userData.classPermissions && userData.classPermissions >= 4 ? (
                         <Tooltip placement="bottomRight" title={"Teacher Panel"} arrow={{pointAtCenter: true}} color="pink">
-                            <Button type='primary' variant='solid' color='pink' size='large' style={styles.headerButton} onClick={() => navigate('/controlpanel')}>
+                            <Button type='primary' variant='solid' color='pink' size='large' style={styles.headerButton} onClick={() => navigate('/panel')}>
                                 <IonIcon icon={IonIcons.pieChart} size='large' />
                             </Button>
                         </Tooltip>
@@ -84,7 +108,7 @@ export default function FormbarHeader() {
                 }
 
                 <Tooltip placement="bottomRight" title={"Classes"} arrow={{pointAtCenter: true}} color="blue">
-                    <Button type='primary' variant='solid' color='blue' size='large' style={styles.headerButton} onClick={() => navigate('/classes')}>
+                    <Button type='primary' variant='solid' color='blue' size='large' style={styles.headerButton} onClick={leaveClass}>
                         <IonIcon icon={IonIcons.easel} size='large' />
                     </Button>
                 </Tooltip>

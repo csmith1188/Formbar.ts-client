@@ -52,6 +52,8 @@ export function socketLogin(token: string) {
 	})
 	.then(res => {
 		if (!res.ok) {
+			localStorage.removeItem('refreshToken');
+			window.location.reload();
 			throw new Error('Failed to refresh token');
 		}
 		return res.json();

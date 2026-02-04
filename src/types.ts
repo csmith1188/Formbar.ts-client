@@ -28,6 +28,7 @@ export type ClassData = {
     id: number,
     className: string,
     isActive: boolean,
+    owner: number,
     timer: {
         startTime: number,
         timeLeft: number,
