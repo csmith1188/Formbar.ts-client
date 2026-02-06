@@ -1,4 +1,5 @@
 import FormbarHeader from "../components/FormbarHeader";
+import Log from "../debugLogger";
 import { Collapse, Card, Flex, Progress, Tooltip, Modal, InputNumber, Typography, Button } from "antd";
 const { Text, Link } = Typography;
 import { IonIcon } from "@ionic/react";
@@ -35,7 +36,7 @@ export default function Profile() {
         .then(res => res.json())
         .then(data => {
             if(data.error) {
-                console.error('Error fetching profile data:', data.error);
+                Log({ message: 'Error fetching profile data', data: data.error, level: 'error' });
                 setError(typeof data.error === 'string' ? data.error : data.error.message || 'Unknown error');
                 return;
             }
@@ -51,7 +52,7 @@ export default function Profile() {
             setError(null);
         })
         .catch(err => {
-            console.error('Error fetching profile data:', err);
+            Log({ message: 'Error fetching profile data', data: err, level: 'error' });
             setError('Error fetching profile data');
         });
     }, [userData, id, accessToken]);

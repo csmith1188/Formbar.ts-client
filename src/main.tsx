@@ -166,7 +166,7 @@ const AppContent = () => {
 			setUserData(data);
 		})
 		.catch(err => {
-			console.error('Error fetching user data:', err);
+			Log({ message: 'Error fetching user data', data: err, level: 'error' });
 			setHttpErrorCount(prev => prev + 1);
 		});
 	};
@@ -194,17 +194,17 @@ const AppContent = () => {
 			fetch(`${formbarUrl}/api/v1/certs`, { method: 'GET' })
 			.then(res => {
 				if (res.ok) {
-					Log({ message: 'Ping successful.', level: 'info' });
+					Log({ message: 'Ping successful.', data: res.status, level: 'info' });
 					setHttpErrorCount(0);
 				} else {
-					console.error('Ping failed with status:', res.status);
+					Log({ message: 'Ping failed with status', data: res.status, level: 'error' });
 					if (attempts < connectionTriesLimit) {
 						timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
 					}
 				}
 			})
 			.catch(err => {
-				console.error('Error during ping:', err);
+				Log({ message: 'Error during ping', data: err, level: 'error' });
 				if (attempts < connectionTriesLimit) {
 					timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
 				}
@@ -244,12 +244,12 @@ const AppContent = () => {
 		}
 
 		function connectError(err: any) {
-			console.error('Connection Error:', err);
+			Log({ message: 'Connection Error', data: err, level: 'error' });
 			setSocketErrorCount(prev => {
 				const newCount = prev + 1;
 
 				if (newCount >= connectionTriesLimit) {
-					console.error('Max socket connection attempts reached. Please check your network or contact support.');
+					Log({ message: 'Max socket connection attempts reached. Please check your network or contact support.', level: 'error' });
 					socket?.disconnect();
 				}
 				return newCount;
@@ -257,7 +257,7 @@ const AppContent = () => {
 		}
 
 		function onDisconnect(reason: string) {
-			console.warn('Disconnected from server. Reason:', reason);
+			Log({ message: 'Disconnected from server', data: { reason }, level: 'warn' });
 		}
 
 		// Register socket event handlers

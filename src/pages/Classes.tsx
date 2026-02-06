@@ -1,6 +1,7 @@
 import { Button, Card, Flex, Input, Select, Typography } from "antd";
 const { Title, Text } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
+import Log from "../debugLogger";
 import { useUserData } from "../main";
 import type { CardStylesType } from "antd/es/card/Card";
 import { useMobileDetect } from "../main";
@@ -10,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function ClassesPage() {
     const navigate = useNavigate();
-    const { userData } = useUserData();
+    const { userData, setUserData } = useUserData();
     const isMobileView = useMobileDetect();
 
     const [joinClassCode, setJoinClassCode] = useState<string>("");
@@ -38,11 +39,11 @@ export default function ClassesPage() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Classes data:', data);
+            Log({ message: 'Classes data', data });
             setJoinedClasses(data.joinedClasses);
         })
         .catch(err => {
-            console.error('Error fetching classes data:', err);
+            Log({ message: 'Error fetching classes data', data: err, level: 'error' });
         });
 
 
@@ -54,20 +55,20 @@ export default function ClassesPage() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Owned classes data:', data);
+            Log({ message: 'Owned classes data', data });
             setOwnedClasses(data);
         })
         .catch(err => {
-            console.error('Error fetching classes data:', err);
+            Log({ message: 'Error fetching owned classes data', data: err, level: 'error' });
         });
     }, [userData]);
 
     function enterClass() {
         if (selectedClass === null) {
-            console.error('No class selected');
+            Log({ message: 'No class selected', level: 'error' });
             return;
         }
-        console.log(selectedClass)
+        Log({ message: 'Selected class', data: { selectedClass } });
         fetch(`${formbarUrl}/api/v1/class/${selectedClass}/join`, {
             method: 'POST',
             headers: {
@@ -76,18 +77,37 @@ export default function ClassesPage() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Entered class:', data);
+            Log({ message: 'Entered class', data });
             // Handle successful class entry (e.g., navigate to class page)
-            if(data.success) navigate('/student');
+            if(data.success) {
+                fetch(`${formbarUrl}/api/v1/user/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `${accessToken}`,
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Log({ message: 'User data fetched successfully after joining class.', data, level: 'info' });
+                    // Update user data in context or state
+                    // For example, if you have a setUserData function from context:
+                    setUserData(data);
+                    if(data.classPermissions >= 4) navigate('/panel')
+                    else navigate('/student');
+                })
+                .catch(err => {
+                    Log({ message: 'Error fetching user data after joining class:', data: err, level: 'error' });
+                });
+            }
         })
         .catch(err => {
-            console.error('Error entering class:', err);
+            Log({ message: 'Error entering class', data: err, level: 'error' });
         });
     }
 
     function createClass() {
         if (createClassName.trim() === "") {
-            console.error('Class name cannot be empty');
+            Log({ message: 'Class name cannot be empty', level: 'error' });
             return;
         }
         fetch(`${formbarUrl}/api/v1/class/create`, {
@@ -100,17 +120,17 @@ export default function ClassesPage() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Created class:', data);
+            Log({ message: 'Created class', data });
             // Handle successful class creation (e.g., update ownedClasses state)
         })
         .catch(err => {
-            console.error('Error creating class:', err);
+            Log({ message: 'Error creating class', data: err, level: 'error' });
         });
     }
 
     function joinClass() {
         if (joinClassCode.trim() === "") {
-            console.error('Class code cannot be empty');
+            Log({ message: 'Class code cannot be empty', level: 'error' });
             return;
         }
         fetch(`${formbarUrl}/api/v1/room/${joinClassCode}/join`, {
@@ -122,12 +142,15 @@ export default function ClassesPage() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Joined class with code:', data);
+            Log({ message: 'Joined class with code', data });
             // Handle successful class join (e.g., navigate to class page)
-            // if(data.success) navigate('/student');
+            if(data.success) {
+                
+                    
+            }
         })
         .catch(err => {
-            console.error('Error joining class with code:', err);
+            Log({ message: 'Error joining class with code', data: err, level: 'error' });
         });
     }
 

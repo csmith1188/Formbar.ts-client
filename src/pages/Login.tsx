@@ -1,5 +1,6 @@
 import { Button, Card, Flex, Input, Segmented, Typography, notification } from "antd";
-import FormbarHeader from "../components/FormbarHeader"
+import FormbarHeader from "../components/FormbarHeader";
+import Log from "../debugLogger"
 import { useState } from "react";
 const { Title } = Typography;
 import { useEffect } from "react";
@@ -9,7 +10,10 @@ import { useMobileDetect, useUserData } from '../main';
 import { formbarUrl } from "../socket";
 import { useNavigate } from "react-router-dom";
 
+import { useTheme } from "../main";
+
 export default function LoginPage() {
+    const { isDark } = useTheme();
     const navigate = useNavigate();
     const { userData } = useUserData();
 
@@ -42,7 +46,7 @@ export default function LoginPage() {
         // Handle form submission based on mode
         switch (mode) {
             case 'Login':
-                console.log('Logging in with:', { email, password });
+                Log({ message: 'Logging in', data: { email, password } });
                 
                 const formData = new URLSearchParams();
                 formData.append('email', email);
@@ -61,7 +65,7 @@ export default function LoginPage() {
                 }
                 const loginData = await loginResponse.json();
                 let { accessToken, refreshToken } = loginData;
-                console.log('Login successful:', loginData);
+                Log({ message: 'Login successful', data: loginData });
 
                 // 2. Make authenticated requests
                 await fetch(`${formbarUrl}/api/v1/user/me`, {
@@ -69,22 +73,22 @@ export default function LoginPage() {
                 })
                 .then(res => res.json())
                 .then(data => {
-                    console.log('User data:', data);
+                    Log({ message: 'User data', data });
 
                     socketLogin(refreshToken);
 
                     return data;
                 })
                 .catch(err => {
-                    console.error('Error fetching user data:', err);
+                    Log({ message: 'Error fetching user data', data: err, level: 'error' });
                 });
                 break;
             case 'Sign Up':
-                console.log('Signing up with:', { displayName, email, password, confirmPassword });
+                Log({ message: 'Signing up', data: { displayName, email, password, confirmPassword } });
 
-                if(displayName.length < 4) return console.error('displayName must be at least 4 characters long');
-                if(!emailRegex.test(email)) return console.error('Invalid email format');
-                if(password !== confirmPassword) return console.error('Passwords do not match');
+                if(displayName.length < 4) return Log({ message: 'displayName must be at least 4 characters long', level: 'error' });
+                if(!emailRegex.test(email)) return Log({ message: 'Invalid email format', level: 'error' });
+                if(password !== confirmPassword) return Log({ message: 'Passwords do not match', level: 'error' });
 
 
                 const signupResponse = await fetch(`${formbarUrl}/api/v1/auth/register`, {
@@ -98,26 +102,26 @@ export default function LoginPage() {
                     throw new Error('Signup failed', errorData.error.message);
                 }
                 const signUpData = await signupResponse.json();
-                console.log('Signup successful:', signUpData);
+                Log({ message: 'Signup successful', data: signUpData });
 
                 await fetch(`${formbarUrl}/api/v1/user/me`, {
                     headers: { 'Authorization': signUpData.accessToken }
                 })
                 .then(res => res.json())
                 .then(data => {
-                    console.log('User data:', data);
+                    Log({ message: 'User data', data });
 
                     socketLogin(signUpData.refreshToken);
 
                     return data;
                 })
                 .catch(err => {
-                    console.error('Error fetching user data:', err);
+                    Log({ message: 'Error fetching user data', data: err, level: 'error' });
                 });
                 break;
 
             case 'Guest':
-                console.log('Continuing as guest with displayName:', { displayName });
+                Log({ message: 'Continuing as guest', data: { displayName } });
                 // Add guest logic here
                 break;
         }
@@ -193,7 +197,7 @@ export default function LoginPage() {
                                     {
                                         (mode === 'Guest' || mode === 'Sign Up') && (
                                             <Input placeholder="Display Name" style={{ marginBottom: '10px', color: 
-                                                displayName.length > 3 ? 'white' : 'red'
+                                                displayName.length > 3 ? isDark ? 'white' : 'black' : 'red'
                                             }} value={displayName} onChange={e => setDisplayName(e.target.value)} />
                                         )
                                     }
@@ -202,10 +206,10 @@ export default function LoginPage() {
                                         mode !== 'Guest' && (
                                             <>
                                                 <Input placeholder="Email" style={{ marginBottom: '10px', color: 
-                                                    emailRegex.test(email) || email.length === 0 ? 'white' : 'red'
+                                                    emailRegex.test(email) || email.length === 0 ? isDark ? 'white' : 'black' : 'red'
                                                 }} value={email} onChange={e => setEmail(e.target.value)} />
                                                 <Input.Password placeholder="Password" style={{ marginBottom: '10px', color: 
-                                                password.length >= 5 ? 'white' : 'red' }} value={password} onChange={e => setPassword(e.target.value)} />
+                                                password.length >= 5 ? isDark ? 'white' : 'black' : 'red' }} value={password} onChange={e => setPassword(e.target.value)} />
                                             </>
                                         )
                                     }
@@ -214,7 +218,7 @@ export default function LoginPage() {
                                         mode === 'Sign Up' && (
                                             <Input.Password placeholder="Confirm Password" style={{ marginBottom: '10px' }} value={confirmPassword} styles={{
                                                 root: {
-                                                    color: password == confirmPassword && confirmPassword.length >= 5 ? 'white' : 'red'
+                                                    color: password == confirmPassword && confirmPassword.length >= 5 ? isDark ? 'white' : 'black' : 'red'
                                                 }
                                             }} onChange={
                                                 (e) => { 

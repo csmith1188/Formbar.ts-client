@@ -198,6 +198,10 @@ export default function ControlPanel() {
                             End Class
                         </Button>
                     </Activity>
+
+                    <Button variant="outlined" type="default" onClick={() => socket.emit('classUpdate', '')}>
+                        Update
+                    </Button>
                 </Flex>
                 
                 <div style={{ padding: '20px', height: '100%', width: 'calc(100% - 250px)'}}>

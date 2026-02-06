@@ -1,5 +1,6 @@
 import FormbarHeader from "../components/FormbarHeader";
 import { Flex, Typography } from "antd";
+import Log from "../debugLogger";
 const { Title, Text } = Typography;
 
 import TransactionItem from "../components/TransactionItem";
@@ -43,9 +44,9 @@ export default function Transactions() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Transactions data:', data);
+            Log({ message: 'Transactions data', data });
             if(data.error) {
-                console.error('Error fetching transactions:', data.error);
+                Log({ message: 'Error fetching transactions', data: data.error, level: 'error' });
                 setTransactions([]);
                 setError(typeof data.error === 'string' ? data.error : data.error.message || 'Unknown error');
                 return;
@@ -55,7 +56,7 @@ export default function Transactions() {
             setError(null);
         })
         .catch(err => {
-            console.error('Error fetching transactions data:', err);
+            Log({ message: 'Error fetching transactions data', data: err, level: 'error' });
         });
 
     }, [userData]);

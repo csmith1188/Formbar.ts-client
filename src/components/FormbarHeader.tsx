@@ -2,6 +2,7 @@ import { Button, Flex, Tooltip, Popconfirm } from 'antd'
 import { IonIcon } from '@ionic/react';
 import * as IonIcons from 'ionicons/icons';
 import { useNavigate } from 'react-router-dom';
+import Log from '../debugLogger';
 
 import { useMobileDetect, useTheme, useUserData } from '../main';
 import { themeColors, version } from '../../themes/ThemeConfig';
@@ -58,11 +59,11 @@ export default function FormbarHeader() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Left class:', data);
+            Log({ message: 'Left class', data });
             navigate('/classes');
         })
         .catch(err => {
-            console.error('Error leaving class:', err);
+            Log({ message: 'Error leaving class', data: err, level: 'error' });
         });
     }
 

@@ -1,4 +1,4 @@
-import { formbarUrl, socket } from "../socket";
+import { accessToken, formbarUrl, socket } from "../socket";
 
 import FormbarHeader from "../components/FormbarHeader";
 import FullCircularPoll from "../components/CircularPoll";
@@ -63,8 +63,8 @@ export default function Student() {
         if (!socket) return; // Don't set up listener if socket isn't ready
 
         function classUpdate(classData: any) {
-            console.log(classData.poll)
-            console.log(lastPollDataRef.current)
+            Log({ message: 'Poll data', data: classData.poll });
+            Log({ message: 'Last poll data ref', data: lastPollDataRef.current });
             if(classData.poll.startTime !== lastPollDataRef.current?.startTime) {
                 setTextResponse("");
             }
@@ -74,20 +74,20 @@ export default function Student() {
             setLastPollData(classData.poll);
             Log({ message: "Class Update received.", data: classData, level: 'info' });
 
-            // fetch(`${formbarUrl}/api/me`, {
-            //     method: 'GET',
-            //     headers: {
-            //         "api": connectionAPI,
-            //     }
-            // })
-            // .then(res => res.json())
-            // .then(data => {
-            //     Log({ message: 'User data fetched successfully.', data, level: 'info' });
-            //     setUserData(data);
-            // })
-            // .catch(err => {
-            //     console.error('Error fetching user data:', err);
-            // })
+            fetch(`${formbarUrl}/api/v1/user/me`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `${accessToken}`,
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                Log({ message: 'User data fetched successfully.', data, level: 'info' });
+                setUserData(data);
+            })
+            .catch(err => {
+                Log({ message: 'Error fetching user data:', data: err, level: 'error' });
+            })
 
             setAnswerState(classData.poll.responses);
         }

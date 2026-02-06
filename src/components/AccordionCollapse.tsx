@@ -258,7 +258,7 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
                         content: 
                         <Flex justify='center' align='center' style={{width:'100%', height: '100%'}} gap={10}>
                             <InputNumber placeholder='Digipogs' style={{width: '120px'}} onInput={(e)=>{if (e !== null) setAwardDigipogs(parseInt(e.toString()))}}/>
-                            <Button variant='solid' color='blue' style={{width: '120px'}} onClick={() => {console.log(awardDigipogs);socket.emit('awardDigipogs', {from: userData?.id, to: studentData.id, amount: awardDigipogs})}}>Award</Button>
+                            <Button variant='solid' color='blue' style={{width: '120px'}} onClick={() => {socket.emit('awardDigipogs', {from: userData?.id, to: studentData.id, amount: awardDigipogs})}}>Award</Button>
                         </Flex>,
                         enabled: true
                     },

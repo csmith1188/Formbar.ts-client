@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import Log from "./debugLogger";
 
 //! ONLY UNTIL LOGIN IS IMPLEMENTED
 export const prodUrl = "https://formbeta.yorktechapps.com"
@@ -52,15 +53,14 @@ export function socketLogin(token: string) {
 	})
 	.then(res => {
 		if (!res.ok) {
-			localStorage.removeItem('refreshToken');
-			window.location.reload();
+			// localStorage.removeItem('refreshToken');
 			throw new Error('Failed to refresh token');
 		}
 		return res.json();
 	})
 	.then(data => {
 		const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data.token;
-		console.log('Token refreshed successfully:', data);
+		Log({ message: 'Token refreshed successfully', data });
 		
 		localStorage.setItem('refreshToken', newRefreshToken);
 		refreshToken = newRefreshToken;
@@ -79,7 +79,7 @@ export function socketLogin(token: string) {
 		socket.connect();
 	})
 	.catch(err => {
-		console.error('Error refreshing token:', err);
+		Log({ message: 'Error refreshing token', data: err, level: 'error' });
 	});
 
 	

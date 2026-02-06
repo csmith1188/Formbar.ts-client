@@ -1,6 +1,7 @@
 import { Card, Col, Row, Statistic, Tooltip, Typography } from "antd";
 const { Text, Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
+import Log from "../debugLogger";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useUserData } from "../main";
@@ -66,10 +67,10 @@ export default function PogPools() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('Fetched pools:', data);
+            Log({ message: 'Fetched pools', data });
         })
         .catch(err => {
-            console.error('Error fetching pools:', err);
+            Log({ message: 'Error fetching pools', data: err, level: 'error' });
         })
     }, [userData]);
 

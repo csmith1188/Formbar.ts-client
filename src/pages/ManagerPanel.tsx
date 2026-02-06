@@ -1,4 +1,5 @@
 import FormbarHeader from "../components/FormbarHeader";
+import Log from "../debugLogger";
 import { Segmented, Typography, Row, Col, Card, Button, Flex, Select, Tooltip, Input, Spin, Skeleton } from "antd";
 import { type UserData } from "../types";
 import { LoadingOutlined } from '@ant-design/icons';
@@ -25,13 +26,12 @@ export default function ManagerPanel() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log(data)
+            Log({ message: 'Manager panel data', data });
             setUsers(data.users);
             setClassrooms(data.classrooms);
-            console.log(data)
         })
         .catch(err => {
-            console.error('Error fetching manager panel data:', err);
+            Log({ message: 'Error fetching manager panel data', data: err, level: 'error' });
         });
     }, [accessToken])
 
@@ -44,10 +44,10 @@ export default function ManagerPanel() {
         })
         .then(res => res.json())
         .then(data => {
-            console.log('User verified:', data);
+            Log({ message: 'User verified', data });
         })
         .catch(err => {
-            console.error('Error verifying user:', err);
+            Log({ message: 'Error verifying user', data: err, level: 'error' });
         });
     }
 
