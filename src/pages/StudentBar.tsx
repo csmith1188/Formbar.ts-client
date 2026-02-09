@@ -10,118 +10,158 @@ import ControlPanelPoll from "../components/BarPoll";
 const { Title } = Typography;
 
 export default function StudentBar() {
-    const [classData, setClassData] = useState<any>(null);
-    const [answerState, setAnswerState] = useState<any>([]);
-    const isMobileView = useMobileDetect();
+	const [classData, setClassData] = useState<any>(null);
+	const [answerState, setAnswerState] = useState<any>([]);
+	const isMobileView = useMobileDetect();
 
-    const [pollWidth, setPollWidth] = useState<number>(!isMobileView ? Math.min(window.innerWidth / 2 - 20, window.innerHeight - 200) : Math.min(window.innerWidth - 40, window.innerHeight / 2 - 100));
+	const [pollWidth, setPollWidth] = useState<number>(
+		!isMobileView
+			? Math.min(window.innerWidth / 2 - 20, window.innerHeight - 200)
+			: Math.min(window.innerWidth - 40, window.innerHeight / 2 - 100),
+	);
 
-    function Respond(response: string) {
-        if (!socket || !socket.connected) {
-            Log({ message: 'Socket not connected, cannot send response', level: 'warn' });
-            return;
-        }
-        socket.emit('pollResp', response, '');
-        Log({ message: `Responded with: ${response}`, level: 'info' });
-    }
+	function Respond(response: string) {
+		if (!socket || !socket.connected) {
+			Log({
+				message: "Socket not connected, cannot send response",
+				level: "warn",
+			});
+			return;
+		}
+		socket.emit("pollResp", response, "");
+		Log({ message: `Responded with: ${response}`, level: "info" });
+	}
 
-    useEffect(() => {
-        function handleResize() {
-            if(!isMobileView) {
-                setPollWidth(Math.min(window.innerWidth / 2 - 20, window.innerHeight - 200));
-            } else {
-                setPollWidth(Math.min(window.innerWidth - 40, window.innerHeight / 2 - 100));
-            }
-        }    
-    
-        window.addEventListener('resize', handleResize);
+	useEffect(() => {
+		function handleResize() {
+			if (!isMobileView) {
+				setPollWidth(
+					Math.min(
+						window.innerWidth / 2 - 20,
+						window.innerHeight - 200,
+					),
+				);
+			} else {
+				setPollWidth(
+					Math.min(
+						window.innerWidth - 40,
+						window.innerHeight / 2 - 100,
+					),
+				);
+			}
+		}
 
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        }
-    }, [isMobileView])
+		window.addEventListener("resize", handleResize);
 
-    useEffect(() => {
-        if (!socket) return; // Don't set up listener if socket isn't ready
+		return () => {
+			window.removeEventListener("resize", handleResize);
+		};
+	}, [isMobileView]);
 
-        function classUpdate(classData: any) {
-            setClassData(classData);
-            Log({ message: "Class Update received.", data: classData, level: 'info' });
+	useEffect(() => {
+		if (!socket) return; // Don't set up listener if socket isn't ready
 
-            let answers = [];
+		function classUpdate(classData: any) {
+			setClassData(classData);
+			Log({
+				message: "Class Update received.",
+				data: classData,
+				level: "info",
+			});
 
-            for (let answer of classData.poll.responses) {
-                let percentage = (answer.responses / classData.poll.totalResponders) * 100;
-                answers.push({percentage: percentage, color: answer.color});
-            }
+			let answers = [];
 
-            setAnswerState(answers);
-        }
+			for (let answer of classData.poll.responses) {
+				let percentage =
+					(answer.responses / classData.poll.totalResponders) * 100;
+				answers.push({ percentage: percentage, color: answer.color });
+			}
 
-        socket.on('classUpdate', classUpdate);
-        
-        socket.emit('classUpdate', '');
-        return () => {
-            socket.off('classUpdate', classUpdate);
-        };
-    }, [socket, setClassData]);
+			setAnswerState(answers);
+		}
 
-    return (
-        <>
-            <FormbarHeader />
+		socket.on("classUpdate", classUpdate);
 
-            <ControlPanelPoll classData={classData} height="50px"/>
+		socket.emit("classUpdate", "");
+		return () => {
+			socket.off("classUpdate", classUpdate);
+		};
+	}, [socket, setClassData]);
 
-            <Title style={{marginTop:'50px',width:'100%',textAlign:'center'}}>{classData?.poll.prompt}</Title>
+	return (
+		<>
+			<FormbarHeader />
 
-            <Flex 
-                style={!isMobileView ? {width:'100%', height:'100%'} : {width:'100%', height:'calc(100% - 120px)', marginTop:'120px'}}
-                justify="space-around"
-                align="center"
-                vertical={isMobileView}
-                >
+			<ControlPanelPoll classData={classData} height="50px" />
 
-                {
-                    classData?.poll.status ? (
-                        <Flex 
-                            justify="center" 
-                            align="center" 
-                            vertical
-                            style={isMobileView ? {width:'100%', height:'50%'} : {width:'50%', padding:'0 20px'}}
-                            gap={10}
-                        >
-                            <Flex 
-                                gap={10}
-                                style={{width:'100%'}}
-                                justify="center"
-                                align="stretch"
-                                vertical
-                            >
-                                {
-                                    classData?.poll.responses.map((resp: any, index: number) => (
-                                        <PollButton key={index} answerData={{
-                                            answer: resp.answer,
-                                            color: resp.color
-                                        }} Respond={Respond} />
-                                    ))
-                                }
-                            </Flex>
-                            { 
-                                classData?.poll.allowVoteChanges ? (
-                                    <PollButton answerData={{
-                                        answer: 'remove',
-                                        color: '#ff0000'
-                                    }} Respond={Respond} />
-                                ) : null
-                            }
-                        </Flex>
-                    ) : null
-                }
+			<Title
+				style={{
+					marginTop: "50px",
+					width: "100%",
+					textAlign: "center",
+				}}
+			>
+				{classData?.poll.prompt}
+			</Title>
 
-                
-                
-            </Flex>
-            
-        </>
-    );
+			<Flex
+				style={
+					!isMobileView
+						? { width: "100%", height: "100%" }
+						: {
+								width: "100%",
+								height: "calc(100% - 120px)",
+								marginTop: "120px",
+							}
+				}
+				justify="space-around"
+				align="center"
+				vertical={isMobileView}
+			>
+				{classData?.poll.status ? (
+					<Flex
+						justify="center"
+						align="center"
+						vertical
+						style={
+							isMobileView
+								? { width: "100%", height: "50%" }
+								: { width: "50%", padding: "0 20px" }
+						}
+						gap={10}
+					>
+						<Flex
+							gap={10}
+							style={{ width: "100%" }}
+							justify="center"
+							align="stretch"
+							vertical
+						>
+							{classData?.poll.responses.map(
+								(resp: any, index: number) => (
+									<PollButton
+										key={index}
+										answerData={{
+											answer: resp.answer,
+											color: resp.color,
+										}}
+										Respond={Respond}
+									/>
+								),
+							)}
+						</Flex>
+						{classData?.poll.allowVoteChanges ? (
+							<PollButton
+								answerData={{
+									answer: "remove",
+									color: "#ff0000",
+								}}
+								Respond={Respond}
+							/>
+						) : null}
+					</Flex>
+				) : null}
+			</Flex>
+		</>
+	);
 }

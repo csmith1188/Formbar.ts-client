@@ -1,13 +1,37 @@
-import { StrictMode, createContext, useState, useEffect, useContext } from "react";
+import {
+	StrictMode,
+	createContext,
+	useState,
+	useEffect,
+	useContext,
+} from "react";
 import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useNavigate, useLocation } from "react-router-dom";
+import {
+	BrowserRouter,
+	Route,
+	Routes,
+	useNavigate,
+	useLocation,
+} from "react-router-dom";
 import { ConfigProvider } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
-import { socket, registerSocketEventHandlers, formbarUrl, prodUrl, socketLogin, accessToken } from './socket';
+import {
+	socket,
+	registerSocketEventHandlers,
+	formbarUrl,
+	prodUrl,
+	socketLogin,
+	accessToken,
+} from "./socket";
 
-import { darkMode, lightMode, showMobileIfVertical, themeColors } from "../themes/ThemeConfig";
+import {
+	darkMode,
+	lightMode,
+	showMobileIfVertical,
+	themeColors,
+} from "../themes/ThemeConfig";
 
 import "./assets/css/index.css";
 
@@ -20,24 +44,28 @@ export const isDev: boolean = !import.meta.env.PROD;
 type ThemeContextType = {
 	isDark: boolean;
 	toggleTheme: () => void;
-}
+};
 
 type UserDataContextType = {
 	userData: CurrentUserData | null;
 	setUserData: (data: CurrentUserData | null) => void;
-}
+};
 
 type ClassDataContextType = {
 	classData: ClassData | null;
 	setClassData: (data: ClassData | null) => void;
-}
+};
 
 const connectionTriesLimit = 5;
 
 export const isMobile = () => {
-	const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+	const userAgent =
+		navigator.userAgent || navigator.vendor || (window as any).opera;
 
-	let isMobileBool = /android|avantgo|blackberry|bb|playbook|iemobile|ipad|iphone|ipod|kindle|mobile|palm|phone|silk|symbian|tablet|up\.browser|up\.link|webos|windows ce|windows phone/i.test(userAgent.toLowerCase());
+	let isMobileBool =
+		/android|avantgo|blackberry|bb|playbook|iemobile|ipad|iphone|ipod|kindle|mobile|palm|phone|silk|symbian|tablet|up\.browser|up\.link|webos|windows ce|windows phone/i.test(
+			userAgent.toLowerCase(),
+		);
 
 	if (window.innerWidth <= 768) {
 		isMobileBool = true;
@@ -73,34 +101,47 @@ export const useTheme = () => {
 	return context;
 };
 
-const UserDataContext = createContext<UserDataContextType | undefined>(undefined);
-const ClassDataContext = createContext<ClassDataContextType | undefined>(undefined);
+const UserDataContext = createContext<UserDataContextType | undefined>(
+	undefined,
+);
+const ClassDataContext = createContext<ClassDataContextType | undefined>(
+	undefined,
+);
 
 export const useUserData = () => {
 	const context = useContext(UserDataContext);
-	if (!context) throw new Error("useUserData must be used within UserDataProvider");
+	if (!context)
+		throw new Error("useUserData must be used within UserDataProvider");
 	return context;
 };
 
 export const useClassData = () => {
 	const context = useContext(ClassDataContext);
-	if (!context) throw new Error("useClassData must be used within ClassDataProvider");
+	if (!context)
+		throw new Error("useClassData must be used within ClassDataProvider");
 	return context;
-}
+};
 
 const ThemeProvider = ({ children }: { children: ReactNode }) => {
 	const [isDark, setIsDark] = useState(() => {
-		const saved = document.cookie.split('; ').find(row => row.startsWith('theme='))?.split('=')[1];
-		return saved ? saved === 'dark' : false;
+		const saved = document.cookie
+			.split("; ")
+			.find((row) => row.startsWith("theme="))
+			?.split("=")[1];
+		return saved ? saved === "dark" : false;
 	});
 
 	useEffect(() => {
 		const expires = new Date();
 		expires.setFullYear(expires.getFullYear() + 1);
-		document.cookie = `theme=${isDark ? 'dark' : 'light'}; expires=${expires.toUTCString()}; path=/`;
-		
-		const bodyColor = isDark ? themeColors.dark.body.background : themeColors.light.body.background;
-		const bodyTextColor = isDark ? themeColors.dark.body.color : themeColors.light.body.color;
+		document.cookie = `theme=${isDark ? "dark" : "light"}; expires=${expires.toUTCString()}; path=/`;
+
+		const bodyColor = isDark
+			? themeColors.dark.body.background
+			: themeColors.light.body.background;
+		const bodyTextColor = isDark
+			? themeColors.dark.body.color
+			: themeColors.light.body.color;
 		document.body.style.background = bodyColor;
 		document.body.style.color = bodyTextColor;
 	}, [isDark]);
@@ -133,9 +174,15 @@ const ClassDataProvider = ({ children }: { children: ReactNode }) => {
 			{children}
 		</ClassDataContext.Provider>
 	);
-}
+};
 
-const PageWrapper = ({ pageName, children }: { pageName: string; children: ReactNode }) => {
+const PageWrapper = ({
+	pageName,
+	children,
+}: {
+	pageName: string;
+	children: ReactNode;
+}) => {
 	useEffect(() => {
 		document.title = `${pageName} - Formbar`;
 	}, [pageName]);
@@ -153,37 +200,45 @@ const AppContent = () => {
 
 	const fetchUserData = () => {
 		if (!accessToken) return;
-		
+
 		fetch(`${formbarUrl}/api/v1/user/me`, {
-			method: 'GET',
+			method: "GET",
 			headers: {
-				'Authorization': `${accessToken}`,
-			}
+				Authorization: `${accessToken}`,
+			},
 		})
-		.then(res => res.json())
-		.then(response => {
-			const { data } = response;
-			Log({ message: 'User data fetched successfully.', data, level: 'info' });
-			setUserData(data);
-		})
-		.catch(err => {
-			Log({ message: 'Error fetching user data', data: err, level: 'error' });
-			setHttpErrorCount(prev => prev + 1);
-		});
+			.then((res) => res.json())
+			.then((response) => {
+				const { data } = response;
+				Log({
+					message: "User data fetched successfully.",
+					data,
+					level: "info",
+				});
+				setUserData(data);
+			})
+			.catch((err) => {
+				Log({
+					message: "Error fetching user data",
+					data: err,
+					level: "error",
+				});
+				setHttpErrorCount((prev) => prev + 1);
+			});
 	};
 
 	/*
-	* Re-fetch user data on every page navigation
-	*/
+	 * Re-fetch user data on every page navigation
+	 */
 	useEffect(() => {
-		if (socket?.connected && location.pathname !== '/login') {
+		if (socket?.connected && location.pathname !== "/login") {
 			fetchUserData();
 		}
 	}, [location.pathname]);
 
 	/*
-	* This effect handles initial HTTP connection and pinging the server
-	*/
+	 * This effect handles initial HTTP connection and pinging the server
+	 */
 	useEffect(() => {
 		let attempts = 0;
 		let timeoutId: ReturnType<typeof setTimeout>;
@@ -192,65 +247,80 @@ const AppContent = () => {
 			attempts++;
 			setHttpErrorCount(attempts - 1);
 
-			fetch(`${formbarUrl}/api/v1/certs`, { method: 'GET' })
-			.then(res => {
-				if (res.ok) {
-					Log({ message: 'Ping successful.', data: res.status, level: 'info' });
-					setHttpErrorCount(0);
-				} else {
-					Log({ message: 'Ping failed with status', data: res.status, level: 'error' });
+			fetch(`${formbarUrl}/api/v1/certs`, { method: "GET" })
+				.then((res) => {
+					if (res.ok) {
+						Log({
+							message: "Ping successful.",
+							data: res.status,
+							level: "info",
+						});
+						setHttpErrorCount(0);
+					} else {
+						Log({
+							message: "Ping failed with status",
+							data: res.status,
+							level: "error",
+						});
+						if (attempts < connectionTriesLimit) {
+							timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
+						}
+					}
+				})
+				.catch((err) => {
+					Log({
+						message: "Error during ping",
+						data: err,
+						level: "error",
+					});
 					if (attempts < connectionTriesLimit) {
 						timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
 					}
-				}
-			})
-			.catch(err => {
-				Log({ message: 'Error during ping', data: err, level: 'error' });
-				if (attempts < connectionTriesLimit) {
-					timeoutId = setTimeout(pingServer, 1000); // Retry after 1 second
-				}
-			});
+				});
 		}
 
 		pingServer();
 
-		return() => {
+		return () => {
 			clearTimeout(timeoutId);
 		};
 	}, []);
 
 	useEffect(() => {
-
-		if(!socket?.connected && localStorage.getItem('refreshToken')) {
-			socketLogin(localStorage.getItem('refreshToken')!);
-		} else if(!localStorage.getItem('refreshToken')) {
-			navigate('/login')
+		if (!socket?.connected && localStorage.getItem("refreshToken")) {
+			socketLogin(localStorage.getItem("refreshToken")!);
+		} else if (!localStorage.getItem("refreshToken")) {
+			navigate("/login");
 			setIsConnected(true);
 		}
-		
+
 		function onConnect() {
 			setSocketErrorCount(0); // Reset on successful connection
-			Log({ message: 'Connected to server.', level: 'info' });
+			Log({ message: "Connected to server.", level: "info" });
 
 			fetchUserData();
-			if (window.location.pathname === '/login') {
-				navigate('/');
+			if (window.location.pathname === "/login") {
+				navigate("/");
 			}
 			setIsConnected(true);
 		}
 
 		function onSetClass(classID: number) {
-			Log({ message: "Class ID set to: " + classID, level: 'debug' });
-			socket.emit('classUpdate', '');
+			Log({ message: "Class ID set to: " + classID, level: "debug" });
+			socket.emit("classUpdate", "");
 		}
 
 		function connectError(err: any) {
-			Log({ message: 'Connection Error', data: err, level: 'error' });
-			setSocketErrorCount(prev => {
+			Log({ message: "Connection Error", data: err, level: "error" });
+			setSocketErrorCount((prev) => {
 				const newCount = prev + 1;
 
 				if (newCount >= connectionTriesLimit) {
-					Log({ message: 'Max socket connection attempts reached. Please check your network or contact support.', level: 'error' });
+					Log({
+						message:
+							"Max socket connection attempts reached. Please check your network or contact support.",
+						level: "error",
+					});
 					socket?.disconnect();
 				}
 				return newCount;
@@ -258,7 +328,11 @@ const AppContent = () => {
 		}
 
 		function onDisconnect(reason: string) {
-			Log({ message: 'Disconnected from server', data: { reason }, level: 'warn' });
+			Log({
+				message: "Disconnected from server",
+				data: { reason },
+				level: "warn",
+			});
 		}
 
 		// Register socket event handlers
@@ -266,30 +340,38 @@ const AppContent = () => {
 			onConnect,
 			onConnectError: connectError,
 			onDisconnect,
-			onSetClass
+			onSetClass,
 		});
 
 		return () => {
-			socket?.off('connect', onConnect);
-			socket?.off('connect_error', connectError);
-			socket?.off('disconnect', onDisconnect);
-			socket?.off('setClass', onSetClass);
+			socket?.off("connect", onConnect);
+			socket?.off("connect_error", connectError);
+			socket?.off("disconnect", onDisconnect);
+			socket?.off("setClass", onSetClass);
 		};
 	}, []);
 
 	return (
 		<Routes>
-			{
-				pages.map(page => {
-					const Element = page.page;
-					return <Route key={page.routePath} path={page.routePath} element={
-						<PageWrapper pageName={page.pageName}>
-							<LoadingScreen socketErrors={socketErrorCount} httpErrors={httpErrorCount} isConnected={isConnected} />
-							<Element />
-						</PageWrapper>
-					} />
-				})
-			}
+			{pages.map((page) => {
+				const Element = page.page;
+				return (
+					<Route
+						key={page.routePath}
+						path={page.routePath}
+						element={
+							<PageWrapper pageName={page.pageName}>
+								<LoadingScreen
+									socketErrors={socketErrorCount}
+									httpErrors={httpErrorCount}
+									isConnected={isConnected}
+								/>
+								<Element />
+							</PageWrapper>
+						}
+					/>
+				);
+			})}
 		</Routes>
 	);
 };

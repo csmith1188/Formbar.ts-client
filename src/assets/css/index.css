@@ -4,13 +4,16 @@
 	margin: 0;
 	padding: 0;
 	box-sizing: border-box;
-	font-family: 'Outfit', sans-serif;
+	font-family: "Outfit", sans-serif;
 
-	transition: 
-	background-color var(--ant-motion-duration-slow) ease-in-out, color var(--ant-motion-duration-slow) ease-in-out;
+	transition:
+		background-color var(--ant-motion-duration-slow) ease-in-out,
+		color var(--ant-motion-duration-slow) ease-in-out;
 }
 
-html, body, #root {
+html,
+body,
+#root {
 	overflow: hidden;
 	height: 100%;
 	width: 100%;
@@ -38,7 +41,7 @@ ion-icon {
 	aspect-ratio: 1;
 }
 
-ion-icon[size='large'] {
+ion-icon[size="large"] {
 	height: 1.5rem;
 	width: 1.5rem;
 }
@@ -69,10 +72,11 @@ ion-icon[size='large'] {
 	align-items: center;
 }
 .ant-progress-circle {
-    overflow: visible !important;
+	overflow: visible !important;
 }
 @keyframes bounce {
-	0%, 100% {
+	0%,
+	100% {
 		transform: translateY(0);
 		text-shadow: none;
 	}
@@ -109,8 +113,7 @@ ion-icon[size='large'] {
 .border {
 	--borderWidth: -4px;
 	--borderColor: black;
-	filter: 
-		drop-shadow(0px var(--borderWidth) 0px var(--borderColor))
+	filter: drop-shadow(0px var(--borderWidth) 0px var(--borderColor))
 		drop-shadow(var(--borderWidth) 0px 0px var(--borderColor))
 		drop-shadow(0px calc(var(--borderWidth) * -1) 0px var(--borderColor))
 		drop-shadow(calc(var(--borderWidth) * -1) 0px 0px var(--borderColor));

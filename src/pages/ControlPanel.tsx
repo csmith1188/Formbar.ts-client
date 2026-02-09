@@ -1,4 +1,15 @@
-import { Menu, Flex, Col, Row, Typography, Card, Statistic, Splitter, Button, Tooltip } from "antd";
+import {
+	Menu,
+	Flex,
+	Col,
+	Row,
+	Typography,
+	Card,
+	Statistic,
+	Splitter,
+	Button,
+	Tooltip,
+} from "antd";
 const { Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
@@ -17,7 +28,6 @@ import { socket } from "../socket";
 import Log from "../debugLogger";
 import ControlPanelPoll from "../components/BarPoll";
 import Statistics from "../components/ControlPanel/StatisticsPage";
-
 
 const items = [
 	{
@@ -65,44 +75,51 @@ const items = [
 ];
 
 export default function ControlPanel() {
-    const { classData, setClassData } = useClassData();
+	const { classData, setClassData } = useClassData();
 
-    const statsPanelRef = useRef<HTMLDivElement>(null);
-    const [panelWidth, setPanelWidth] = useState(480);
+	const statsPanelRef = useRef<HTMLDivElement>(null);
+	const [panelWidth, setPanelWidth] = useState(480);
 
-    useEffect(() => {
-        const panel = statsPanelRef.current;
-        if (!panel) return;
+	useEffect(() => {
+		const panel = statsPanelRef.current;
+		if (!panel) return;
 
-        const resizeObserver = new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                setPanelWidth(entry.contentRect.width);
-            }
-        });
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				setPanelWidth(entry.contentRect.width);
+			}
+		});
 
-        resizeObserver.observe(panel);
-        return () => resizeObserver.disconnect();
-    }, []);
-    
-    const isSingleColumn = panelWidth < 380;
+		resizeObserver.observe(panel);
+		return () => resizeObserver.disconnect();
+	}, []);
 
-    useEffect(() => {
-        if (!socket) return; // Don't set up listener if socket isn't ready
+	const isSingleColumn = panelWidth < 380;
 
-        function classUpdate(classData: any) {
-            setClassData(classData);
-            Log({ message: "Class Update received.", data: classData, level: 'info' });
+	useEffect(() => {
+		if (!socket) return; // Don't set up listener if socket isn't ready
 
-            Log({ message: "Total Voters: " + classData.poll.totalResponders, level: 'info' });
-        }
+		function classUpdate(classData: any) {
+			setClassData(classData);
+			Log({
+				message: "Class Update received.",
+				data: classData,
+				level: "info",
+			});
 
-        socket.on('classUpdate', classUpdate);
-        
-        socket.emit('classUpdate', '');
-        return () => {
-            socket.off('classUpdate', classUpdate);
-        };
-    }, [socket, setClassData]);
+			Log({
+				message: "Total Voters: " + classData.poll.totalResponders,
+				level: "info",
+			});
+		}
+
+		socket.on("classUpdate", classUpdate);
+
+		socket.emit("classUpdate", "");
+		return () => {
+			socket.off("classUpdate", classUpdate);
+		};
+	}, [socket, setClassData]);
 
 	const { isDark } = useTheme();
 
@@ -110,30 +127,32 @@ export default function ControlPanel() {
 	const [menuItems, setMenuItems] = useState(items);
 	const [openModalId, setOpenModalId] = useState<number | null>(null);
 
-    const [ classActive, setClassActive ] = useState<boolean>(() => !!classData?.isActive);
-    //const [allStudents, setAllStudents] = useState<Student[]>(students);
+	const [classActive, setClassActive] = useState<boolean>(
+		() => !!classData?.isActive,
+	);
+	//const [allStudents, setAllStudents] = useState<Student[]>(students);
 
-    function startClass() {
-        socket?.emit('startClass')
-        socket?.emit('classUpdate', '');
-        setClassActive(true);
-    }
+	function startClass() {
+		socket?.emit("startClass");
+		socket?.emit("classUpdate", "");
+		setClassActive(true);
+	}
 
-    function endClass() {
-        socket?.emit('endClass')
-        setClassActive(false);
-    }
+	function endClass() {
+		socket?.emit("endClass");
+		setClassActive(false);
+	}
 
-    // Keep `classActive` synced with incoming `classData.isActive` updates
-    useEffect(() => {
-        setClassActive(!!classData?.isActive);
-    }, [classData?.isActive]);
+	// Keep `classActive` synced with incoming `classData.isActive` updates
+	useEffect(() => {
+		setClassActive(!!classData?.isActive);
+	}, [classData?.isActive]);
 
-    const infoDivs = {
-        background: isDark 
-            ? themeColors.dark.information.background
-            : themeColors.light.information.background,
-    };
+	const infoDivs = {
+		background: isDark
+			? themeColors.dark.information.background
+			: themeColors.light.information.background,
+	};
 
 	function openMenu(key: string) {
 		if (key === currentMenu) return;
@@ -156,75 +175,109 @@ export default function ControlPanel() {
 		<>
 			<FormbarHeader />
 
-            <ControlPanelPoll classData={classData} height="40px"/>
+			<ControlPanelPoll classData={classData} height="40px" />
 
-            <Flex style={{
-                height: 'calc(100% - 40px)'
-            }}>
-                <Menu
-                    defaultSelectedKeys={["1"]}
-                    defaultOpenKeys={["sub1"]}
-                    mode="inline"
-                    inlineCollapsed={false}
-                    items={menuItems}
-                    theme={isDark ? "dark" : "light"}
-                    style={{
-                        height: "100%",
-                        minWidth: "250px",
-                        maxWidth: "250px",
-                        padding: "0 10px",
-                        paddingTop: "15px",
-                    }}
-                    styles={{
-                        itemIcon: {
-                            marginRight: '18px'
-                        }
-                    }}
-                    onClick={(e) => openMenu(e.key)}
-                />
+			<Flex
+				style={{
+					height: "calc(100% - 40px)",
+				}}
+			>
+				<Menu
+					defaultSelectedKeys={["1"]}
+					defaultOpenKeys={["sub1"]}
+					mode="inline"
+					inlineCollapsed={false}
+					items={menuItems}
+					theme={isDark ? "dark" : "light"}
+					style={{
+						height: "100%",
+						minWidth: "250px",
+						maxWidth: "250px",
+						padding: "0 10px",
+						paddingTop: "15px",
+					}}
+					styles={{
+						itemIcon: {
+							marginRight: "18px",
+						},
+					}}
+					onClick={(e) => openMenu(e.key)}
+				/>
 
+				<Flex
+					style={{
+						position: "absolute",
+						bottom: "30px",
+						left: "10px",
+						gap: "10px",
+						width: "230px",
+					}}
+					vertical
+				>
+					<Activity mode={classActive ? "hidden" : "visible"}>
+						<Button
+							color="green"
+							variant="solid"
+							type="default"
+							onClick={startClass}
+						>
+							Start Class
+						</Button>
+					</Activity>
 
+					<Activity mode={classActive ? "visible" : "hidden"}>
+						<Button
+							color="red"
+							variant="solid"
+							type="default"
+							onClick={endClass}
+						>
+							End Class
+						</Button>
+					</Activity>
 
-                <Flex style={{position:'absolute', bottom:'30px', left:'10px', gap:'10px', width:'230px'}} vertical>
-                    
-                    <Activity mode={classActive ? "hidden" : "visible"}>
-                        <Button color="green" variant="solid" type="default" onClick={startClass}>
-                            Start Class
-                        </Button>
-                    </Activity>
-                    
-                    <Activity mode={classActive ? "visible" : "hidden"}>
-                        <Button color="red" variant="solid" type="default" onClick={endClass}>
-                            End Class
-                        </Button>
-                    </Activity>
+					<Button
+						variant="outlined"
+						type="default"
+						onClick={() => socket.emit("classUpdate", "")}
+					>
+						Update
+					</Button>
+				</Flex>
 
-                    <Button variant="outlined" type="default" onClick={() => socket.emit('classUpdate', '')}>
-                        Update
-                    </Button>
-                </Flex>
-                
-                <div style={{ padding: '20px', height: '100%', width: 'calc(100% - 250px)'}}>
-                    <Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
-                        <Dashboard openModalId={openModalId} setOpenModalId={setOpenModalId}/>
-                    </Activity>
-                    <Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
-                        <PollsMenu openModalId={openModalId} setOpenModalId={setOpenModalId} />
-                    </Activity>
-                    <Activity mode={currentMenu == "3" ? "visible" : "hidden"}>
-                        <div>Timer Menu</div>
-                    </Activity>
-                    <Activity mode={currentMenu == "4" ? "visible" : "hidden"}>
-                        <Statistics />
-                    </Activity>
-                    <Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
-                        <PermissionsMenu />
-                    </Activity>
-                    <Activity mode={currentMenu == "6" ? "visible" : "hidden"}>
-                        <SettingsMenu />
-                    </Activity>
-                </div>
-            </Flex>
+				<div
+					style={{
+						padding: "20px",
+						height: "100%",
+						width: "calc(100% - 250px)",
+					}}
+				>
+					<Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
+						<Dashboard
+							openModalId={openModalId}
+							setOpenModalId={setOpenModalId}
+						/>
+					</Activity>
+					<Activity mode={currentMenu == "2" ? "visible" : "hidden"}>
+						<PollsMenu
+							openModalId={openModalId}
+							setOpenModalId={setOpenModalId}
+						/>
+					</Activity>
+					<Activity mode={currentMenu == "3" ? "visible" : "hidden"}>
+						<div>Timer Menu</div>
+					</Activity>
+					<Activity mode={currentMenu == "4" ? "visible" : "hidden"}>
+						<Statistics />
+					</Activity>
+					<Activity mode={currentMenu == "5" ? "visible" : "hidden"}>
+						<PermissionsMenu />
+					</Activity>
+					<Activity mode={currentMenu == "6" ? "visible" : "hidden"}>
+						<SettingsMenu />
+					</Activity>
+				</div>
+			</Flex>
 		</>
 	);
 }
