@@ -58,8 +58,9 @@ export function socketLogin(token: string) {
 		}
 		return res.json();
 	})
-	.then(data => {
-		const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data.token;
+	.then(response => {
+		const { data } = response;
+		const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data;
 		Log({ message: 'Token refreshed successfully', data });
 		
 		localStorage.setItem('refreshToken', newRefreshToken);

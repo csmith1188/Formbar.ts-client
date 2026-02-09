@@ -34,10 +34,11 @@ export default function Profile() {
             }
         })
         .then(res => res.json())
-        .then(data => {
-            if(data.error) {
-                Log({ message: 'Error fetching profile data', data: data.error, level: 'error' });
-                setError(typeof data.error === 'string' ? data.error : data.error.message || 'Unknown error');
+        .then(response => {
+            const { data } = response;
+            if(response.error) {
+                Log({ message: 'Error fetching profile data', data: response.error, level: 'error' });
+                setError(typeof response.error === 'string' ? response.error : response.error.message || 'Unknown error');
                 return;
             }
 

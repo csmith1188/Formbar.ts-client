@@ -58,7 +58,8 @@ export default function FormbarHeader() {
             },
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Left class', data });
             navigate('/classes');
         })
