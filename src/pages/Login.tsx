@@ -64,7 +64,8 @@ export default function LoginPage() {
                     throw new Error('Login failed');
                 }
                 const loginData = await loginResponse.json();
-                let { accessToken, refreshToken } = loginData;
+                const { data } = loginData;
+                let { accessToken, refreshToken } = data;
                 Log({ message: 'Login successful', data: loginData });
 
                 // 2. Make authenticated requests
@@ -72,7 +73,8 @@ export default function LoginPage() {
                     headers: { 'Authorization': accessToken }
                 })
                 .then(res => res.json())
-                .then(data => {
+                .then(response => {
+                    const { data } = response;
                     Log({ message: 'User data', data });
 
                     socketLogin(refreshToken);
@@ -102,16 +104,18 @@ export default function LoginPage() {
                     throw new Error('Signup failed', errorData.error.message);
                 }
                 const signUpData = await signupResponse.json();
+                const { data: signupData } = signUpData;
                 Log({ message: 'Signup successful', data: signUpData });
 
                 await fetch(`${formbarUrl}/api/v1/user/me`, {
-                    headers: { 'Authorization': signUpData.accessToken }
+                    headers: { 'Authorization': signupData.accessToken }
                 })
                 .then(res => res.json())
-                .then(data => {
+                .then(response => {
+                    const { data } = response;
                     Log({ message: 'User data', data });
 
-                    socketLogin(signUpData.refreshToken);
+                    socketLogin(signupData.refreshToken);
 
                     return data;
                 })

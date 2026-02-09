@@ -31,35 +31,24 @@ export default function ClassesPage() {
     useEffect(() => {
         if(!userData) return;
 
-        fetch(`${formbarUrl}/api/v1/selectClass`, {
+        fetch(`${formbarUrl}/api/v1/user/${userData.id}/classes`, {
             method: 'GET',
             headers: {
                 'Authorization': `${accessToken}`,
             }
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Classes data', data });
-            setJoinedClasses(data.joinedClasses);
+
+            const owned = data.filter((cls: any) => cls.isOwner === true);
+            const joined = data.filter((cls: any) => cls.isOwner === false);
+            setOwnedClasses(owned);
+            setJoinedClasses(joined);
         })
         .catch(err => {
             Log({ message: 'Error fetching classes data', data: err, level: 'error' });
-        });
-
-
-        fetch(`${formbarUrl}/api/v1/user/${userData?.id}/ownedClasses`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `${accessToken}`,
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            Log({ message: 'Owned classes data', data });
-            setOwnedClasses(data);
-        })
-        .catch(err => {
-            Log({ message: 'Error fetching owned classes data', data: err, level: 'error' });
         });
     }, [userData]);
 
@@ -76,10 +65,11 @@ export default function ClassesPage() {
             }
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Entered class', data });
             // Handle successful class entry (e.g., navigate to class page)
-            if(data.success) {
+            if(response.success) {
                 fetch(`${formbarUrl}/api/v1/user/me`, {
                     method: 'GET',
                     headers: {
@@ -87,12 +77,13 @@ export default function ClassesPage() {
                     }
                 })
                 .then(res => res.json())
-                .then(data => {
-                    Log({ message: 'User data fetched successfully after joining class.', data, level: 'info' });
+                .then(userResponse => {
+                    const { data: userData } = userResponse;
+                    Log({ message: 'User data fetched successfully after joining class.', data: userData, level: 'info' });
                     // Update user data in context or state
                     // For example, if you have a setUserData function from context:
-                    setUserData(data);
-                    if(data.classPermissions >= 4) navigate('/panel')
+                    setUserData(userData);
+                    if(userData.classPermissions >= 4) navigate('/panel')
                     else navigate('/student');
                 })
                 .catch(err => {
@@ -119,7 +110,8 @@ export default function ClassesPage() {
             body: JSON.stringify({ name: createClassName }),
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Created class', data });
             // Handle successful class creation (e.g., update ownedClasses state)
         })
@@ -141,10 +133,11 @@ export default function ClassesPage() {
             },
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Joined class with code', data });
             // Handle successful class join (e.g., navigate to class page)
-            if(data.success) {
+            if(response.success) {
                 
                     
             }

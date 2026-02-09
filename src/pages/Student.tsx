@@ -81,7 +81,8 @@ export default function Student() {
                 }
             })
             .then(res => res.json())
-            .then(data => {
+            .then(response => {
+                const { data } = response;
                 Log({ message: 'User data fetched successfully.', data, level: 'info' });
                 setUserData(data);
             })

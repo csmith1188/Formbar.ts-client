@@ -43,12 +43,13 @@ export default function Transactions() {
             }
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Transactions data', data });
-            if(data.error) {
-                Log({ message: 'Error fetching transactions', data: data.error, level: 'error' });
+            if(response.error) {
+                Log({ message: 'Error fetching transactions', data: response.error, level: 'error' });
                 setTransactions([]);
-                setError(typeof data.error === 'string' ? data.error : data.error.message || 'Unknown error');
+                setError(typeof response.error === 'string' ? response.error : response.error.message || 'Unknown error');
                 return;
             }
 

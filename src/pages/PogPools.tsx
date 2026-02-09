@@ -66,7 +66,8 @@ export default function PogPools() {
             method: 'GET',
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Fetched pools', data });
         })
         .catch(err => {

@@ -25,7 +25,8 @@ export default function ManagerPanel() {
             }
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'Manager panel data', data });
             setUsers(data.users);
             setClassrooms(data.classrooms);
@@ -43,7 +44,8 @@ export default function ManagerPanel() {
             },
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
+            const { data } = response;
             Log({ message: 'User verified', data });
         })
         .catch(err => {
@@ -52,7 +54,7 @@ export default function ManagerPanel() {
     }
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <FormbarHeader />
 
             <Title style={{textAlign:'center', marginTop:'20px', marginBottom:'20px'}}>Manager Panel</Title>
@@ -70,10 +72,7 @@ export default function ManagerPanel() {
                 />
             </Flex>
 
-            <Flex gap={20} style={{position:'absolute', bottom: '20px', left: '20px'}}>
-                <Button type="primary">View Logs</Button>
-                <Button type="primary">Download Database</Button>
-            </Flex>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
 
             <Activity mode={listCategory === "Users" ? "visible" : "hidden"}>
                 <Flex gap={10} justify="center" align="center" style={{marginBottom:'20px', height:'40px'}}>
@@ -89,7 +88,7 @@ export default function ManagerPanel() {
                         Object.keys(users).length > 0 ? Object.values(users).map((user) => (
                             <Col span={4} key={user.id}>
                                 <Card 
-                                    title={user.displayName}
+                                    title={user.displayName || user.email || 'Pending User'}
 
                                     styles={
                                         {
@@ -110,7 +109,11 @@ export default function ManagerPanel() {
                                     >
                                     <Flex vertical style={{marginBottom:'10px'}}>
                                         <Text type='secondary' style={{fontSize:'16px'}}>{user.email}</Text>
-                                        <Text type='secondary' style={{fontSize:'16px'}}>ID: {user.id}</Text>
+                                        {user.verified !== false && user.verified !== 0 ? (
+                                            <Text type='secondary' style={{fontSize:'16px'}}>ID: {user.id}</Text>
+                                        ) : (
+                                            <Text type='secondary' style={{fontSize:'16px', fontStyle:'italic'}}>Pending Verification</Text>
+                                        )}
                                     </Flex>
                                     <Select style={{width: '100%'}} defaultValue={user.permissions}>
                                         <Select.Option value={5}>Manager</Select.Option>
@@ -121,7 +124,7 @@ export default function ManagerPanel() {
                                     </Select>
                                     <Flex gap={10} justify="space-evenly" style={{marginTop:'10px'}} wrap>
                                         {
-                                            user.verified === 0 ? (
+                                            (user.verified === 0 || user.verified === false) ? (
                                                 <Tooltip title={"Verify User"} color="green">
                                                     <Button variant="solid" color='green' size='large' style={{padding: '0 20px',}} onClick={() => handleVerify(user.id)}>
                                                         <IonIcon icon={IonIcons.checkmarkCircle} size='large' />
@@ -197,6 +200,12 @@ export default function ManagerPanel() {
                 }
                 </Row>
             </Activity>
-        </>
+            </div>
+
+            <Flex gap={20} style={{position:'fixed', bottom: '20px', left: '20px', zIndex: 1000}}>
+                <Button type="primary">View Logs</Button>
+                <Button type="primary">Download Database</Button>
+            </Flex>
+        </div>
     )
 }
