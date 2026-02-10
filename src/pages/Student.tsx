@@ -136,6 +136,19 @@ export default function Student() {
 		};
 	}, [socket, setClassData]);
 
+	useEffect(() => {
+		if (!userData) return;
+
+		if (!userData.activeClass) {
+			navigate("/classes");
+		}
+
+		if (userData.classPermissions && userData.classPermissions > 2) {
+			navigate("/panel");
+		}
+
+	}, [userData, navigate]);
+
 	return (
 		<>
 			<FormbarHeader />

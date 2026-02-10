@@ -20,6 +20,8 @@ import ClassroomPage from "../ControlPanel/ClassroomPage";
 import * as IonIcons from "ionicons/icons";
 import { IonIcon } from "@ionic/react";
 
+import { useTheme, isMobile } from "../../main";
+
 export default function Dashboard({
 	openModalId,
 	setOpenModalId,
@@ -27,6 +29,8 @@ export default function Dashboard({
 	openModalId: number | null;
 	setOpenModalId: React.Dispatch<React.SetStateAction<number | null>>;
 }) {
+	const { isDark } = useTheme();
+
 	const [allResponseModalOpen, setAllResponseModalOpen] =
 		useState<boolean>(false);
 	const [currentView, setView] = useState<"dash" | "class">("dash");
@@ -252,57 +256,59 @@ export default function Dashboard({
 								open={allResponseModalOpen}
 								onCancel={() => setAllResponseModalOpen(false)}
 								footer={null}
+								width={"90%"}
 							>
 								{classData.poll ? (
-									<div>
-										{students
-											.filter(
-												(e) => e.id !== userData?.id,
-											)
+									<div
+										style={{
+											display: "grid",
+											gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+											gap: "16px",
+											width: "100%",
+										}}
+									>
+										{...students.sort((a, b) => a.displayName.localeCompare(b.displayName))
+											.filter((e) => e.id !== userData?.id)
 											.map((student: any) => {
-												const matchingResponse =
-													classData.poll.responses.find(
-														(e: any) =>
-															e.answer ===
-															student.pollRes
-																?.buttonRes,
-													);
+												const matchingResponse = classData.poll.responses.find(
+													(e: any) => e.answer === student.pollRes?.buttonRes,
+												);
 												return (
 													<div
 														key={student.id}
 														style={{
-															marginBottom:
-																"10px",
-															paddingBottom:
-																"10px",
-															borderBottom:
-																"1px solid var(--border-color)",
+															border: "1px solid var(--border-color)",
+															borderRadius: "8px",
+															padding: "12px",
+															background: isDark ? "#fff2" : "#0002",
+															minHeight: "80px",
+															display: "flex",
+															flexDirection: "column",
+															justifyContent: "center",
+															position: "relative",
 														}}
 													>
-														<strong>
-															{
-																student.displayName
-															}
-															:
-														</strong>{" "}
-														<span
+														<strong style={{paddingRight: 40}}>
+															{student.displayName}
+														</strong>
+														<Switch 
 															style={{
-																color: matchingResponse?.color,
+																position: 'absolute',
+																top: 20,
+																right: 20,
 															}}
-														>
-															{student.pollRes
-																?.buttonRes
-																? student
-																		.pollRes
-																		.buttonRes
+															size="small"
+														/>
+														<span style={{ color: matchingResponse?.color }}>
+															{student.pollRes?.buttonRes
+																? student.pollRes.buttonRes
 																: "No Response"}
-														</span>{" "}
-														|{" "}
-														{student.pollRes
-															?.textRes
-															? student.pollRes
-																	.textRes
+														</span>
+														<span style={{ opacity: 0.75, display: classData?.poll.allowTextResponses ? 'initial' : 'none', fontSize: 16 }}>
+															{student.pollRes?.textRes
+															? student.pollRes.textRes
 															: "No Text"}
+														</span>
 													</div>
 												);
 											})}

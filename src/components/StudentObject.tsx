@@ -1,4 +1,4 @@
-import { Badge, Button, Flex, Modal, Typography } from "antd";
+import { Badge, Button, Checkbox, Flex, Modal, Switch, Typography } from "antd";
 import { StudentAccordion } from "./AccordionCollapse";
 const { Text } = Typography;
 
@@ -45,7 +45,8 @@ export default function StudentObject({
 						<Button
 							type="primary"
 							style={{
-								padding: "10px",
+								padding: "5px",
+								height: "auto",
 								width: "100%",
 								opacity: statusText === "Offline" ? 0.5 : 1,
 							}}
@@ -62,7 +63,7 @@ export default function StudentObject({
 				) : (
 					<Button
 						type="primary"
-						style={{ padding: "10px", width: "100%" }}
+						style={{ padding: "5px", height: 'auto', width: "100%" }}
 						onClick={() => setOpenModalId(student.id)}
 					>
 						<Text strong>

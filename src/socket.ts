@@ -51,10 +51,30 @@ export function socketLogin(token: string) {
 		},
 		body: JSON.stringify({ token: token }),
 	})
-		.then((res) => {
+		.then(async (res) => {
 			if (!res.ok) {
 				// localStorage.removeItem('refreshToken');
-				throw new Error("Failed to refresh token");
+				console.error(new Error("Failed to refresh token"));
+
+				const loginResponse = await fetch(
+					`${formbarUrl}/api/v1/auth/login`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: localStorage.getItem("formbarLoginData")!,
+					},
+				);
+				if (!loginResponse.ok) {
+					const errorData = await loginResponse.json();
+					throw new Error("Login failed", { cause: errorData });
+				}
+				const loginData = await loginResponse.json();
+				const { data } = loginData;
+				let { accessToken, refreshToken } = data;
+				Log({ message: "Login successful", data: loginData });
+
+				socketLogin(refreshToken);
+				return;
 			}
 			return res.json();
 		})

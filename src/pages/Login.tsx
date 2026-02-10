@@ -61,12 +61,17 @@ export default function LoginPage() {
 				formData.append("password", password);
 				formData.append("loginType", "login");
 
+				localStorage.setItem("formbarLoginData", formData.toString());
+
+				const storedLoginData = localStorage.getItem("formbarLoginData");
+				Log({ message: "Stored login data", data: storedLoginData });
+
 				const loginResponse = await fetch(
 					`${formbarUrl}/api/v1/auth/login`,
 					{
 						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ email, password }),
+						headers: { "Content-Type": "application/x-www-form-urlencoded" },
+						body: formData.toString(),
 					},
 				);
 				if (!loginResponse.ok) {
@@ -143,6 +148,12 @@ export default function LoginPage() {
 				const signUpData = await signupResponse.json();
 				const { data: signupData } = signUpData;
 				Log({ message: "Signup successful", data: signUpData });
+
+				const signUpformData = new URLSearchParams();
+				signUpformData.append("email", email);
+				signUpformData.append("password", password);
+				signUpformData.append("loginType", "signup");
+				localStorage.setItem("formbarLoginData", signUpformData.toString());
 
 				await fetch(`${formbarUrl}/api/v1/user/me`, {
 					headers: { Authorization: signupData.accessToken },

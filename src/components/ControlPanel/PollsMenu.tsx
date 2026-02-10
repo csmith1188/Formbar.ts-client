@@ -1,4 +1,4 @@
-import { Button, Modal, Typography } from "antd";
+import { Button, Divider, Flex, Modal, Typography } from "antd";
 const { Text, Title } = Typography;
 import { textColorForBackground } from "../../CustomStyleFunctions";
 import { socket } from "../../socket";
@@ -69,7 +69,7 @@ const defaultPolls = [
 	},
 	{
 		id: 5,
-		prompt: "Text Response",
+		prompt: "Multiple Choice + Text",
 		answers: [
 			{ answer: "A", weight: 1, color: "#FF0000" },
 			{ answer: "B", weight: 1, color: "#0000FF" },
@@ -86,6 +86,8 @@ const defaultPolls = [
 	},
 ];
 
+import { useTheme } from "../../main";
+
 export default function PollsMenu({
 	openModalId,
 	setOpenModalId,
@@ -94,6 +96,7 @@ export default function PollsMenu({
 	setOpenModalId: React.Dispatch<React.SetStateAction<number | null>>;
 }) {
 	const { classData } = useClassData();
+	const { isDark } = useTheme();
 
 	function startPoll(id: number) {
 		const poll = defaultPolls.filter((e) => e.id == id)[0];
@@ -108,67 +111,73 @@ export default function PollsMenu({
 	}
 
 	return (
-		<>
-			<Title>Default Polls</Title>
-			{defaultPolls.map((poll) => {
-				return (
-					<div
-						key={poll.id}
-						style={{ marginTop: "10px", width: "300px" }}
-					>
-						<Button
-							type="primary"
-							style={{ padding: "10px", width: "100%" }}
-							onClick={() => {
-								setOpenModalId(poll.id);
-							}}
+		<Flex align="center" justify="space-between" gap={40} style={{ height: "100%" }}>
+			<Flex vertical align="center" justify="start" style={{ height: "100%", paddingLeft: "20px", paddingRight: "20px"}}>
+				<Title>Default Polls</Title>
+				{defaultPolls.map((poll) => {
+					return (
+						<div
+							key={poll.id}
+							style={{ marginTop: "10px", width: "300px" }}
 						>
-							<Text strong>{poll.prompt}</Text>
-						</Button>
-						<Modal
-							centered
-							title={poll.prompt}
-							open={openModalId === poll.id}
-							onCancel={() => {
-								setOpenModalId(null);
-							}}
-							destroyOnHidden
-							footer={null}
-						>
-							{poll.answers.map((answer, index) => (
-								<Button
-									key={index}
+							<Button
+								type="primary"
+								style={{ padding: "10px", width: "100%" }}
+								onClick={() => {
+									setOpenModalId(poll.id);
+								}}
+							>
+								<Text strong>{poll.prompt}</Text>
+							</Button>
+							<Modal
+								centered
+								title={poll.prompt}
+								open={openModalId === poll.id}
+								onCancel={() => {
+									setOpenModalId(null);
+								}}
+								destroyOnHidden
+								footer={null}
+							>
+								{poll.answers.map((answer, index) => (
+									<Button
+										key={index}
+										style={{
+											backgroundColor: answer.color,
+											color: textColorForBackground(
+												answer.color,
+											),
+											marginTop: "5px",
+											width: "100%",
+										}}
+									>
+										{answer.answer}
+									</Button>
+								))}
+
+								<div
 									style={{
-										backgroundColor: answer.color,
-										color: textColorForBackground(
-											answer.color,
-										),
-										marginTop: "5px",
+										marginTop: "20px",
+										textAlign: "center",
 										width: "100%",
 									}}
 								>
-									{answer.answer}
-								</Button>
-							))}
-
-							<div
-								style={{
-									marginTop: "20px",
-									textAlign: "center",
-									width: "100%",
-								}}
-							>
-								<Button
-									type="primary"
-									onClick={() => startPoll(poll.id)}
-								>
-									Start Poll
-								</Button>
-							</div>
-						</Modal>
-					</div>
-				);
-			})}
-		</>
+									<Button
+										type="primary"
+										onClick={() => startPoll(poll.id)}
+									>
+										Start Poll
+									</Button>
+								</div>
+							</Modal>
+						</div>
+					);
+				})}
+			</Flex>
+			<Flex vertical align="center" justify="start" style={{ height: "100%", borderLeft: `2px solid ${isDark ? '#0002' : '#fff2'}`, paddingLeft: "20px", paddingRight: "20px", flex: 1 }}>
+				<Title>Previous Polls</Title>
+				<p>no endpoing</p>
+			</Flex>
+		</Flex>
 	);
 }

@@ -118,3 +118,20 @@ ion-icon[size="large"] {
 		drop-shadow(0px calc(var(--borderWidth) * -1) 0px var(--borderColor))
 		drop-shadow(calc(var(--borderWidth) * -1) 0px 0px var(--borderColor));
 }
+
+label.correctAnswer .ant-checkbox-inner {
+	height: 100%;
+	width: unset;
+	aspect-ratio: 1;
+	border-radius: 5px;
+}
+
+label.correctAnswer .ant-checkbox-inner::after {
+	margin-left: 3px;
+}
+
+.ant-color-picker-color-block,
+.ant-color-picker-color-block-inner {
+	height: 100% !important;
+	width: 100% !important;
+}

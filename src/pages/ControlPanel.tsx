@@ -14,7 +14,7 @@ const { Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { useClassData, useTheme } from "../main";
+import { useClassData, useTheme, useUserData } from "../main";
 import { Activity, useEffect, useState, useRef } from "react";
 
 import Dashboard from "../components/ControlPanel/Dashboard";
@@ -22,12 +22,16 @@ import PollsMenu from "../components/ControlPanel/PollsMenu";
 import SettingsMenu from "../components/ControlPanel/SettingsMenu";
 import PermissionsMenu from "../components/ControlPanel/PermissionsMenu";
 import ClassroomPage from "../components/ControlPanel/ClassroomPage";
+import PollEditorMenu from "../components/ControlPanel/PollEditorMenu";
 
 import { themeColors } from "../../themes/ThemeConfig";
 import { socket } from "../socket";
 import Log from "../debugLogger";
 import ControlPanelPoll from "../components/BarPoll";
 import Statistics from "../components/ControlPanel/StatisticsPage";
+
+import { isMobile } from "../main";
+import { useNavigate } from "react-router-dom";
 
 const items = [
 	{
@@ -43,6 +47,13 @@ const items = [
 		deselectedicon: <IonIcon icon={IonIcons.barChartOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.barChart} />,
 		label: "Polls",
+	},
+	{
+		key: "7",
+		icon: <IonIcon icon={IonIcons.barChartOutline} />,
+		deselectedicon: <IonIcon icon={IonIcons.barChartOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.barChart} />,
+		label: "Poll Editor",
 	},
 	// {
 	// 	key: "3",
@@ -76,25 +87,7 @@ const items = [
 
 export default function ControlPanel() {
 	const { classData, setClassData } = useClassData();
-
-	const statsPanelRef = useRef<HTMLDivElement>(null);
-	const [panelWidth, setPanelWidth] = useState(480);
-
-	useEffect(() => {
-		const panel = statsPanelRef.current;
-		if (!panel) return;
-
-		const resizeObserver = new ResizeObserver((entries) => {
-			for (const entry of entries) {
-				setPanelWidth(entry.contentRect.width);
-			}
-		});
-
-		resizeObserver.observe(panel);
-		return () => resizeObserver.disconnect();
-	}, []);
-
-	const isSingleColumn = panelWidth < 380;
+	const isMobileDevice = isMobile();
 
 	useEffect(() => {
 		if (!socket) return; // Don't set up listener if socket isn't ready
@@ -122,6 +115,9 @@ export default function ControlPanel() {
 	}, [socket, setClassData]);
 
 	const { isDark } = useTheme();
+
+	const { userData } = useUserData();
+	const navigate = useNavigate();
 
 	const [currentMenu, setCurrentMenu] = useState("1");
 	const [menuItems, setMenuItems] = useState(items);
@@ -171,6 +167,19 @@ export default function ControlPanel() {
 		setMenuItems(updatedItems);
 	}
 
+	useEffect(() => {
+		if (!userData) return;
+
+		if (!userData.activeClass) {
+			navigate("/classes");
+		}
+
+		if (userData.classPermissions && userData.classPermissions <= 2) {
+			navigate("/student");
+		}
+
+	}, [userData, navigate]);
+
 	return (
 		<>
 			<FormbarHeader />
@@ -186,13 +195,13 @@ export default function ControlPanel() {
 					defaultSelectedKeys={["1"]}
 					defaultOpenKeys={["sub1"]}
 					mode="inline"
-					inlineCollapsed={false}
+					inlineCollapsed={isMobileDevice}
 					items={menuItems}
 					theme={isDark ? "dark" : "light"}
 					style={{
 						height: "100%",
-						minWidth: "250px",
-						maxWidth: "250px",
+						minWidth: isMobileDevice ? "80px" : "250px",
+						maxWidth: isMobileDevice ? "80px" : "250px",
 						padding: "0 10px",
 						paddingTop: "15px",
 					}}
@@ -210,7 +219,7 @@ export default function ControlPanel() {
 						bottom: "30px",
 						left: "10px",
 						gap: "10px",
-						width: "230px",
+						width: isMobileDevice ? "60px" : "230px",
 					}}
 					vertical
 				>
@@ -249,7 +258,7 @@ export default function ControlPanel() {
 					style={{
 						padding: "20px",
 						height: "100%",
-						width: "calc(100% - 250px)",
+						width: isMobileDevice ? "calc(100% - 80px)" : "calc(100% - 250px)",
 					}}
 				>
 					<Activity mode={currentMenu == "1" ? "visible" : "hidden"}>
@@ -275,6 +284,9 @@ export default function ControlPanel() {
 					</Activity>
 					<Activity mode={currentMenu == "6" ? "visible" : "hidden"}>
 						<SettingsMenu />
+					</Activity>
+					<Activity mode={currentMenu == "7" ? "visible" : "hidden"}>
+						<PollEditorMenu />
 					</Activity>
 				</div>
 			</Flex>

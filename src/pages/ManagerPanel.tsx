@@ -174,8 +174,7 @@ export default function ManagerPanel() {
 											>
 												{user.email}
 											</Text>
-											{user.verified !== false &&
-											user.verified !== 0 ? (
+											{user.verified !== 0 ? (
 												<Text
 													type="secondary"
 													style={{ fontSize: "16px" }}
@@ -220,8 +219,7 @@ export default function ManagerPanel() {
 											style={{ marginTop: "10px" }}
 											wrap
 										>
-											{user.verified === 0 ||
-											user.verified === false ? (
+											{user.verified === 0 ? (
 												<Tooltip
 													title={"Verify User"}
 													color="green"
