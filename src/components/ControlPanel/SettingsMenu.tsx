@@ -5,42 +5,55 @@ import {
 	Input,
 	Button,
 	Switch,
+	Image,
 	Splitter,
 	Space,
 	Divider,
 	Collapse,
+	Modal,
+	Tooltip,
 } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 const { Title, Text } = Typography;
-import { useClassData } from "../../main";
+import { useClassData, useTheme } from "../../main";
 import { useEffect, useState } from "react";
+import { accessToken, formbarUrl } from "../../socket";
 
 export default function SettingsMenu() {
 	const { classData } = useClassData();
+
+	const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
 	const [classLinks, setClassLinks] = useState<
 		{ name: string; url: string }[]
 	>([]);
 
 	useEffect(() => {
-		// Fetch class links from server or initialize
-		setClassLinks([
-			{ name: "Formbar", url: "https://formbar.ljharnish.org" },
-			{ name: "YTech-Formbar", url: "https://formbar.yorktechapps.com" },
-			{ name: "Formbeta", url: "https://formbeta.yorktechapps.com" },
+		if (!classData) return;
 
-			{
-				name: "Formbar.js",
-				url: "https://github.com/csmith1188/Formbar.js",
-			},
-			{
-				name: "Formbar.ts-client",
-				url: "https://github.com/csmith1188/Formbar.ts-client",
-			},
-		]);
-	}, []);
+		fetch(`${formbarUrl}/api/v1/class/${classData.id}/links`, {
+			method: "GET",
+			headers: {
+				"Authorization": `Bearer ${accessToken}`,
+			}
+		})
+		.then((res) => res.json())
+		.then((data) => {
+			console.log(data)
+			if (data.success && data.data.links) {
+				console.log("Fetched class links:", data.data.links);
+				setClassLinks(data.data.links);
+			}
+		})
+		.catch((err) => {
+			console.error("Error fetching class links:", err);
+		});
+		
+	}, [classData]);
+
+	const {isDark} = useTheme();
 
 	return (
 		<>
@@ -50,43 +63,73 @@ export default function SettingsMenu() {
 			>
 				<Flex
 					vertical
-					gap={20}
 					style={{ width: "100%", paddingRight: 20 }}
 				>
 					<Title style={{ marginBottom: "0" }}>Settings</Title>
 					<Divider />
+					
 
-					{/* <QRCode value={"http://172.16.3.100:5000/spotify"} bordered={false} size={100} /> */}
-
-					<Title level={3} style={{ marginTop: 0 }}>
+					<Title level={3} style={{ marginTop: 0, marginBottom: 10 }}>
 						General
 					</Title>
+					<Text type="secondary" style={{marginBottom: 10, fontSize: 16}}>
+						Class Code: <Text code style={{fontSize: 16}}>{classData?.key}</Text>
+					</Text>
+					<Flex gap={30} align="center">
+						<Flex vertical gap={20}>
+							<Flex
+								gap={10}
+								style={{ width: "500px" }}
+								justify="center"
+								align="center"
+							>
+								<Input
+									placeholder="Class Name"
+									defaultValue={classData?.className}
+								/>
+								<Button type="primary">Change Class Name</Button>
+							</Flex>
 
-					<Flex
-						gap={10}
-						style={{ width: "400px" }}
-						justify="center"
-						align="center"
-					>
-						<Input
-							placeholder="Class Name"
-							defaultValue={classData?.className}
-						/>
-						<Button type="primary">Change Class Name</Button>
-					</Flex>
+							<Flex
+								gap={10}
+								style={{ width: "400px" }}
+								justify="center"
+								align="center"
+							>
+								<Button variant="solid" color="danger">
+									Kick All Students
+								</Button>
+								<Button variant="solid" color="danger">
+									Regenerate Code
+								</Button>
+							</Flex>
+						</Flex>
+						
+						<Flex vertical gap={10} align="center" justify="center" style={{borderLeft: `2px solid ${isDark ? '#fff2' : '#0002'}`,paddingLeft: 20}}>
 
-					<Flex
-						gap={10}
-						style={{ width: "400px" }}
-						justify="center"
-						align="center"
-					>
-						<Button variant="solid" color="danger">
-							Kick All Students
-						</Button>
-						<Button variant="solid" color="danger">
-							Regenerate Code
-						</Button>
+							<Tooltip title="Click to enlarge">
+								<QRCode value={"https://formbar.ljharnish.org/joinClass?code=" + classData?.key} bordered={false} size={150} style={{cursor:'pointer'}} type="svg" icon="/img/FormbarLogo2-Circle.png" onClick={() => { setIsQRModalOpen(true) }}/>
+							</Tooltip>
+
+							<Text strong type="secondary" style={{fontSize:16}}>Scan to join class</Text>
+							
+							<Modal 
+								open={isQRModalOpen}
+								title="Join Class"
+								footer={null}
+								centered
+								onCancel={() => {
+									setIsQRModalOpen(false)
+								}}
+								>
+								<QRCode value={"https://formbar.ljharnish.org/joinClass?code=" + classData?.key} bordered={false} style={{
+									width: '100%',
+									aspectRatio: 1,
+									height: 'unset'
+								}} type="svg" icon="/img/FormbarLogo2-Circle.png"/>
+								
+							</Modal>
+						</Flex>
 					</Flex>
 
 					<Divider />
@@ -155,6 +198,7 @@ export default function SettingsMenu() {
 					</Flex>
 
 					<Collapse
+						style={{ width: "100%", marginTop: 20 }}
 						bordered={false}
 						items={[
 							{

@@ -1,16 +1,9 @@
 import {
 	Menu,
 	Flex,
-	Col,
-	Row,
 	Typography,
-	Card,
-	Statistic,
-	Splitter,
 	Button,
-	Tooltip,
 } from "antd";
-const { Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
@@ -76,13 +69,13 @@ const items = [
 	// 	selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
 	// 	label: "Permissions",
 	// },
-	// {
-	// 	key: "6",
-	// 	icon: <IonIcon icon={IonIcons.settingsOutline} />,
-	// 	deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
-	// 	selectedicon: <IonIcon icon={IonIcons.settings} />,
-	// 	label: "Settings & Links",
-	// }
+	{
+		key: "6",
+		icon: <IonIcon icon={IonIcons.settingsOutline} />,
+		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.settings} />,
+		label: "Settings & Links",
+	}
 ];
 
 export default function ControlPanel() {
