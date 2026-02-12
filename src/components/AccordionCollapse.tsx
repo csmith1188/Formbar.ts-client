@@ -5,7 +5,7 @@ import { textColorForBackground } from "../CustomStyleFunctions";
 import { PermissionLevels, type Student } from "../types";
 import * as IonIcons from "ionicons/icons";
 import { useClassData, useUserData } from "../main";
-import { socket } from "../socket";
+import { accessToken, formbarUrl, socket } from "../socket";
 
 type AccordionCategory = {
 	name: string;
@@ -14,11 +14,14 @@ type AccordionCategory = {
 	enabled: boolean;
 };
 
+
+
 export default function AccordionCollapse({
 	categories,
 }: {
 	categories: AccordionCategory[];
 }) {
+    
 	const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 	const [expanded, setExpanded] = useState<boolean>(false);
 
@@ -254,6 +257,28 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 	const [awardDigipogs, setAwardDigipogs] = useState<number>(0);
 	const { userData } = useUserData();
 
+    function awardDigipogsAPI(studentId: string, amount: number) {
+        fetch(`${formbarUrl}/api/v1/digipogs/award`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ studentId, amount })
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                alert(`Awarded ${amount} digipogs to student.`);
+            } else {
+                alert("Failed to award digipogs.");
+            }
+        })
+        .catch(() => {
+            alert("Failed to award digipogs.");
+        });        
+    }
+
 	return (
 		<AccordionCollapse
 			categories={[
@@ -417,11 +442,7 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 								color="blue"
 								style={{ width: "120px" }}
 								onClick={() => {
-									socket.emit("awardDigipogs", {
-										from: userData?.id,
-										to: studentData.id,
-										amount: awardDigipogs,
-									});
+									awardDigipogsAPI(studentData.id, awardDigipogs);
 								}}
 							>
 								Award

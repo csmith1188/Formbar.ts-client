@@ -127,11 +127,11 @@ label.correctAnswer .ant-checkbox-inner {
 }
 
 label.correctAnswer .ant-checkbox-inner::after {
-	margin-left: 3px;
+	margin-left: 6px;
 }
 
-.ant-color-picker-color-block,
-.ant-color-picker-color-block-inner {
+.ant-color-picker-trigger > .ant-color-picker-color-block,
+.ant-color-picker-trigger > .ant-color-picker-color-block-inner {
 	height: 100% !important;
 	width: 100% !important;
 }

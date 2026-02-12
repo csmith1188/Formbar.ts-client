@@ -66,6 +66,7 @@ const defaultPolls = [
 		indeterminate: [],
 		allowTextResponses: false,
 		allowMultipleResponses: false,
+        divider: true,
 	},
 	{
 		id: 5,
@@ -116,61 +117,64 @@ export default function PollsMenu({
 				<Title>Default Polls</Title>
 				{defaultPolls.map((poll) => {
 					return (
-						<div
-							key={poll.id}
-							style={{ marginTop: "10px", width: "300px" }}
-						>
-							<Button
-								type="primary"
-								style={{ padding: "10px", width: "100%" }}
-								onClick={() => {
-									setOpenModalId(poll.id);
-								}}
-							>
-								<Text strong>{poll.prompt}</Text>
-							</Button>
-							<Modal
-								centered
-								title={poll.prompt}
-								open={openModalId === poll.id}
-								onCancel={() => {
-									setOpenModalId(null);
-								}}
-								destroyOnHidden
-								footer={null}
-							>
-								{poll.answers.map((answer, index) => (
-									<Button
-										key={index}
-										style={{
-											backgroundColor: answer.color,
-											color: textColorForBackground(
-												answer.color,
-											),
-											marginTop: "5px",
-											width: "100%",
-										}}
-									>
-										{answer.answer}
-									</Button>
-								))}
+                        <>
+                            <div
+                                key={poll.id}
+                                style={{ marginTop: "10px", width: "300px" }}
+                            >
+                                <Button
+                                    type="primary"
+                                    style={{ padding: "10px", width: "100%" }}
+                                    onClick={() => {
+                                        setOpenModalId(poll.id);
+                                    }}
+                                >
+                                    <Text strong>{poll.prompt}</Text>
+                                </Button>
+                                <Modal
+                                    centered
+                                    title={poll.prompt}
+                                    open={openModalId === poll.id}
+                                    onCancel={() => {
+                                        setOpenModalId(null);
+                                    }}
+                                    destroyOnHidden
+                                    footer={null}
+                                >
+                                    {poll.answers.map((answer, index) => (
+                                        <Button
+                                            key={index}
+                                            style={{
+                                                backgroundColor: answer.color,
+                                                color: textColorForBackground(
+                                                    answer.color,
+                                                ),
+                                                marginTop: "5px",
+                                                width: "100%",
+                                            }}
+                                        >
+                                            {answer.answer}
+                                        </Button>
+                                    ))}
 
-								<div
-									style={{
-										marginTop: "20px",
-										textAlign: "center",
-										width: "100%",
-									}}
-								>
-									<Button
-										type="primary"
-										onClick={() => startPoll(poll.id)}
-									>
-										Start Poll
-									</Button>
-								</div>
-							</Modal>
-						</div>
+                                    <div
+                                        style={{
+                                            marginTop: "20px",
+                                            textAlign: "center",
+                                            width: "100%",
+                                        }}
+                                    >
+                                        <Button
+                                            type="primary"
+                                            onClick={() => startPoll(poll.id)}
+                                        >
+                                            Start Poll
+                                        </Button>
+                                    </div>
+                                </Modal>
+                            </div>
+                            {poll.divider && <Divider style={{marginTop: '15px', marginBottom: '5px'}}/>}
+                        </>
 					);
 				})}
 			</Flex>

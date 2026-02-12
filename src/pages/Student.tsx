@@ -238,6 +238,7 @@ export default function Student() {
 									style={{ width: "100%" }}
 									justify="center"
 									align="center"
+                                    wrap
 								>
 									{classData?.poll.responses.map(
 										(resp: any, index: number) => (

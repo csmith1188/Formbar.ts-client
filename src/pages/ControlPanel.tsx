@@ -43,18 +43,18 @@ const items = [
 	},
 	{
 		key: "7",
-		icon: <IonIcon icon={IonIcons.barChartOutline} />,
-		deselectedicon: <IonIcon icon={IonIcons.barChartOutline} />,
-		selectedicon: <IonIcon icon={IonIcons.barChart} />,
+		icon: <IonIcon icon={IonIcons.pencilOutline} />,
+		deselectedicon: <IonIcon icon={IonIcons.pencilOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.pencil} />,
 		label: "Poll Editor",
 	},
-	// {
-	// 	key: "3",
-	// 	icon: <IonIcon icon={IonIcons.timerOutline} />,
-	// 	deselectedicon: <IonIcon icon={IonIcons.timerOutline} />,
-	// 	selectedicon: <IonIcon icon={IonIcons.timer} />,
-	// 	label: "Timer",
-	// },
+	{
+		key: "3",
+		icon: <IonIcon icon={IonIcons.timerOutline} />,
+		deselectedicon: <IonIcon icon={IonIcons.timerOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.timer} />,
+		label: "Timer",
+	},
 	{
 		key: "4",
 		icon: <IonIcon icon={IonIcons.statsChartOutline} />,
@@ -62,19 +62,19 @@ const items = [
 		selectedicon: <IonIcon icon={IonIcons.statsChart} />,
 		label: "Statistics",
 	},
-	// {
-	// 	key: "5",
-	// 	icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
-	// 	deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
-	// 	selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
-	// 	label: "Permissions",
-	// },
+	{
+		key: "5",
+		icon: <IonIcon icon={IonIcons.lockClosedOutline} />,
+		deselectedicon: <IonIcon icon={IonIcons.lockClosedOutline} />,
+		selectedicon: <IonIcon icon={IonIcons.lockClosed} />,
+		label: "Permissions",
+	},
 	{
 		key: "6",
 		icon: <IonIcon icon={IonIcons.settingsOutline} />,
 		deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
 		selectedicon: <IonIcon icon={IonIcons.settings} />,
-		label: "Settings & Links",
+		label: "Settings",
 	}
 ];
 
@@ -237,14 +237,6 @@ export default function ControlPanel() {
 							End Class
 						</Button>
 					</Activity>
-
-					<Button
-						variant="outlined"
-						type="default"
-						onClick={() => socket.emit("classUpdate", "")}
-					>
-						Update
-					</Button>
 				</Flex>
 
 				<div

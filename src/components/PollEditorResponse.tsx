@@ -7,13 +7,15 @@ import * as IonIcons from "ionicons/icons";
 export default function PollEditorResponse({
     answer,
     setAnswer,
+    removeAnswer,
 }: {
-    answer: { text: string; isCorrect: boolean; weight: number };
-    setAnswer: (newAnswer: { text: string; isCorrect: boolean; weight: number }) => void;
+    answer: { color: string; answer: string; isCorrect: boolean; weight: number };
+    setAnswer: (newAnswer: { color: string; answer: string; isCorrect: boolean; weight: number }) => void;
+    removeAnswer: () => void;
 }) {
     return (
         <Flex align="center" justify="center" style={{ height: "40px" }} gap={10}>
-            <ColorPicker defaultValue="#1677ff" styles={{
+            <ColorPicker value={answer.color} styles={{
                 root: {
                     height: '100%',  
                     minWidth: 'unset',
@@ -21,7 +23,7 @@ export default function PollEditorResponse({
                     aspectRatio: 1,
                 },
                 
-            }}/>
+            }} onChange={(e) => setAnswer({...answer, color: "#" + e.toHex()})}/>
 
             <Tooltip title="Mark as Correct Answer">
                 <Checkbox className="correctAnswer" styles={{
@@ -38,7 +40,7 @@ export default function PollEditorResponse({
 
             <Input placeholder="Answer Text" style={{
                 height: '100%'
-            }} value={answer.text} onChange={(e) => setAnswer({ ...answer, text: e.target.value })} />
+            }} value={answer.answer} onChange={(e) => setAnswer({ ...answer, answer: e.target.value })} />
 
             <Tooltip title="Answer Weight">
                 <InputNumber styles={{
@@ -57,7 +59,7 @@ export default function PollEditorResponse({
                     }}} value={answer.weight} onChange={(value) => setAnswer({ ...answer, weight: value ?? 1 })} />
             </Tooltip>
             
-            <Button variant="solid" color="red" 
+            <Button variant="solid" color="red" onClick={removeAnswer}
                 style={{
                     height: '100%',
                     aspectRatio: 1

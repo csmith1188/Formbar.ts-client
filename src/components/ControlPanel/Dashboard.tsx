@@ -291,14 +291,16 @@ export default function Dashboard({
 														<strong style={{paddingRight: 40}}>
 															{student.displayName}
 														</strong>
-														<Switch 
-															style={{
-																position: 'absolute',
-																top: 20,
-																right: 20,
-															}}
-															size="small"
-														/>
+                                                        <Tooltip title="Allow Vote">
+                                                            <Switch 
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    top: 20,
+                                                                    right: 20,
+                                                                }}
+                                                                size="small"
+                                                            />
+                                                        </Tooltip>
 														<span style={{ color: matchingResponse?.color }}>
 															{student.pollRes?.buttonRes
 																? student.pollRes.buttonRes

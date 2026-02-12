@@ -26,6 +26,11 @@ export default function SettingsMenu() {
 
 	const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
+    const [newLinkInput, setNewLinkInput] = useState<{ name: string; url: string }>({ name: "", url: "" });
+
+    const [classTags, setClassTags] = useState<string[]>(classData?.tags || []);
+    const [newTagInput, setNewTagInput] = useState<string>("");
+
 	const [classLinks, setClassLinks] = useState<
 		{ name: string; url: string }[]
 	>([]);
@@ -33,7 +38,9 @@ export default function SettingsMenu() {
 	useEffect(() => {
 		if (!classData) return;
 
-		fetch(`${formbarUrl}/api/v1/class/${classData.id}/links`, {
+        setClassTags(classData.tags || []);
+
+		fetch(`${formbarUrl}/api/v1/room/${classData.id}/links`, {
 			method: "GET",
 			headers: {
 				"Authorization": `Bearer ${accessToken}`,
@@ -42,9 +49,9 @@ export default function SettingsMenu() {
 		.then((res) => res.json())
 		.then((data) => {
 			console.log(data)
-			if (data.success && data.data.links) {
-				console.log("Fetched class links:", data.data.links);
-				setClassLinks(data.data.links);
+			if (data.success && data.data) {
+				console.log("Fetched class links:", data.data);
+				setClassLinks(data.data);
 			}
 		})
 		.catch((err) => {
@@ -52,6 +59,95 @@ export default function SettingsMenu() {
 		});
 		
 	}, [classData]);
+
+    function tryAddLink() {
+        if (!newLinkInput.name || !newLinkInput.url) {
+            alert("Please fill out both the link name and URL.");
+            return;
+        }
+
+        // Basic URL validation
+        try {
+            new URL("https://" + newLinkInput.url.replace(/^https?:\/\//, ''));
+        } catch (e) {
+            alert("Please enter a valid URL.");
+            return;
+        }
+
+        fetch(`${formbarUrl}/api/v1/room/${classData?.id}/links/add`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newLinkInput)
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                setClassLinks([...classLinks, newLinkInput]);
+                setNewLinkInput({ name: "", url: "" });
+            } else {
+                alert("Failed to add link.");
+            }
+        })
+        .catch((err) => {
+            console.error("Error adding link:", err);
+            alert("An error occurred while adding the link.");
+        });
+
+    }
+
+    function removeLink(linkToRemove: { name: string; url: string }) {
+        fetch(`${formbarUrl}/api/v1/room/${classData?.id}/links/remove`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(linkToRemove)
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                setClassLinks(classLinks.filter(link => link.url !== linkToRemove.url));
+            } else {
+                alert("Failed to remove link.");
+            }
+        })
+        .catch((err) => {
+            console.error("Error removing link:", err);
+            alert("An error occurred while removing the link.");
+        });
+    }
+
+    function tryAddTag() {
+        if (!newTagInput) {
+            alert("Please enter a tag name.");
+            return;
+        }
+
+        fetch(`${formbarUrl}/api/v1/room/${classData?.id}/tags/`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ tags: [...classTags, newTagInput] })
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
+                setClassTags([...classTags, newTagInput]);
+            } else {
+                alert("Failed to add tag.");
+            }
+        })
+        .catch((err) => {
+            console.error("Error adding tag:", err);
+            alert("An error occurred while adding the tag.");
+        });
+    }
 
 	const {isDark} = useTheme();
 
@@ -184,14 +280,21 @@ export default function SettingsMenu() {
 						<Input
 							placeholder="Link Name"
 							style={{ width: "200px", marginRight: 10 }}
+                            value={newLinkInput.name}
+                            onChange={(e) => setNewLinkInput({...newLinkInput, name: e.target.value})}
 						/>
 						<Space.Compact style={{ width: "100%" }}>
 							<Space.Addon>https://</Space.Addon>
-							<Input placeholder="example.com" />
+							<Input 
+								placeholder="example.com" 
+								value={newLinkInput.url}
+								onChange={(e) => setNewLinkInput({...newLinkInput, url: e.target.value})}
+							/>
 						</Space.Compact>
 						<Button
 							type="primary"
 							style={{ marginLeft: 10, width: "100px" }}
+                            onClick={() => tryAddLink()}
 						>
 							Add Link
 						</Button>
@@ -239,6 +342,7 @@ export default function SettingsMenu() {
 														marginLeft: 10,
 														width: "100px",
 													}}
+                                                    onClick={() => removeLink(link)}
 												>
 													Remove
 												</Button>
@@ -251,6 +355,43 @@ export default function SettingsMenu() {
 					/>
 
 					<Divider />
+
+					<Title level={3}>Tags</Title>
+
+					<Flex
+						justify="start"
+						align="center"
+						style={{ width: "100%" }}
+					>
+						<Input
+							placeholder="Tag Name"
+							style={{ width: "200px", marginRight: 10 }}
+                            value={newTagInput}
+                            onChange={(e) => setNewTagInput(e.target.value)}
+						/>
+						<Button
+							type="primary"
+							style={{ marginLeft: 10, width: "100px" }}
+                            onClick={() => tryAddTag()}
+						>
+							Add Tag
+						</Button>
+					</Flex>
+                    <Flex gap={10} align="center" justify="start" wrap>
+                        {
+                            classTags.map((tag: string, index: number) => (
+                                <Button 
+                                    key={index} 
+                                    variant="outlined" 
+                                    type="default" 
+                                    style={{marginTop: 10}}
+                                >
+                                    {tag}
+                                    <IonIcon icon={IonIcons.trash} />
+                                </Button>
+                            ))
+                        }
+                    </Flex>
 				</Flex>
 			</Flex>
 		</>

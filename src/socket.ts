@@ -109,4 +109,11 @@ export function socketLogin(token: string) {
 				level: "error",
 			});
 		});
+
 }
+
+let tokenRefreshInterval = setInterval(() => {
+    if (refreshToken) {
+        socketLogin(refreshToken);
+    }
+}, 15 * 60 * 1000); // Refresh every 10 minutes
