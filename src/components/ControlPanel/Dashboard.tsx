@@ -36,20 +36,11 @@ export default function Dashboard({
 	const [currentView, setView] = useState<"dash" | "class">("dash");
 	const [searchQuery, setSearchQuery] = useState<string>("");
 
-	const [sortState, setSortState] = useState<
-		| "Name ▲"
-		| "Name ▼"
-		| "Permissions ▲"
-		| "Permissions ▼"
-		| "Response Order ▲"
-		| "Response Order ▼"
-		| "Response Time ▲"
-		| "Response Time ▼"
-		| "Response Text ▲"
-		| "Response Text ▼"
-		| "Help Time ▲"
-		| "Help Time ▼"
-	>("Name ▲");
+	const [sortType, setSortType] = useState<
+		"Name" | "Permissions" | "Response Order" | "Response Time" | "Response Text" | "Help Time"
+	>("Name");
+
+	const [sortDirection, setSortDirection] = useState<"▲" | "▼">("▲");
 
 	const [filterState, setFilterState] = useState<{
 		answeredPoll: boolean;
@@ -86,89 +77,65 @@ export default function Dashboard({
 	}
 
     function sortStudents(students: any[]) {
-        const sorted = [...students];
-        switch (sortState) {
-            case "Name ▲":
-                sorted.sort((a, b) => a.displayName.localeCompare(b.displayName));
-                break;
-            case "Name ▼":
-                sorted.sort((a, b) => b.displayName.localeCompare(a.displayName));
-                break;
-			case "Permissions ▲":
-				   sorted.sort((a, b) => {
-					   if (a.classPermissions === b.classPermissions) {
-						   return a.displayName.localeCompare(b.displayName);
-					   }
-					   return a.classPermissions > b.classPermissions ? 1 : -1;
-				   });
+		const sorted = [...students];
+		switch (sortType) {
+			case "Name":
+				sortDirection === "▲"
+					? sorted.sort((a, b) => a.displayName.localeCompare(b.displayName))
+					: sorted.sort((a, b) => b.displayName.localeCompare(a.displayName));
 				break;
-			case "Permissions ▼":
-				   sorted.sort((a, b) => {
-					   if (a.classPermissions === b.classPermissions) {
-						   return a.displayName.localeCompare(b.displayName);
-					   }
-					   return a.classPermissions < b.classPermissions ? 1 : -1;
-				   });
+			case "Permissions":
+				sorted.sort((a, b) => {
+					if (a.classPermissions === b.classPermissions) {
+						return a.displayName.localeCompare(b.displayName);
+					}
+					if (sortDirection === "▲") return a.classPermissions > b.classPermissions ? 1 : -1;
+					else return a.classPermissions < b.classPermissions ? 1 : -1;
+				});
 				break;
-            case "Response Order ▲":
+            case "Response Order":
                 sorted.sort((a, b) => {
                     const aIndex = classData?.poll.responses.findIndex((r: any) => r.answer === a.pollRes?.buttonRes) || 0;
                     const bIndex = classData?.poll.responses.findIndex((r: any) => r.answer === b.pollRes?.buttonRes) || 0;
-                    return aIndex - bIndex;
-                });
+                    if (sortDirection === "▲") return aIndex - bIndex;
+                    else return bIndex - aIndex;
+                })
                 break;
-            case "Response Order ▼":
-                sorted.sort((a, b) => {
-                    const aIndex = classData?.poll.responses.findIndex((r: any) => r.answer === a.pollRes?.buttonRes) || 0;
-                    const bIndex = classData?.poll.responses.findIndex((r: any) => r.answer === b.pollRes?.buttonRes) || 0;
-                    return bIndex - aIndex;
-                });
-                break;
-            case "Response Time ▲":
+            case "Response Time":
 				sorted.sort((a, b) => {
 					const aTimeRaw = a.pollRes?.time;
 					const bTimeRaw = b.pollRes?.time;
 					// If aTimeRaw is empty string, force to bottom
-					if (aTimeRaw === "" && bTimeRaw !== "") return -1;
-					if (bTimeRaw === "" && aTimeRaw !== "") return 1;
-					if (aTimeRaw === "" && bTimeRaw === "") return 0;
-					const aTime = new Date(aTimeRaw).getTime() || 0;
-					const bTime = new Date(bTimeRaw).getTime() || 0;
-					return aTime - bTime;
+
+                    if(sortDirection === "▲") {
+                        if (aTimeRaw === "" && bTimeRaw !== "") return -1;
+                        if (bTimeRaw === "" && aTimeRaw !== "") return 1;
+                        if (aTimeRaw === "" && bTimeRaw === "") return 0;
+                        const aTime = new Date(aTimeRaw).getTime() || 0;
+                        const bTime = new Date(bTimeRaw).getTime() || 0;
+                        return aTime - bTime;
+                    } else {
+                        if (aTimeRaw === "" && bTimeRaw !== "") return 1;
+                        if (bTimeRaw === "" && aTimeRaw !== "") return -1;
+                        if (aTimeRaw === "" && bTimeRaw === "") return 0;
+                        const aTime = new Date(aTimeRaw).getTime() || 0;
+                        const bTime = new Date(bTimeRaw).getTime() || 0;
+                        return bTime - aTime;
+                    }
 				});
                 break;
-            case "Response Time ▼":
-				sorted.sort((a, b) => {
-					const aTimeRaw = a.pollRes?.time;
-					const bTimeRaw = b.pollRes?.time;
-					// If aTimeRaw is empty string, force to bottom
-					if (aTimeRaw === "" && bTimeRaw !== "") return 1;
-					if (bTimeRaw === "" && aTimeRaw !== "") return -1;
-					if (aTimeRaw === "" && bTimeRaw === "") return 0;
-					const aTime = new Date(aTimeRaw).getTime() || 0;
-					const bTime = new Date(bTimeRaw).getTime() || 0;
-					return bTime - aTime;
-				});
-                break;
-            case "Response Text ▲":
-                sorted.sort((a, b) => {
-                    const aText = new Date(a.pollRes?.time).getTime() || 0;
-                    const bTime = new Date(b.pollRes?.time).getTime() || 0;
-                    return aText - bTime;
-                });
-                break;
-            case "Response Text ▼":
+            case "Response Text":
                 sorted.sort((a, b) => {
                     const aText = a.pollRes?.textRes || "";
                     const bText = b.pollRes?.textRes || "";
-                    return bText.localeCompare(aText);
+                
+                    if (sortDirection === "▲") return aText.localeCompare(bText);
+                    else return bText.localeCompare(aText);
                 });
                 break;
-            case "Help Time ▲":
-                sorted.sort((a, b) => (a.helpReqTime || 0) - (b.helpReqTime || 0));
-                break;
-            case "Help Time ▼":
-                sorted.sort((a, b) => (b.helpReqTime || 0) - (a.helpReqTime || 0));
+            case "Help Time":
+                if(sortDirection === "▲") sorted.sort((a, b) => (a.helpReqTime || 0) - (b.helpReqTime || 0));
+                else sorted.sort((a, b) => (b.helpReqTime || 0) - (a.helpReqTime || 0));
                 break;
         }
         return sorted;
@@ -328,50 +295,42 @@ export default function Dashboard({
 										<Flex vertical gap={10}>
                                             <Flex vertical gap={10}>
                                                 <p>Sort by:</p>
-                                                <Select
-                                                    style={{ width: "100%" }}
-                                                    value={sortState}
-                                                    onChange={(value) =>
-                                                        setSortState(value)
-                                                    }
-                                                >
-                                                    <Select.Option value="Name ▲">
-                                                        Name ▲
-                                                    </Select.Option>
-                                                    <Select.Option value="Name ▼">
-                                                        Name ▼
-                                                    </Select.Option>
-                                                    <Select.Option value="Permissions ▲">
-                                                        Permissions ▲
-                                                    </Select.Option>
-                                                    <Select.Option value="Permissions ▼">
-                                                        Permissions ▼
-                                                    </Select.Option>
-                                                    <Select.Option value="Response Order ▲">
-                                                        Response Order ▲
-                                                    </Select.Option>
-                                                    <Select.Option value="Response Order ▼">
-                                                        Response Order ▼
-                                                    </Select.Option>
-                                                    <Select.Option value="Response Time ▲">
-                                                        Response Time ▲
-                                                    </Select.Option>
-                                                    <Select.Option value="Response Time ▼">
-                                                        Response Time ▼
-                                                    </Select.Option>
-                                                    <Select.Option value="Response Text ▲">
-                                                        Response Text ▲
-                                                    </Select.Option>
-                                                    <Select.Option value="Response Text ▼">
-                                                        Response Text ▼
-                                                    </Select.Option>
-                                                    <Select.Option value="Help Time ▲">
-                                                        Help Time ▲
-                                                    </Select.Option>
-                                                    <Select.Option value="Help Time ▼">
-                                                        Help Time ▼
-                                                    </Select.Option>
-                                                </Select>
+                                                <Flex gap={10}>
+													<Select
+														style={{ flex: '1 1 auto'}}
+														value={sortType}
+														onChange={(value) =>
+															setSortType(value)
+														}
+													>
+														<Select.Option value="Name">
+															Name
+														</Select.Option>
+														<Select.Option value="Permissions">
+															Permissions
+														</Select.Option>
+														<Select.Option value="Response Order">
+															Response Order
+														</Select.Option>
+														<Select.Option value="Response Time">
+															Response Time
+														</Select.Option>
+														<Select.Option value="Response Text">
+															Response Text 
+														</Select.Option>
+														<Select.Option value="Help Time">
+															Help Time
+														</Select.Option>
+													</Select>
+													<Switch 
+                                                        checked={sortDirection === "▲"}
+                                                        onChange={() => setSortDirection(sortDirection === "▲" ? "▼" : "▲")}
+                                                        style={{flex: '0 0 auto', margin: 'auto '}}
+                                                        
+                                                        checkedChildren={"▲"}
+                                                        unCheckedChildren={"▼"}
+                                                    />
+                                                </Flex>
                                             </Flex>
 
 											<Flex vertical gap={10}>

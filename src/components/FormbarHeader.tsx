@@ -265,6 +265,24 @@ export default function FormbarHeader() {
 
 				<Tooltip
 					placement="bottomRight"
+					title="Testing"
+					arrow={{ pointAtCenter: true }}
+					color="geekblue"
+				>
+					<Button
+						type="primary"
+						variant="solid"
+						color="geekblue"
+						size="large"
+						style={styles.headerButton}
+						onClick={() => navigate("/testing")}
+					>
+						<IonIcon icon={IonIcons.bug} size="large" />
+					</Button>
+				</Tooltip>
+
+				<Tooltip
+					placement="bottomRight"
 					title="Log Out"
 					arrow={{ pointAtCenter: true }}
 					color="magenta"

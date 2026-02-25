@@ -76,6 +76,21 @@ export default function ManagerPanel() {
 			});
 	}
 
+    const [sortBy, setSortBy] = useState<"name" | "permission">("name");
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const sortedUsers = Object.values(users).sort((a, b) => {
+        if (sortBy === "name") {
+            return (a.displayName || a.email).localeCompare(b.displayName || b.email);
+        } else {
+            return b.permissions - a.permissions;
+        }
+    });
+
+    const filteredUsers = sortedUsers.filter((user) =>
+        (user.displayName || user.email).toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
 	return (
 		<div
 			style={{
@@ -111,40 +126,47 @@ export default function ManagerPanel() {
 				/>
 			</Flex>
 
+            <Flex
+                gap={10}
+                justify="center"
+                align="center"
+                style={{ marginBottom: "20px", height: "40px" }}
+            >
+                <Title level={3} style={{ margin: 0 }}>
+                    Sort by:
+                </Title>
+                <Button
+                    variant="solid"
+                    color={ sortBy === "name" ? "primary" : undefined }
+                    style={{ padding: "0 20px", height: "100%" }}
+                    onClick={() => setSortBy('name')}
+                >
+                    Name
+                </Button>
+                <Button
+                    variant="solid"
+                    color={ sortBy === "permission" ? "primary" : undefined }
+                    style={{ padding: "0 20px", height: "100%" }}
+                    onClick={() => setSortBy('permission')}
+                >
+                    Permission
+                </Button>
+                <Input
+                    placeholder="Search users..."
+                    style={{ width: "40%" }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </Flex>
+
 			<div style={{ flex: 1, overflowY: "auto", paddingBottom: "80px" }}>
 				<Activity
 					mode={listCategory === "Users" ? "visible" : "hidden"}
 				>
-					<Flex
-						gap={10}
-						justify="center"
-						align="center"
-						style={{ marginBottom: "20px", height: "40px" }}
-					>
-						<Title level={3} style={{ margin: 0 }}>
-							Sort by:
-						</Title>
-						<Button
-							variant="solid"
-							style={{ padding: "0 20px", height: "100%" }}
-						>
-							Name
-						</Button>
-						<Button
-							variant="solid"
-							style={{ padding: "0 20px", height: "100%" }}
-						>
-							Permission
-						</Button>
-						<Input
-							placeholder="Search users..."
-							style={{ width: "40%" }}
-						/>
-					</Flex>
 
 					<Row gutter={[8, 8]} style={{ margin: "10px" }}>
 						{Object.keys(users).length > 0 ? (
-							Object.values(users).map((user) => (
+							filteredUsers.map((user) => (
 								<Col span={4} key={user.id}>
 									<Card
 										title={
@@ -347,19 +369,6 @@ export default function ManagerPanel() {
 					</Row>
 				</Activity>
 			</div>
-
-			<Flex
-				gap={20}
-				style={{
-					position: "fixed",
-					bottom: "20px",
-					left: "20px",
-					zIndex: 1000,
-				}}
-			>
-				<Button type="primary">View Logs</Button>
-				<Button type="primary">Download Database</Button>
-			</Flex>
 		</div>
 	);
 }

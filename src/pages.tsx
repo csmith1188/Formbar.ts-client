@@ -9,6 +9,8 @@ import ClassesPage from "./pages/Classes.tsx";
 import PogPools from "./pages/PogPools.tsx";
 import Transactions from "./pages/Transactions.tsx";
 import ManagerPanel from "./pages/ManagerPanel.tsx";
+import NotFound from "./pages/404.tsx";
+import { Testing } from "./pages/Testing.tsx";
 
 import { Permissions } from "./types.ts";
 
@@ -23,9 +25,7 @@ const pages: Page[] = [
 	{
 		pageName: "404",
 		routePath: "*",
-		page: () => {
-			return <h1>404</h1>;
-		},
+		page: NotFound,
 	},
 	{
 		pageName: "Login",
@@ -83,6 +83,11 @@ const pages: Page[] = [
 		routePath: "/profile/:id?/transactions",
 		page: Transactions,
 	},
+    {
+        pageName: "Testing",
+        routePath: "/testing",
+        page: Testing
+    }
 ];
 
 export default pages;
