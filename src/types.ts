@@ -14,6 +14,7 @@ export type CurrentUserData = {
 	pollRes: { buttonRes: string; textRes: string; time: number | null };
 	sharedPolls: any[];
 	tags: any[];
+	verified?: number;
 };
 
 export type UserData = {

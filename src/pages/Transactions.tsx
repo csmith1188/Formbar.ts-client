@@ -105,7 +105,7 @@ export default function Transactions() {
 		if (!userData) return;
 
 		fetch(
-			`${formbarUrl}/api/v1/profile/transactions/${id ? id : userData?.id}`,
+			`${formbarUrl}/api/v1/user/${id ? id : userData?.id}/transactions`,
 			{
 				method: "GET",
 				headers: {
@@ -142,7 +142,7 @@ export default function Transactions() {
 					level: "error",
 				});
 			});
-	}, [userData]);
+	}, [userData, id]);
 
 	return (
 		<>

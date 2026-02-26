@@ -11,6 +11,7 @@ import Transactions from "./pages/Transactions.tsx";
 import ManagerPanel from "./pages/ManagerPanel.tsx";
 import NotFound from "./pages/404.tsx";
 import { Testing } from "./pages/Testing.tsx";
+import PinResetPage from "./pages/PinReset.tsx";
 
 import { Permissions } from "./types.ts";
 
@@ -77,6 +78,11 @@ const pages: Page[] = [
 		pageName: "Profile",
 		routePath: "/profile/:id?",
 		page: Profile,
+	},
+	{
+		pageName: "Reset PIN",
+		routePath: "/user/me/pin",
+		page: PinResetPage,
 	},
 	{
 		pageName: "Transactions",

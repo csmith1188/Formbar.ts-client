@@ -14,14 +14,13 @@ import {
 	useNavigate,
 	useLocation,
 } from "react-router-dom";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, Modal } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
 import {
 	socket,
 	registerSocketEventHandlers,
 	formbarUrl,
-	prodUrl,
 	socketLogin,
 	accessToken,
 } from "./socket";
@@ -36,7 +35,7 @@ import {
 import "./assets/css/index.css";
 
 import pages from "./pages";
-import type { ClassData, CurrentUserData, UserData } from "./types";
+import type { ClassData, CurrentUserData } from "./types";
 import Log from "./debugLogger";
 
 export const isDev: boolean = !import.meta.env.PROD;
@@ -54,6 +53,11 @@ type UserDataContextType = {
 type ClassDataContextType = {
 	classData: ClassData | null;
 	setClassData: (data: ClassData | null) => void;
+};
+
+type ServerConfig = {
+	emailEnabled: boolean;
+	googleOauthEnabled: boolean;
 };
 
 const connectionTriesLimit = 5;
@@ -193,38 +197,137 @@ const PageWrapper = ({
 const AppContent = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const [modal, contextHolder] = Modal.useModal();
 	const [isConnected, setIsConnected] = useState(socket?.connected || false);
 	const [socketErrorCount, setSocketErrorCount] = useState(0);
 	const [httpErrorCount, setHttpErrorCount] = useState(0);
-	const { setUserData } = useUserData();
+	const [config, setConfig] = useState<ServerConfig | null>(null);
+	const [showVerificationModal, setShowVerificationModal] = useState(false);
+	const [verificationRequestLoading, setVerificationRequestLoading] =
+		useState(false);
+	const { userData, setUserData } = useUserData();
+	const publicRoutes = ["/login", "/user/me/pin", "/user/me/password"];
 
-	const fetchUserData = () => {
+	const fetchConfig = async () => {
+		try {
+			const configResponse = await fetch(`${formbarUrl}/api/v1/config`, {
+				method: "GET",
+			});
+			const configPayload = await configResponse.json();
+			const nextConfig: ServerConfig = {
+				emailEnabled: Boolean(configPayload?.data?.emailEnabled),
+				googleOauthEnabled: Boolean(
+					configPayload?.data?.googleOauthEnabled,
+				),
+			};
+			setConfig(nextConfig);
+			return nextConfig;
+		} catch (err) {
+			Log({
+				message: "Error fetching server config",
+				data: err,
+				level: "error",
+			});
+			setConfig(null);
+			return null;
+		}
+	};
+
+	const fetchUserData = async () => {
 		if (!accessToken) return;
 
-		fetch(`${formbarUrl}/api/v1/user/me`, {
-			method: "GET",
-			headers: {
-				Authorization: `${accessToken}`,
-			},
-		})
-			.then((res) => res.json())
-			.then((response) => {
-				const { data } = response;
-				Log({
-					message: "User data fetched successfully.",
-					data,
-					level: "info",
-				});
-				setUserData(data);
-			})
-			.catch((err) => {
-				Log({
-					message: "Error fetching user data",
-					data: err,
-					level: "error",
-				});
-				setHttpErrorCount((prev) => prev + 1);
+		try {
+			const userResponse = await fetch(`${formbarUrl}/api/v1/user/me`, {
+				method: "GET",
+				headers: {
+					Authorization: `${accessToken}`,
+				},
 			});
+			const userPayload = await userResponse.json();
+			const { data } = userPayload;
+			if (userPayload?.error || !data?.id) {
+				throw new Error("Failed to load current user data");
+			}
+
+			Log({
+				message: "User data fetched successfully.",
+				data,
+				level: "info",
+			});
+			setUserData(data);
+
+			const serverConfig = config || (await fetchConfig());
+			if (!serverConfig?.emailEnabled) {
+				setShowVerificationModal(false);
+				return;
+			}
+
+			const userDetailResponse = await fetch(
+				`${formbarUrl}/api/v1/user/${data.id}`,
+				{
+					method: "GET",
+					headers: {
+						Authorization: `${accessToken}`,
+					},
+				},
+			);
+			const userDetailPayload = await userDetailResponse.json();
+			const verified = Number(userDetailPayload?.data?.verified);
+
+			if (!Number.isNaN(verified)) {
+				setUserData({ ...data, verified });
+			}
+			setShowVerificationModal(verified === 0);
+		} catch (err) {
+			Log({
+				message: "Error fetching user data",
+				data: err,
+				level: "error",
+			});
+			setHttpErrorCount((prev) => prev + 1);
+		}
+	};
+
+	const requestVerificationEmail = async () => {
+		if (!userData?.id || !accessToken) return;
+
+		setVerificationRequestLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/verify/request`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `${accessToken}`,
+					},
+				},
+			);
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				throw new Error(
+					payload?.error?.message ||
+						"Failed to request verification email",
+				);
+			}
+
+			modal.success({
+				title: "Verification Email Sent",
+				content:
+					"Check your inbox and click the verification link to activate your account.",
+			});
+			setShowVerificationModal(false);
+		} catch (err) {
+			const message =
+				err instanceof Error
+					? err.message
+					: "Unable to request verification email.";
+			modal.error({
+				title: "Verification Request Failed",
+				content: message,
+			});
+		} finally {
+			setVerificationRequestLoading(false);
+		}
 	};
 
 	/*
@@ -242,6 +345,8 @@ const AppContent = () => {
 	useEffect(() => {
 		let attempts = 0;
 		let timeoutId: ReturnType<typeof setTimeout>;
+
+		fetchConfig();
 
 		function pingServer() {
 			attempts++;
@@ -290,7 +395,9 @@ const AppContent = () => {
 		if (!socket?.connected && localStorage.getItem("refreshToken")) {
 			socketLogin(localStorage.getItem("refreshToken")!);
 		} else if (!localStorage.getItem("refreshToken")) {
-			navigate("/login");
+			if (!publicRoutes.includes(window.location.pathname)) {
+				navigate("/login");
+			}
 			setIsConnected(true);
 		}
 
@@ -352,27 +459,45 @@ const AppContent = () => {
 	}, []);
 
 	return (
-		<Routes>
-			{pages.map((page) => {
-				const Element = page.page;
-				return (
-					<Route
-						key={page.routePath}
-						path={page.routePath}
-						element={
-							<PageWrapper pageName={page.pageName}>
-								<LoadingScreen
-									socketErrors={socketErrorCount}
-									httpErrors={httpErrorCount}
-									isConnected={isConnected}
-								/>
-								<Element />
-							</PageWrapper>
-						}
-					/>
-				);
-			})}
-		</Routes>
+		<>
+			{contextHolder}
+			<Modal
+				title="Email Verification Required"
+				open={showVerificationModal && location.pathname !== "/login"}
+				onCancel={() => setShowVerificationModal(false)}
+				onOk={requestVerificationEmail}
+				okText="Request Verification Email"
+				cancelText="Later"
+				confirmLoading={verificationRequestLoading}
+			>
+				<p>
+					Your account has not been verified yet. Request a
+					verification email to verify your account and unlock
+					restricted features.
+				</p>
+			</Modal>
+			<Routes>
+				{pages.map((page) => {
+					const Element = page.page;
+					return (
+						<Route
+							key={page.routePath}
+							path={page.routePath}
+							element={
+								<PageWrapper pageName={page.pageName}>
+									<LoadingScreen
+										socketErrors={socketErrorCount}
+										httpErrors={httpErrorCount}
+										isConnected={isConnected}
+									/>
+									<Element />
+								</PageWrapper>
+							}
+						/>
+					);
+				})}
+			</Routes>
+		</>
 	);
 };
 

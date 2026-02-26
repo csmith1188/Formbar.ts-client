@@ -28,6 +28,10 @@ const testFuncs = [
     { name: 'Ban User', func: banUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
     { name: 'Unban User', func: unbanUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
     { name: 'Verify User', func: verifyUser, hasArgs: true, category: 'User', method: 'PATCH' },
+    { name: 'Regenerate API Key', func: regenerateApiKey, hasArgs: true, category: 'User', method: 'PATCH' },
+    { name: 'Update PIN', func: updatePin, hasArgs: true, category: 'User', method: 'PATCH' },
+    { name: 'Request PIN Reset', func: requestPinReset, hasArgs: true, category: 'User', method: 'POST' },
+    { name: 'Reset PIN (Token)', func: resetPinWithToken, hasArgs: true, category: 'User', method: 'PATCH' },
 
     // Class endpoints (from attachments)
     { name: 'Get Class', func: getClass, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
@@ -94,8 +98,8 @@ const testFuncs = [
     { name: 'OAuth Revoke', func: oauthRevoke, hasArgs: true, category: 'OAuth', method: 'POST' },
     { name: 'OAuth Token', func: oauthToken, hasArgs: true, category: 'OAuth', method: 'POST' },
 
-    // Profile
-    { name: 'Get Profile Transactions', func: getProfileTransactions, hasArgs: true, category: 'Profile', method: 'GET' },
+    // User
+    { name: 'Get User Transactions', func: getUserTransactions, hasArgs: true, category: 'User', method: 'GET' },
 
     // Pools
     { name: 'Get User Pools', func: getUserPools, hasArgs: false, category: 'Pools', method: 'GET' },
@@ -279,6 +283,76 @@ async function verifyUser(inputValue: string) {
         console.log("Verify User:", data);
     } catch (err) {
         console.error("Error verifying user:", err);
+    }
+}
+
+async function regenerateApiKey(inputValue: string) {
+    if (!inputValue) return console.warn('regenerateApiKey requires an id');
+    try {
+        const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/api/regenerate`, getFetchOptions('POST'));
+        const data = await res.json();
+        console.log("Regenerate API Key:", data);
+    } catch (err) {
+        console.error("Error regenerating API key:", err);
+    }
+}
+
+// updatePin expects "id|newPin|oldPin(optional)" or JSON body with id,pin,oldPin
+async function updatePin(inputValue: string) {
+    if (!inputValue) return console.warn('updatePin requires "id|newPin|oldPin(optional)"');
+    let id = "";
+    let body: any = {};
+    if (inputValue.includes('|')) {
+        const [userId, newPin, oldPin] = inputValue.split('|').map(s => s.trim());
+        id = userId;
+        body = { pin: newPin, ...(oldPin ? { oldPin } : {}) };
+    } else {
+        try {
+            const parsed = JSON.parse(inputValue);
+            id = String(parsed.id || "");
+            body = { pin: parsed.pin, ...(parsed.oldPin ? { oldPin: parsed.oldPin } : {}) };
+        } catch {
+            return console.warn('updatePin requires "id|newPin|oldPin(optional)" or JSON');
+        }
+    }
+    if (!id || !body.pin) return console.warn('updatePin requires both id and pin');
+
+    try {
+        const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(id)}/pin`, getFetchOptions('PATCH', body));
+        const data = await res.json();
+        console.log("Update PIN:", data);
+    } catch (err) {
+        console.error("Error updating PIN:", err);
+    }
+}
+
+async function requestPinReset(inputValue: string) {
+    if (!inputValue) return console.warn('requestPinReset requires a user id');
+    try {
+        const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/pin/reset`, getFetchOptions('POST'));
+        const data = await res.json();
+        console.log("Request PIN Reset:", data);
+    } catch (err) {
+        console.error("Error requesting PIN reset:", err);
+    }
+}
+
+// resetPinWithToken expects JSON: {"pin":"1234","token":"..."}
+async function resetPinWithToken(inputValue: string) {
+    if (!inputValue) return console.warn('resetPinWithToken requires JSON body');
+    let body: any;
+    try {
+        body = JSON.parse(inputValue);
+    } catch {
+        return console.warn('resetPinWithToken requires JSON body like {"pin":"1234","token":"..."}');
+    }
+
+    try {
+        const res = await fetch(`${formbarUrl}/api/v1/user/pin/reset`, getFetchOptions('PATCH', body));
+        const data = await res.json();
+        console.log("Reset PIN (Token):", data);
+    } catch (err) {
+        console.error("Error resetting PIN:", err);
     }
 }
 
@@ -722,7 +796,7 @@ async function updateIP(inputValue: string) {
     } catch (err) { console.error('Error updating IP:', err); }
 }
 
-// --- Manager / Logs / Student / OAuth / Profile / Pools ---
+// --- Manager / Logs / Student / OAuth / User / Pools ---
 async function getManager() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/manager`, getFetchOptions());
@@ -778,13 +852,13 @@ async function oauthToken(inputValue: string) {
     } catch (err) { console.error('Error requesting oauth token:', err); }
 }
 
-async function getProfileTransactions(inputValue: string) {
-    if (!inputValue) return console.warn('getProfileTransactions requires a userId');
+async function getUserTransactions(inputValue: string) {
+    if (!inputValue) return console.warn('getUserTransactions requires a userId');
     try {
-        const res = await fetch(`${formbarUrl}/api/v1/profile/transactions/${encodeURIComponent(inputValue)}`, getFetchOptions());
+        const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/transactions`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Profile Transactions:', data);
-    } catch (err) { console.error('Error getting profile transactions:', err); }
+        console.log('Get User Transactions:', data);
+    } catch (err) { console.error('Error getting user transactions:', err); }
 }
 
 async function getUserPools() {
