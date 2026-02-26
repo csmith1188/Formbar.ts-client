@@ -1,4 +1,4 @@
-import { Button, Masonry, Flex, Input } from "antd";
+import { Button, Masonry, Flex, Input, Badge, Tooltip } from "antd";
 import { accessToken, formbarUrl } from "../socket";
 import { useState } from "react";
 import FormbarHeader from "../components/FormbarHeader";
@@ -16,50 +16,52 @@ const getFetchOptions = (method = "GET", body?: any) => {
 }
 
 const testFuncs = [
-    { name: 'Certs', func: certs, hasArgs: false, category: 'System', method: 'GET' },
-    { name: 'Get Me', func: getMe, hasArgs: false, category: 'User', method: 'GET' },
-    { name: 'Get User', func: getUser, hasArgs: true, category: 'User', method: 'GET' },
+    { name: 'Clear Console', func: () => console.clear(), hasArgs: false, category: 'System', method: 'DELETE', testedWorks: true },
+    { name: 'Certs', func: certs, hasArgs: false, category: 'System', method: 'GET', testedWorks: true },
+
+    { name: 'Get Me', func: getMe, hasArgs: false, category: 'User', method: 'GET', testedWorks: true },
+    { name: 'Get User', func: getUser, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
     { name: 'Get User Class', func: getUserClass, hasArgs: true, category: 'User', method: 'GET' },
-    { name: 'Get User Classes', func: getUserClasses, hasArgs: true, category: 'User', method: 'GET' },
-    { name: 'Delete User', func: deleteUser, hasArgs: true, category: 'User', method: 'DELETE' },
-    { name: 'Change Perm (email|perm)', func: changePerm, hasArgs: true, category: 'User', method: 'PATCH' },
-    { name: 'Ban User', func: banUser, hasArgs: true, category: 'User', method: 'PATCH' },
-    { name: 'Unban User', func: unbanUser, hasArgs: true, category: 'User', method: 'PATCH' },
+    { name: 'Get User Classes', func: getUserClasses, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
+    { name: 'Delete User', func: deleteUser, hasArgs: true, category: 'User', method: 'DELETE', testedWorks: true },
+    { name: 'Change Perm (email|perm)', func: changePerm, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
+    { name: 'Ban User', func: banUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
+    { name: 'Unban User', func: unbanUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
     { name: 'Verify User', func: verifyUser, hasArgs: true, category: 'User', method: 'PATCH' },
 
     // Class endpoints (from attachments)
-    { name: 'Get Class', func: getClass, hasArgs: true, category: 'Class', method: 'GET' },
+    { name: 'Get Class', func: getClass, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
     { name: 'Get Class Active', func: getClassActive, hasArgs: true, category: 'Class', method: 'GET' },
     { name: 'Get Class Banned', func: getClassBanned, hasArgs: true, category: 'Class', method: 'GET' },
     { name: 'Get Class Links', func: getClassLinks, hasArgs: true, category: 'Class', method: 'GET' },
     { name: 'Get Class Permissions', func: getClassPermissions, hasArgs: true, category: 'Class', method: 'GET' },
     { name: 'Get Class Students', func: getClassStudents, hasArgs: true, category: 'Class', method: 'GET' },
-    { name: 'Create Class', func: createClass, hasArgs: true, category: 'Class', method: 'POST' },
-    { name: 'End Class', func: endClass, hasArgs: true, category: 'Class', method: 'POST' },
-    { name: 'Join Class', func: joinClass, hasArgs: true, category: 'Class', method: 'POST' },
-    { name: 'Leave Class', func: leaveClass, hasArgs: true, category: 'Class', method: 'POST' },
-    { name: 'Start Class', func: startClass, hasArgs: true, category: 'Class', method: 'POST' },
+    { name: 'Create Class', func: createClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
+    { name: 'End Class', func: endClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
+    { name: 'Join Class', func: joinClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
+    { name: 'Leave Class', func: leaveClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
+    { name: 'Start Class', func: startClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
 
     // Class - Polls
     { name: 'Get Class Polls', func: getClassPolls, hasArgs: true, category: 'Class - Polls', method: 'GET' },
-    { name: 'Get Class Current Poll', func: getClassPollCurrent, hasArgs: true, category: 'Class - Polls', method: 'GET' },
-    { name: 'Clear Class Poll', func: clearClassPolls, hasArgs: true, category: 'Class - Polls', method: 'POST' },
+    { name: 'Get Class Current Poll', func: getClassPollCurrent, hasArgs: true, category: 'Class - Polls', method: 'GET', testedWorks: true },
+    { name: 'Clear Class Poll', func: clearClassPolls, hasArgs: true, category: 'Class - Polls', method: 'POST', testedWorks: true },
     { name: 'Create Class Poll', func: createClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST' },
-    { name: 'End Class Poll', func: endClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST' },
+    { name: 'End Class Poll', func: endClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST', testedWorks: true },
     { name: 'Response to Poll', func: respondClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST' },
 
     // Class - Breaks
     { name: 'End Own Break', func: endOwnBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST' },
-    { name: 'Request Break', func: requestBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST' },
-    { name: 'Approve Break', func: approveBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST' },
+    { name: 'Request Break', func: requestBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', testedWorks: true },
+    { name: 'Approve Break', func: approveBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', testedWorks: true },
     { name: 'Deny Break', func: denyBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST' },
 
     // Class - Help
-    { name: 'Delete Help Request', func: deleteHelpRequest, hasArgs: true, category: 'Class - Help', method: 'DELETE' },
+    { name: 'Delete Help Request', func: deleteHelpRequest, hasArgs: true, category: 'Class - Help', method: 'DELETE', testedWorks: true },
     { name: 'Request Help', func: requestClassHelp, hasArgs: true, category: 'Class - Help', method: 'POST' },
 
     // Room
-    { name: 'Leave Room', func: leaveRoom, hasArgs: true, category: 'Room', method: 'DELETE' },
+    { name: 'Leave Room', func: leaveRoom, hasArgs: true, category: 'Room', method: 'DELETE', testedWorks: true },
     { name: 'Get Room Tags', func: getRoomTags, hasArgs: false, category: 'Room', method: 'GET' },
     { name: 'Join Room By Code', func: joinRoomByCode, hasArgs: true, category: 'Room', method: 'POST' },
     { name: 'Set Room Tags', func: setRoomTags, hasArgs: true, category: 'Room', method: 'PUT' },
@@ -76,19 +78,16 @@ const testFuncs = [
 
     // IP Management
     { name: 'Remove IP', func: removeIP, hasArgs: true, category: 'IP', method: 'DELETE' },
-    { name: 'Get IP List', func: getIPList, hasArgs: true, category: 'IP', method: 'GET' },
+    { name: 'Get IP List', func: getIPList, hasArgs: true, category: 'IP', method: 'GET', testedWorks: true },
     { name: 'Toggle IP', func: toggleIP, hasArgs: true, category: 'IP', method: 'POST' },
     { name: 'Update IP', func: updateIP, hasArgs: true, category: 'IP', method: 'PUT' },
 
     // Manager
-    { name: 'Get Manager', func: getManager, hasArgs: false, category: 'Manager', method: 'GET' },
+    { name: 'Get Manager', func: getManager, hasArgs: false, category: 'Manager', method: 'GET', testedWorks: true },
 
     // Logs
     { name: 'Get Logs', func: getLogs, hasArgs: false, category: 'Logs', method: 'GET' },
     { name: 'Get Log File', func: getLogFile, hasArgs: true, category: 'Logs', method: 'GET' },
-
-    // Student
-    { name: 'Student Submit', func: studentSubmit, hasArgs: true, category: 'Student', method: 'POST' },
 
     // OAuth
     { name: 'OAuth Authorize', func: oauthAuthorize, hasArgs: false, category: 'OAuth', method: 'GET' },
@@ -96,7 +95,6 @@ const testFuncs = [
     { name: 'OAuth Token', func: oauthToken, hasArgs: true, category: 'OAuth', method: 'POST' },
 
     // Profile
-    { name: 'Get Profile', func: getProfile, hasArgs: true, category: 'Profile', method: 'GET' },
     { name: 'Get Profile Transactions', func: getProfileTransactions, hasArgs: true, category: 'Profile', method: 'GET' },
 
     // Pools
@@ -117,14 +115,19 @@ function getButtonStyle(method?: string) {
 
 export function Testing() {
     const [inputValue, setInputValue] = useState("");
+    const [bodyValue, setBodyValue] = useState("");
 
     return (
         <div style={{ padding: '0 20px' }}>
             <FormbarHeader />
             <Flex style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }} wrap gap={16} align="start">
-                <h1>Testing Page</h1>
-                <p>This page is for testing new features and components.</p>
+                <Flex justify="center" align="center" gap={20} style={{marginTop:16}}>
+                    <h1>Testing Page</h1>
+                    <p>This page is for testing new features and components.</p>
+                    <p>Working: {testFuncs.filter(t => t.testedWorks === true).length-1}/{testFuncs.length-1}</p>
+                </Flex>
                 <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Argument (id, email, or 'email|perm')"/>
+                <Input value={bodyValue} onChange={(e) => setBodyValue(e.target.value)} placeholder="Body (for POST/PUT requests)"/>
                 {
                     // group tests by category
                     Object.entries(testFuncs.reduce<Record<string, any[]>>((acc, t) => {
@@ -137,14 +140,18 @@ export function Testing() {
                             <h3 style={{ margin: '6px 0' }}>{category}</h3>
                             <Flex vertical align="start" style={{ background: '#000a', padding: 8, borderRadius: 10 }} wrap gap={8}>
                                 {tests.map((test: any) => (
-                                    <Button
-                                        key={test.name}
-                                        onClick={() => test.hasArgs ? test.func(inputValue) : test.func()}
-                                        style={{ margin: 4 }}
-                                        type='default'
-                                        variant="solid"
-                                        color={getButtonStyle(test.method) as any}
-                                    >{test.name}</Button>
+                                    <Tooltip title={typeof test.testedWorks === 'string' ? test.testedWorks : test.testedWorks === true ? 'Works' : "Not working"} color={test.testedWorks === true ? 'green' : !test.testedWorks ? 'red' : 'orange'}>
+                                        <Badge dot color={test.testedWorks === true ? 'green' : !test.testedWorks ? 'red' : 'orange'}>
+                                            <Button
+                                                key={test.name}
+                                                onClick={() => test.hasArgs ? test.func(inputValue, bodyValue) : test.func()}
+                                                style={{ margin: 4 }}
+                                                type='default'
+                                                variant="solid"
+                                                color={getButtonStyle(test.method) as any}
+                                            >{test.name}</Button>
+                                        </Badge>
+                                    </Tooltip>
                                 ))}
                             </Flex>
                         </div>
@@ -427,12 +434,12 @@ async function clearClassPolls(inputValue: string) {
     } catch (err) { console.error('Error clearing polls:', err); }
 }
 
-async function createClassPoll(inputValue: string) {
+async function createClassPoll(inputValue: string, bodyValue: string) {
     if (!inputValue) return console.warn('createClassPoll requires body or name');
     let body: any;
-    try { body = JSON.parse(inputValue); } catch { body = { title: inputValue }; }
+    try { body = JSON.parse(bodyValue); } catch (err) { body = bodyValue; }
     try {
-        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(body.classId || body.id || '')}/polls/create`, getFetchOptions('POST', body));
+        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/create`, getFetchOptions('POST', body));
         const data = await res.json();
         console.log('Create Class Poll:', data);
     } catch (err) { console.error('Error creating poll:', err); }
@@ -447,31 +454,35 @@ async function endClassPoll(inputValue: string) {
     } catch (err) { console.error('Error ending poll:', err); }
 }
 
-async function respondClassPoll(inputValue: string) {
+async function respondClassPoll(inputValue: string, bodyValue: string) {
     if (!inputValue) return console.warn('respondClassPoll requires body');
     let body: any;
-    try { body = JSON.parse(inputValue); } catch { body = { response: inputValue }; }
+    try { body = JSON.parse(bodyValue); } catch (err) { body = bodyValue; }
     try {
-        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(body.classId || body.id || '')}/polls/response`, getFetchOptions('POST', body));
+        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/response`, getFetchOptions('POST', body));
         const data = await res.json();
         console.log('Respond Class Poll:', data);
     } catch (err) { console.error('Error responding to poll:', err); }
 }
 
 // --- Class - Breaks ---
-async function endOwnBreak(inputValue: string) {
+async function endOwnBreak(inputValue: string, bodyValue: string) {
     if (!inputValue) return console.warn('endOwnBreak requires an id');
+    let body: any;
+    try { body = JSON.parse(bodyValue); } catch (err) { body = bodyValue; }
     try {
-        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/break/end`, getFetchOptions('POST'));
+        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/break/end`, getFetchOptions('POST', body));
         const data = await res.json();
         console.log('End Own Break:', data);
     } catch (err) { console.error('Error ending own break:', err); }
 }
 
-async function requestBreak(inputValue: string) {
+async function requestBreak(inputValue: string, bodyValue: string) {
     if (!inputValue) return console.warn('requestBreak requires an id');
+    let body: any;
+    try { body = JSON.parse(bodyValue); } catch (err) { body = bodyValue; }
     try {
-        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/break/request`, getFetchOptions('POST'));
+        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/break/request`, getFetchOptions('POST', body));
         const data = await res.json();
         console.log('Request Break:', data);
     } catch (err) { console.error('Error requesting break:', err); }
@@ -645,10 +656,10 @@ async function awardDigipogs(inputValue: string) {
     } catch (err) { console.error('Error awarding digipogs:', err); }
 }
 
-async function transferDigipogs(inputValue: string) {
-    if (!inputValue) return console.warn('transferDigipogs requires body JSON or "toUserId|amount"');
+async function transferDigipogs(inputValue: string, bodyValue: string) {
+    if (!inputValue && !bodyValue) return console.warn('transferDigipogs requires body JSON or "toUserId|amount"');
     let body: any;
-    try { body = JSON.parse(inputValue); } catch {
+    try { body = JSON.parse(bodyValue); } catch {
         const [toUserId, amount] = inputValue.split('|').map(s => s.trim());
         body = { toUserId, amount: Number(amount) || 0 };
     }
@@ -737,17 +748,6 @@ async function getLogFile(inputValue: string) {
     } catch (err) { console.error('Error getting log file:', err); }
 }
 
-async function studentSubmit(inputValue: string) {
-    if (!inputValue) return console.warn('studentSubmit requires body');
-    let body: any;
-    try { body = JSON.parse(inputValue); } catch { body = { response: inputValue }; }
-    try {
-        const res = await fetch(`${formbarUrl}/api/v1/student`, getFetchOptions('POST', body));
-        const data = await res.json();
-        console.log('Student Submit:', data);
-    } catch (err) { console.error('Error submitting student response:', err); }
-}
-
 async function oauthAuthorize() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/oauth/authorize`, getFetchOptions());
@@ -776,15 +776,6 @@ async function oauthToken(inputValue: string) {
         const data = await res.json();
         console.log('OAuth Token:', data);
     } catch (err) { console.error('Error requesting oauth token:', err); }
-}
-
-async function getProfile(inputValue: string) {
-    if (!inputValue) return console.warn('getProfile requires a userId');
-    try {
-        const res = await fetch(`${formbarUrl}/api/v1/profile/${encodeURIComponent(inputValue)}`, getFetchOptions());
-        const data = await res.json();
-        console.log('Get Profile:', data);
-    } catch (err) { console.error('Error getting profile:', err); }
 }
 
 async function getProfileTransactions(inputValue: string) {

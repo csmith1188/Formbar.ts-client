@@ -200,10 +200,10 @@ export default function Student() {
 											}
 								}
 							>
-								<FullCircularPoll
-									pollAnswers={answerState}
-									size={pollWidth}
-								/>
+                                <FullCircularPoll
+                                    pollAnswers={answerState}
+                                    size={pollWidth}
+                                />
 							</Flex>
 						) : null}
 
@@ -263,8 +263,10 @@ export default function Student() {
 									/>
 								) : null}
 							</Flex>
-						) : (
+						) : !classData?.poll.prompt  ? (
 							<Title>There is no current poll.</Title>
+						) : (
+                            null
 						)}
 
 						{!classData?.isActive ? (

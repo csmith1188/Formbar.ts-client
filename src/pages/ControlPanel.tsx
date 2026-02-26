@@ -18,7 +18,7 @@ import ClassroomPage from "../components/ControlPanel/ClassroomPage";
 import PollEditorMenu from "../components/ControlPanel/PollEditorMenu";
 
 import { themeColors } from "../../themes/ThemeConfig";
-import { socket } from "../socket";
+import { accessToken, formbarUrl, socket } from "../socket";
 import Log from "../debugLogger";
 import ControlPanelPoll from "../components/BarPoll";
 import Statistics from "../components/ControlPanel/StatisticsPage";
@@ -237,6 +237,72 @@ export default function ControlPanel() {
 							End Class
 						</Button>
 					</Activity>
+
+                    {
+                        classData?.poll.status && (
+                            <Button
+                                color="red"
+                                variant="solid"
+                                type="default"
+                                onClick={() => {
+                                    fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/end`, {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Authorization": `${accessToken}`,
+                                        },
+                                    })
+                                    .then((res) => {
+                                        if (!res.ok) {
+                                            throw new Error("Failed to end poll");
+                                        }
+                                        return res.json();
+                                    })
+                                    .then((data) => {
+                                        console.log("Poll ended:", data);
+                                    })
+                                    .catch((err) => {
+                                        console.error("Error ending poll:", err);
+                                    });
+                                }}
+                            >
+                                End Poll
+                            </Button>
+                        )
+                    }
+
+                    {
+                        classData?.poll.prompt && (
+                            <Button
+                                color="red"
+                                variant="solid"
+                                type="default"
+                                onClick={() => {
+                                    fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/clear`, {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                            "Authorization": `${accessToken}`,
+                                        },
+                                    })
+                                    .then((res) => {
+                                        if (!res.ok) {
+                                            throw new Error("Failed to clear polls");
+                                        }
+                                        return res.json();
+                                    })
+                                    .then((data) => {
+                                        console.log("Polls cleared:", data);
+                                    })
+                                    .catch((err) => {
+                                        console.error("Error clearing polls:", err);
+                                    });
+                                }}
+                            >
+                                Clear Poll
+                            </Button>
+                        )
+                    }
 				</Flex>
 
 				<div

@@ -510,6 +510,11 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 								variant="solid"
 								color="red"
 								style={{ width: "120px" }}
+                                onClick={() => {
+                                    if (window.confirm("Are you sure you want to ban this user? This will prevent them from joining any of your classes until unbanned.")) {
+                                        socket.emit("classBanUser", studentData.email);
+                                    }
+                                }}
 							>
 								Ban User
 							</Button>

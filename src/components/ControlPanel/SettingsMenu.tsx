@@ -309,7 +309,7 @@ export default function SettingsMenu() {
 								label: "Added Links",
 								children: (
 									<Flex vertical>
-										{classLinks.map((link, index) => (
+										{classLinks.length > 0 && classLinks.map((link, index) => (
 											<Flex
 												key={index}
 												justify="space-between"

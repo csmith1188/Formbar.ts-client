@@ -1,6 +1,6 @@
 import { Button, Card, Flex, Input, Switch, Typography } from "antd";
 const { Title, Text } = Typography;
-import { useTheme } from "../../main";
+import { useClassData, useTheme } from "../../main";
 import PollEditorResponse from "../PollEditorResponse";
 import { useState } from "react";
 
@@ -23,7 +23,7 @@ type PollProperties = {
     allowMultipleResponses: boolean;
 };
 
-import { socket } from "../../socket";
+import { accessToken, formbarUrl, socket } from "../../socket";
 
 function randomColor() {
     const letters = '0123456789ABCDEF';
@@ -78,6 +78,7 @@ function generateColors(amount: number) {
 
 export default function PollsEditorMenu() {
     const { isDark } = useTheme();
+    const { classData } = useClassData();
 
     const [pollProperties, setPollProperties] = useState<PollProperties>({
         prompt: "Custom Poll",
@@ -96,7 +97,22 @@ export default function PollsEditorMenu() {
     });
 
     function startCustomPoll() {
-        socket.emit("startPoll", pollProperties);
+        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/create`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(pollProperties),
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            console.log("Custom poll started:", data);
+            socket?.emit("classUpdate", ""); // Refresh class data to show new poll
+        })
+        .catch((err) => {
+            console.error("Error starting custom poll:", err);
+        });
     }
 
     return (
