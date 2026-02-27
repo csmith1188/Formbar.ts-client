@@ -30,6 +30,7 @@ export default function Profile() {
 	);
 	const [sensModalOpen, setSensModalOpen] = useState(false);
 	const [enteredPin, setEnteredPin] = useState("");
+	const [hasPin, setHasPin] = useState<boolean | null>(null);
 
 	const [profileProps, setProfileProps] = useState<{
 		[key: string]: string | number | undefined;
@@ -42,6 +43,7 @@ export default function Profile() {
 	const [apiKeyLoading, setApiKeyLoading] = useState(false);
 	const [pinLoading, setPinLoading] = useState(false);
 	const [pinResetLoading, setPinResetLoading] = useState(false);
+	const [pinVerifyLoading, setPinVerifyLoading] = useState(false);
 
 	const { id } = useParams<{ id?: string }>();
 	const isOwnProfile = !id || String(id) === String(userData?.id);
@@ -118,6 +120,7 @@ export default function Profile() {
 
 			setOldPin("");
 			setNewPin("");
+			setHasPin(true);
 			messageApi.success("PIN updated successfully.");
 		} catch (err) {
 			messageApi.error(
@@ -157,6 +160,67 @@ export default function Profile() {
 			);
 		} finally {
 			setPinResetLoading(false);
+		}
+	};
+
+	const verifySensitiveInfoPin = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		if (hasPin === false) {
+			setSensModalOpen(false);
+			setEnteredPin("");
+			setShowSensitiveInfo(true);
+			setSensitiveActiveKeys(["1"]);
+			messageApi.info(
+				"No PIN found. Please create a PIN below to continue.",
+			);
+			return;
+		}
+		if (!/^\d{4,6}$/.test(enteredPin)) {
+			messageApi.error("Enter a valid 4-6 digit PIN.");
+			return;
+		}
+
+		setPinVerifyLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/pin/verify`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${accessToken}`,
+					},
+					body: JSON.stringify({ pin: enteredPin }),
+				},
+			);
+
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				const errorMessage = getErrorMessage(payload, "Incorrect PIN.");
+				if (errorMessage.toLowerCase().includes("no pin is set")) {
+					setHasPin(false);
+					setSensModalOpen(false);
+					setEnteredPin("");
+					setShowSensitiveInfo(true);
+					setSensitiveActiveKeys(["1"]);
+					messageApi.info(
+						"No PIN found. Create a PIN below to protect sensitive information.",
+					);
+					return;
+				}
+				throw new Error(errorMessage);
+			}
+
+			setShowSensitiveInfo(true);
+			setSensitiveActiveKeys(["1"]);
+			setSensModalOpen(false);
+			setEnteredPin("");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error ? err.message : "Failed to verify PIN.",
+			);
+		} finally {
+			setPinVerifyLoading(false);
 		}
 	};
 
@@ -200,6 +264,9 @@ export default function Profile() {
 							? data.pogMeter / 5
 							: 0,
 				});
+				setHasPin(
+					typeof data?.hasPin === "boolean" ? data.hasPin : null,
+				);
 				setError(null);
 			})
 			.catch((err) => {
@@ -208,6 +275,7 @@ export default function Profile() {
 					data: err,
 					level: "error",
 				});
+				setHasPin(null);
 				setError("Error fetching profile data");
 			});
 	}, [userData, id, accessToken]);
@@ -354,7 +422,16 @@ export default function Profile() {
 							<div
 								style={{ width: "100%" }}
 								onClick={() => {
-									if (!isOwnProfile || showSensitiveInfo) return;
+									if (!isOwnProfile || showSensitiveInfo)
+										return;
+									if (hasPin === false) {
+										messageApi.info(
+											"No PIN found. Please create a PIN below to continue.",
+										);
+										setShowSensitiveInfo(true);
+										setSensitiveActiveKeys(["1"]);
+										return;
+									}
 									setSensModalOpen(true);
 								}}
 							>
@@ -392,55 +469,81 @@ export default function Profile() {
 												<Flex vertical gap={12}>
 													{!isOwnProfile && (
 														<Text type="secondary">
-															Sensitive settings are
-															only available on your
-															own profile.
+															Sensitive settings
+															are only available
+															on your own profile.
 														</Text>
 													)}
 													{isOwnProfile && (
 														<>
-															<Flex
-																vertical
-																gap={8}
-															>
-																<Text strong>
-																	API Key
-																</Text>
-																<Button
-																	type="primary"
-																	onClick={
-																		regenerateApiKey
-																	}
-																	loading={
-																		apiKeyLoading
-																	}
+															{hasPin !==
+																false && (
+																<Flex
+																	vertical
+																	gap={8}
 																>
-																	Regenerate
-																	API Key
-																</Button>
-																{apiKey && (
 																	<Text
-																		copyable={{
-																			text: apiKey,
-																		}}
+																		strong
 																	>
-																		New key:{" "}
-																		{apiKey}
+																		API Key
 																	</Text>
-																)}
-															</Flex>
+																	<Button
+																		type="primary"
+																		onClick={
+																			regenerateApiKey
+																		}
+																		loading={
+																			apiKeyLoading
+																		}
+																	>
+																		Regenerate
+																		API Key
+																	</Button>
+																	{apiKey && (
+																		<Text
+																			copyable={{
+																				text: apiKey,
+																			}}
+																		>
+																			New
+																			key:{" "}
+																			{
+																				apiKey
+																			}
+																		</Text>
+																	)}
+																</Flex>
+															)}
 
 															<Flex
 																vertical
 																gap={8}
 															>
+																{hasPin ===
+																	false && (
+																	<Text type="secondary">
+																		No PIN
+																		is set
+																		on your
+																		account
+																		yet.
+																		Create a
+																		4-6
+																		digit
+																		PIN now.
+																	</Text>
+																)}
 																<Text strong>
 																	Update PIN
 																</Text>
 																<Input.Password
 																	placeholder="Current PIN (if set)"
-																	value={oldPin}
-																	onChange={(e) =>
+																	value={
+																		oldPin
+																	}
+																	onChange={(
+																		e,
+																	) =>
 																		setOldPin(
 																			e
 																				.target
@@ -450,8 +553,12 @@ export default function Profile() {
 																/>
 																<Input.Password
 																	placeholder="New PIN (4-6 digits)"
-																	value={newPin}
-																	onChange={(e) =>
+																	value={
+																		newPin
+																	}
+																	onChange={(
+																		e,
+																	) =>
 																		setNewPin(
 																			e
 																				.target
@@ -501,26 +608,20 @@ export default function Profile() {
 							okText="Show"
 							cancelText="Cancel"
 							open={sensModalOpen}
+							confirmLoading={pinVerifyLoading}
 							onCancel={() => {
 								setSensModalOpen(false);
 								setEnteredPin("");
 							}}
-							onOk={() => {
-								if (!/^\d{4,6}$/.test(enteredPin)) {
-									messageApi.error(
-										"Enter a valid 4-6 digit PIN.",
-									);
-									return;
-								}
-
-								setShowSensitiveInfo(true);
-								setSensitiveActiveKeys(["1"]);
-								setSensModalOpen(false);
-								setEnteredPin("");
-							}}
+							onOk={verifySensitiveInfoPin}
 							closeIcon={<IonIcon icon={IonIcons.close} />}
 						>
-							<Flex vertical gap={10} justify="start" align="start">
+							<Flex
+								vertical
+								gap={10}
+								justify="start"
+								align="start"
+							>
 								<Text>
 									Enter your PIN to view sensitive account
 									information.
