@@ -216,6 +216,31 @@ const AppContent = () => {
 					level: "info",
 				});
 				setUserData(data);
+				// If the user has an active class on the server, ensure we re-join it
+				if (data && data.activeClass) {
+					fetch(`${formbarUrl}/api/v1/class/${data.activeClass}/join`, {
+						method: "POST",
+						headers: {
+							Authorization: `${accessToken}`,
+						},
+					})
+						.then((res) => res.json())
+						.then((joinResp) => {
+							Log({
+								message: "Re-joined active class after reconnect",
+								data: joinResp,
+							});
+							// Request class data via socket
+							socket?.emit("classUpdate", "");
+						})
+						.catch((err) => {
+							Log({
+								message: "Error rejoining class",
+								data: err,
+								level: "error",
+							});
+						});
+				}
 			})
 			.catch((err) => {
 				Log({
