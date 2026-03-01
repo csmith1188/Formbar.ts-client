@@ -29,7 +29,9 @@ export default function Profile() {
 		[],
 	);
 	const [sensModalOpen, setSensModalOpen] = useState(false);
+	const [firstPinModalOpen, setFirstPinModalOpen] = useState(false);
 	const [enteredPin, setEnteredPin] = useState("");
+	const [firstPin, setFirstPin] = useState("");
 	const [hasPin, setHasPin] = useState<boolean | null>(null);
 
 	const [profileProps, setProfileProps] = useState<{
@@ -168,11 +170,9 @@ export default function Profile() {
 		if (hasPin === false) {
 			setSensModalOpen(false);
 			setEnteredPin("");
-			setShowSensitiveInfo(true);
-			setSensitiveActiveKeys(["1"]);
-			messageApi.info(
-				"No PIN found. Please create a PIN below to continue.",
-			);
+			setShowSensitiveInfo(false);
+			setSensitiveActiveKeys([]);
+			setFirstPinModalOpen(true);
 			return;
 		}
 		if (!/^\d{4,6}$/.test(enteredPin)) {
@@ -201,11 +201,9 @@ export default function Profile() {
 					setHasPin(false);
 					setSensModalOpen(false);
 					setEnteredPin("");
-					setShowSensitiveInfo(true);
-					setSensitiveActiveKeys(["1"]);
-					messageApi.info(
-						"No PIN found. Create a PIN below to protect sensitive information.",
-					);
+					setShowSensitiveInfo(false);
+					setSensitiveActiveKeys([]);
+					setFirstPinModalOpen(true);
 					return;
 				}
 				throw new Error(errorMessage);
@@ -221,6 +219,50 @@ export default function Profile() {
 			);
 		} finally {
 			setPinVerifyLoading(false);
+		}
+	};
+
+	const createFirstPin = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		if (!/^\d{4,6}$/.test(firstPin)) {
+			messageApi.error("PIN must be 4-6 numeric digits.");
+			return;
+		}
+
+		setPinLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/pin`,
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${accessToken}`,
+					},
+					body: JSON.stringify({
+						pin: firstPin,
+					}),
+				},
+			);
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				throw new Error(
+					getErrorMessage(payload, "Failed to update PIN."),
+				);
+			}
+
+			setFirstPin("");
+			setHasPin(true);
+			setFirstPinModalOpen(false);
+			setShowSensitiveInfo(true);
+			setSensitiveActiveKeys(["1"]);
+			messageApi.success("PIN created successfully.");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error ? err.message : "Failed to create PIN.",
+			);
+		} finally {
+			setPinLoading(false);
 		}
 	};
 
@@ -425,11 +467,7 @@ export default function Profile() {
 									if (!isOwnProfile || showSensitiveInfo)
 										return;
 									if (hasPin === false) {
-										messageApi.info(
-											"No PIN found. Please create a PIN below to continue.",
-										);
-										setShowSensitiveInfo(true);
-										setSensitiveActiveKeys(["1"]);
+										setFirstPinModalOpen(true);
 										return;
 									}
 									setSensModalOpen(true);
@@ -520,63 +558,92 @@ export default function Profile() {
 																gap={8}
 															>
 																{hasPin ===
-																	false && (
-																	<Text type="secondary">
-																		No PIN
-																		is set
-																		on your
-																		account
-																		yet.
-																		Create a
-																		4-6
-																		digit
-																		PIN now.
-																	</Text>
+																false ? (
+																	<>
+																		<Text
+																			strong
+																		>
+																			Set
+																			your
+																			first
+																			PIN
+																		</Text>
+																		<Text type="secondary">
+																			Create
+																			a
+																			4-6
+																			digit
+																			PIN
+																			to
+																			protect
+																			sensitive
+																			account
+																			information.
+																		</Text>
+																		<Button
+																			type="primary"
+																			onClick={() =>
+																				setFirstPinModalOpen(
+																					true,
+																				)
+																			}
+																		>
+																			Set
+																			PIN
+																		</Button>
+																	</>
+																) : (
+																	<>
+																		<Text
+																			strong
+																		>
+																			Update
+																			PIN
+																		</Text>
+																		<Input.Password
+																			placeholder="Current PIN (if set)"
+																			value={
+																				oldPin
+																			}
+																			onChange={(
+																				e,
+																			) =>
+																				setOldPin(
+																					e
+																						.target
+																						.value,
+																				)
+																			}
+																		/>
+																		<Input.Password
+																			placeholder="New PIN (4-6 digits)"
+																			value={
+																				newPin
+																			}
+																			onChange={(
+																				e,
+																			) =>
+																				setNewPin(
+																					e
+																						.target
+																						.value,
+																				)
+																			}
+																		/>
+																		<Button
+																			type="primary"
+																			onClick={
+																				updatePin
+																			}
+																			loading={
+																				pinLoading
+																			}
+																		>
+																			Update
+																			PIN
+																		</Button>
+																	</>
 																)}
-																<Text strong>
-																	Update PIN
-																</Text>
-																<Input.Password
-																	placeholder="Current PIN (if set)"
-																	value={
-																		oldPin
-																	}
-																	onChange={(
-																		e,
-																	) =>
-																		setOldPin(
-																			e
-																				.target
-																				.value,
-																		)
-																	}
-																/>
-																<Input.Password
-																	placeholder="New PIN (4-6 digits)"
-																	value={
-																		newPin
-																	}
-																	onChange={(
-																		e,
-																	) =>
-																		setNewPin(
-																			e
-																				.target
-																				.value,
-																		)
-																	}
-																/>
-																<Button
-																	type="primary"
-																	onClick={
-																		updatePin
-																	}
-																	loading={
-																		pinLoading
-																	}
-																>
-																	Update PIN
-																</Button>
 																<Button
 																	onClick={() => {
 																		setShowSensitiveInfo(
@@ -649,6 +716,42 @@ export default function Profile() {
 										Sending PIN reset email...
 									</Text>
 								)}
+							</Flex>
+						</Modal>
+						<Modal
+							title="Set your PIN"
+							okText="Save PIN"
+							cancelText="Cancel"
+							open={firstPinModalOpen}
+							confirmLoading={pinLoading}
+							onCancel={() => {
+								setFirstPinModalOpen(false);
+								setFirstPin("");
+							}}
+							onOk={createFirstPin}
+							closeIcon={<IonIcon icon={IonIcons.close} />}
+						>
+							<Flex
+								vertical
+								gap={10}
+								justify="start"
+								align="start"
+							>
+								<Text>
+									No PIN is set on your account yet. Enter a
+									4-6 digit PIN to protect sensitive account
+									information.
+								</Text>
+								<Input.Password
+									placeholder="New PIN (4-6 digits)"
+									value={firstPin}
+									onChange={(e) =>
+										setFirstPin(
+											e.target.value.replace(/\D/g, ""),
+										)
+									}
+									maxLength={6}
+								/>
 							</Flex>
 						</Modal>
 					</Flex>
