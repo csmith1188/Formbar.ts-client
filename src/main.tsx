@@ -205,7 +205,7 @@ const AppContent = () => {
 	const [verificationRequestLoading, setVerificationRequestLoading] =
 		useState(false);
 	const { userData, setUserData } = useUserData();
-	const publicRoutes = ["/login", "/user/me/pin", "/user/me/password", "/user/verify/email"];
+	const publicRoutes = ["/login", "/oauth", "/user/me/pin", "/user/me/password", "/user/verify/email"];
 	const isVerificationRequired =
 		Boolean(config?.emailEnabled) && Number(userData?.verified) === 0;
 
@@ -513,11 +513,27 @@ const AppContent = () => {
 			onSetClass,
 		});
 
+		// When all token-refresh and re-login attempts fail (e.g. stale tokens
+		// after a long absence) clear credentials and return to the login page
+		// so the user isn't permanently stuck on the loading screen.
+		function onAuthFailed() {
+			Log({
+				message: "All auth attempts failed – clearing tokens and redirecting to login",
+				level: "warn",
+			});
+			localStorage.removeItem("refreshToken");
+			localStorage.removeItem("formbarLoginData");
+			setIsConnected(true); // dismiss the loading screen
+			navigate("/login");
+		}
+		window.addEventListener("formbar:authfailed", onAuthFailed);
+
 		return () => {
 			socket?.off("connect", onConnect);
 			socket?.off("connect_error", connectError);
 			socket?.off("disconnect", onDisconnect);
 			socket?.off("setClass", onSetClass);
+			window.removeEventListener("formbar:authfailed", onAuthFailed);
 		};
 	}, []);
 

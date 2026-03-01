@@ -95,6 +95,13 @@ const pages: Page[] = [
 		routePath: "/profile/:id?/transactions",
 		page: Transactions,
 	},
+	{
+		// Legacy OAuth redirect flow — third-party apps (e.g. Jukebar) send the user
+		// here with ?redirectURL=<callback>.  LoginPage handles the rest.
+		pageName: "OAuth",
+		routePath: "/oauth",
+		page: LoginPage,
+	},
     {
         pageName: "Testing",
         routePath: "/testing",

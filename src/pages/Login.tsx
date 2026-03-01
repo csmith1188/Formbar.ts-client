@@ -1,6 +1,7 @@
 import {
 	Button,
 	Card,
+	Divider,
 	Flex,
 	Input,
 	Segmented,
@@ -12,22 +13,29 @@ import Log from "../debugLogger";
 import { useState } from "react";
 const { Title } = Typography;
 import { useEffect } from "react";
-import { socket, socketLogin } from "../socket";
+import { socket, socketLogin, accessToken } from "../socket";
 
 import { useMobileDetect, useUserData } from "../main";
 import { formbarUrl } from "../socket";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { useTheme } from "../main";
 
 export default function LoginPage() {
 	const { isDark } = useTheme();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { userData } = useUserData();
 
 	const [mode, setMode] = useState("Login");
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const isMobileView = useMobileDetect();
 	const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+	const [googleOauthEnabled, setGoogleOauthEnabled] = useState(false);
+
+	// If a third-party app (e.g. Jukebar) redirected the user here it will pass
+	// ?redirectURL=<callback>.  After login we redirect back with the access token.
+	const redirectURL = new URLSearchParams(location.search).get("redirectURL");
 
 	// Login and Sign Up modes only
 	const [email, setEmail] = useState("");
@@ -51,6 +59,8 @@ export default function LoginPage() {
 
 	async function handleSubmit(e?: React.FormEvent) {
 		e?.preventDefault();
+		setIsSubmitting(true);
+		try {
 		// Handle form submission based on mode
 		switch (mode) {
 			case "Login":
@@ -83,29 +93,25 @@ export default function LoginPage() {
 				}
 				const loginData = await loginResponse.json();
 				const { data } = loginData;
-				let { accessToken, refreshToken } = data;
+				let { accessToken: loginAccessToken, refreshToken: loginRefreshToken, legacyToken: loginLegacyToken } = data;
 				Log({ message: "Login successful", data: loginData });
 
-				// 2. Make authenticated requests
-				await fetch(`${formbarUrl}/api/v1/user/me`, {
-					headers: { Authorization: accessToken },
-				})
-					.then((res) => res.json())
-					.then((response) => {
-						const { data } = response;
-						Log({ message: "User data", data });
+				// If we were sent here by a third-party app redirect back to it.
+				// On the /oauth path use the legacy token (includes permissions) so that
+				// older apps like Jukebar that read tokenData.permissions still work.
+				if (redirectURL) {
+					const target = new URL(redirectURL);
+					const tokenForRedirect = location.pathname === "/oauth" && loginLegacyToken
+						? loginLegacyToken
+						: loginAccessToken;
+					target.searchParams.set("token", tokenForRedirect);
+					window.location.href = target.toString();
+					break;
+				}
 
-						socketLogin(refreshToken);
-
-						return data;
-					})
-					.catch((err) => {
-						Log({
-							message: "Error fetching user data",
-							data: err,
-							level: "error",
-						});
-					});
+				// Establish the socket session. onConnect in main.tsx will fetch
+				// user data and navigate away from the login page.
+				socketLogin(loginRefreshToken);
 				break;
 			case "Sign Up":
 				Log({
@@ -155,25 +161,9 @@ export default function LoginPage() {
 				signUpformData.append("loginType", "signup");
 				localStorage.setItem("formbarLoginData", signUpformData.toString());
 
-				await fetch(`${formbarUrl}/api/v1/user/me`, {
-					headers: { Authorization: signupData.accessToken },
-				})
-					.then((res) => res.json())
-					.then((response) => {
-						const { data } = response;
-						Log({ message: "User data", data });
-
-						socketLogin(signupData.refreshToken);
-
-						return data;
-					})
-					.catch((err) => {
-						Log({
-							message: "Error fetching user data",
-							data: err,
-							level: "error",
-						});
-					});
+				// Establish the socket session. onConnect in main.tsx will fetch
+				// user data and navigate away from the login page.
+				socketLogin(signupData.refreshToken);
 				break;
 
 			case "Guest":
@@ -181,14 +171,69 @@ export default function LoginPage() {
 				// Add guest logic here
 				break;
 		}
+		} catch (err) {
+			Log({ message: "Form submission error", data: err, level: "error" });
+			if (!(err instanceof Error && err.message === "Login failed") &&
+				!(err instanceof Error && err.message === "Signup failed")) {
+				showErrorNotification("Something went wrong. Please try again.");
+			}
+		} finally {
+			setIsSubmitting(false);
+		}
 	}
 
-	//? Check if user is already logged in and redirect to home page, preventing access to login page if so
+	// Fetch server config to determine which login methods are available
+	useEffect(() => {
+		fetch(`${formbarUrl}/api/v1/config`)
+			.then((r) => r.json())
+			.then((payload) => {
+				setGoogleOauthEnabled(Boolean(payload?.data?.googleOauthEnabled));
+			})
+			.catch(() => {/* config unavailable – hide Google button */});
+	}, []);
+
+	// Handle the Google OAuth redirect callback.
+	// After Google auth the server redirects back here with tokens in the URL.
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const oauthRefreshToken = params.get("refreshToken");
+		if (oauthRefreshToken) {
+			Log({ message: "Google OAuth callback – logging in via token", data: {} });
+			// Wipe tokens from the URL immediately while staying on the same route
+			params.delete("accessToken");
+			params.delete("refreshToken");
+			const cleanedSearch = params.toString();
+			navigate(
+				{
+					pathname: location.pathname,
+					search: cleanedSearch ? `?${cleanedSearch}` : "",
+				},
+				{ replace: true },
+			);
+			socketLogin(oauthRefreshToken);
+		}
+	}, [location.pathname, location.search, navigate]);
+
+	//? Check if user is already logged in
 	useEffect(() => {
 		if (socket?.connected && userData) {
-			navigate("/");
+			// On the /oauth path: if a redirectURL is present, complete the OAuth
+			// flow immediately using the current access token so the user doesn't
+			// have to log in again.
+			if (redirectURL && location.pathname === "/oauth") {
+				const target = new URL(redirectURL);
+				target.searchParams.set("token", accessToken);
+				window.location.href = target.toString();
+				return;
+			}
+			// For all other cases (including /oauth without a redirectURL),
+			// only bounce away from /login — stay on /oauth so the user can
+			// still interact with the page.
+			if (location.pathname === "/login" || location.pathname === "/oauth") {
+				navigate("/");
+			}
 		}
-	}, []);
+	}, [location.pathname, navigate, redirectURL, userData]);
 
 	return (
 		<>
@@ -341,8 +386,10 @@ export default function LoginPage() {
 							<Button
 								htmlType="submit"
 								type="primary"
+								loading={isSubmitting}
 								style={{ marginTop: "10px", width: "100%" }}
 								disabled={
+									isSubmitting || (
 									mode === "Login"
 										? !(
 												email &&
@@ -369,12 +416,35 @@ export default function LoginPage() {
 														displayName.length > 3
 													)
 												: true
+									)
 								}
 							>
 								{mode === "Guest" ? "Continue as Guest" : mode}
 							</Button>
 						</form>
 					</Card>
+
+					{/* Google OAuth — shown only when the server has it enabled */}
+					{googleOauthEnabled && (
+						<>
+							<Divider style={{ margin: "0" }}>or</Divider>
+							<Button
+								style={{ width: "100%" }}
+								icon={
+									<img
+										src="https://www.google.com/favicon.ico"
+										alt="Google"
+										style={{ width: 16, height: 16, verticalAlign: "middle" }}
+									/>
+								}
+								onClick={() => {
+									window.location.href = `${formbarUrl}/api/v1/auth/google?origin=${encodeURIComponent(window.location.href)}`;
+								}}
+							>
+								Sign in with Google
+							</Button>
+						</>
+					)}
 				</Flex>
 			</Flex>
 		</>
