@@ -109,7 +109,9 @@ function randomText() {
 		"Filling Pog Meters...",
 		"Releasing Half-Life 3...",
 		"I'm the Formboy!",
-		"Yo, Gurt!!",
+		"Yo, Gurt!!",,
+        "Steven, fix it!!",
+        "PR #85"
 	];
 
 	return texts[Math.floor(Math.random() * texts.length)];

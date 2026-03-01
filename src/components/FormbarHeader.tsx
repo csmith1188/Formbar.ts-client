@@ -4,7 +4,7 @@ import * as IonIcons from "ionicons/icons";
 import { useNavigate } from "react-router-dom";
 import Log from "../debugLogger";
 
-import { useMobileDetect, useTheme, useUserData } from "../main";
+import { isDev, useMobileDetect, useTheme, useUserData } from "../main";
 import { themeColors, version } from "../../themes/ThemeConfig";
 
 import pages from "../pages";
@@ -263,23 +263,25 @@ export default function FormbarHeader() {
 					</Button>
 				</Tooltip>
 
-				<Tooltip
-					placement="bottomRight"
-					title="Testing"
-					arrow={{ pointAtCenter: true }}
-					color="geekblue"
-				>
-					<Button
-						type="primary"
-						variant="solid"
-						color="geekblue"
-						size="large"
-						style={styles.headerButton}
-						onClick={() => navigate("/testing")}
-					>
-						<IonIcon icon={IonIcons.bug} size="large" />
-					</Button>
-				</Tooltip>
+                { isDev && (
+                    <Tooltip
+                        placement="bottomRight"
+                        title="Testing"
+                        arrow={{ pointAtCenter: true }}
+                        color="geekblue"
+                    >
+                        <Button
+                            type="primary"
+                            variant="solid"
+                            color="geekblue"
+                            size="large"
+                            style={styles.headerButton}
+                            onClick={() => navigate("/testing")}
+                        >
+                            <IonIcon icon={IonIcons.bug} size="large" />
+                        </Button>
+                    </Tooltip>
+                )}
 
 				<Tooltip
 					placement="bottomRight"

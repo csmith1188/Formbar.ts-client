@@ -236,12 +236,54 @@ const AppContent = () => {
 	const fetchUserData = async () => {
 		if (!accessToken) return;
 
-		try {
-			const userResponse = await fetch(`${formbarUrl}/api/v1/user/me`, {
-				method: "GET",
-				headers: {
-					Authorization: `${accessToken}`,
-				},
+		fetch(`${formbarUrl}/api/v1/user/me`, {
+			method: "GET",
+			headers: {
+				Authorization: `${accessToken}`,
+			},
+		})
+			.then((res) => res.json())
+			.then((response) => {
+				const { data } = response;
+				Log({
+					message: "User data fetched successfully.",
+					data,
+					level: "info",
+				});
+				setUserData(data);
+				// If the user has an active class on the server, ensure we re-join it
+				if (data && data.activeClass) {
+					fetch(`${formbarUrl}/api/v1/class/${data.activeClass}/join`, {
+						method: "POST",
+						headers: {
+							Authorization: `${accessToken}`,
+						},
+					})
+						.then((res) => res.json())
+						.then((joinResp) => {
+							Log({
+								message: "Re-joined active class after reconnect",
+								data: joinResp,
+							});
+							// Request class data via socket
+							socket?.emit("classUpdate", "");
+						})
+						.catch((err) => {
+							Log({
+								message: "Error rejoining class",
+								data: err,
+								level: "error",
+							});
+						});
+				}
+			})
+			.catch((err) => {
+				Log({
+					message: "Error fetching user data",
+					data: err,
+					level: "error",
+				});
+				setHttpErrorCount((prev) => prev + 1);
 			});
 			const userPayload = await userResponse.json();
 			const { data } = userPayload;

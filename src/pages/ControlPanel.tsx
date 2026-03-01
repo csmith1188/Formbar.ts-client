@@ -25,6 +25,7 @@ import Statistics from "../components/ControlPanel/StatisticsPage";
 
 import { isMobile } from "../main";
 import { useNavigate } from "react-router-dom";
+import TimerPage from "../components/ControlPanel/TimerPage";
 
 const items = [
 	{
@@ -325,7 +326,7 @@ export default function ControlPanel() {
 						/>
 					</Activity>
 					<Activity mode={currentMenu == "3" ? "visible" : "hidden"}>
-						<div>Timer Menu</div>
+						<TimerPage />
 					</Activity>
 					<Activity mode={currentMenu == "4" ? "visible" : "hidden"}>
 						<Statistics />

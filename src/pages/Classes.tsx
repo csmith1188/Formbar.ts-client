@@ -118,7 +118,57 @@ export default function ClassesPage() {
 				});
 			});
 	}
-
+    function enterClassWithId(classId: number) {
+        Log({ message: "Selected class (direct)", data: { classId } });
+        fetch(`${formbarUrl}/api/v1/class/${classId}/join`, {
+            method: "POST",
+            headers: {
+                Authorization: `${accessToken}`,
+            },
+        })
+            .then((res) => res.json())
+            .then((response) => {
+                const { data } = response;
+                Log({ message: "Entered class", data });
+                if (response.success) {
+                    fetch(`${formbarUrl}/api/v1/user/me`, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `${accessToken}`,
+                        },
+                    })
+                        .then((res) => res.json())
+                        .then((userResponse) => {
+                            const { data: userData } = userResponse;
+                            Log({
+                                message:
+                                    "User data fetched successfully after joining class.",
+                                data: userData,
+                                level: "info",
+                            });
+                            setUserData(userData);
+                            if (userData.classPermissions >= 4)
+                                navigate("/panel");
+                            else navigate("/student");
+                        })
+                        .catch((err) => {
+                            Log({
+                                message:
+                                    "Error fetching user data after joining class:",
+                                data: err,
+                                level: "error",
+                            });
+                        });
+                }
+            })
+            .catch((err) => {
+                Log({
+                    message: "Error entering class",
+                    data: err,
+                    level: "error",
+                });
+            });
+    }
 	function createClass() {
 		if (createClassName.trim() === "") {
 			Log({ message: "Class name cannot be empty", level: "error" });
@@ -137,6 +187,14 @@ export default function ClassesPage() {
 				const { data } = response;
 				Log({ message: "Created class", data });
 				// Handle successful class creation (e.g., update ownedClasses state)
+                if (response.success) {
+					setOwnedClasses((prev) => [...prev, { id: data.classId, name: data.className }]);
+					setCreateClassName("");
+					// Call enterClass with the new classId directly to avoid race condition
+					enterClassWithId(data.classId);
+					// Helper to enter a class by id directly (avoids relying on async setSelectedClass)
+					
+                }
 			})
 			.catch((err) => {
 				Log({
@@ -165,6 +223,8 @@ export default function ClassesPage() {
 				Log({ message: "Joined class with code", data });
 				// Handle successful class join (e.g., navigate to class page)
 				if (response.success) {
+                    setJoinedClasses((prev) => [...prev, { id: data.classId, name: data.className }]);
+                    setJoinClassCode("");
 				}
 			})
 			.catch((err) => {
