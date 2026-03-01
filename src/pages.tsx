@@ -12,6 +12,7 @@ import ManagerPanel from "./pages/ManagerPanel.tsx";
 import NotFound from "./pages/404.tsx";
 import { Testing } from "./pages/Testing.tsx";
 import PinResetPage from "./pages/PinReset.tsx";
+import EmailVerifyPage from "./pages/EmailVerify.tsx";
 
 import { Permissions } from "./types.ts";
 
@@ -83,6 +84,11 @@ const pages: Page[] = [
 		pageName: "Reset PIN",
 		routePath: "/user/me/pin",
 		page: PinResetPage,
+	},
+	{
+		pageName: "Verify Email",
+		routePath: "/user/verify/email",
+		page: EmailVerifyPage,
 	},
 	{
 		pageName: "Transactions",

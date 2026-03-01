@@ -14,7 +14,7 @@ import {
 	useNavigate,
 	useLocation,
 } from "react-router-dom";
-import { ConfigProvider, Modal } from "antd";
+import { Button, ConfigProvider, Modal, Space, Typography } from "antd";
 import LoadingScreen from "./components/LoadingScreen";
 
 import {
@@ -202,11 +202,12 @@ const AppContent = () => {
 	const [socketErrorCount, setSocketErrorCount] = useState(0);
 	const [httpErrorCount, setHttpErrorCount] = useState(0);
 	const [config, setConfig] = useState<ServerConfig | null>(null);
-	const [showVerificationModal, setShowVerificationModal] = useState(false);
 	const [verificationRequestLoading, setVerificationRequestLoading] =
 		useState(false);
 	const { userData, setUserData } = useUserData();
-	const publicRoutes = ["/login", "/user/me/pin", "/user/me/password"];
+	const publicRoutes = ["/login", "/user/me/pin", "/user/me/password", "/user/verify/email"];
+	const isVerificationRequired =
+		Boolean(config?.emailEnabled) && Number(userData?.verified) === 0;
 
 	const fetchConfig = async () => {
 		try {
@@ -235,72 +236,53 @@ const AppContent = () => {
 
 	const fetchUserData = async () => {
 		if (!accessToken) return;
-
-		fetch(`${formbarUrl}/api/v1/user/me`, {
-			method: "GET",
-			headers: {
-				Authorization: `${accessToken}`,
-			},
-		})
-			.then((res) => res.json())
-			.then((response) => {
-				const { data } = response;
-				Log({
-					message: "User data fetched successfully.",
-					data,
-					level: "info",
-				});
-				setUserData(data);
-				// If the user has an active class on the server, ensure we re-join it
-				if (data && data.activeClass) {
-					fetch(`${formbarUrl}/api/v1/class/${data.activeClass}/join`, {
-						method: "POST",
-						headers: {
-							Authorization: `${accessToken}`,
-						},
-					})
-						.then((res) => res.json())
-						.then((joinResp) => {
-							Log({
-								message: "Re-joined active class after reconnect",
-								data: joinResp,
-							});
-							// Request class data via socket
-							socket?.emit("classUpdate", "");
-						})
-						.catch((err) => {
-							Log({
-								message: "Error rejoining class",
-								data: err,
-								level: "error",
-							});
-						});
-				}
-			})
-			.catch((err) => {
-				Log({
-					message: "Error fetching user data",
-					data: err,
-					level: "error",
-				});
-				setHttpErrorCount((prev) => prev + 1);
+		try {
+			const userResponse = await fetch(`${formbarUrl}/api/v1/user/me`, {
+				method: "GET",
+				headers: {
+					Authorization: `${accessToken}`,
+				},
 			});
+
 			const userPayload = await userResponse.json();
 			const { data } = userPayload;
 			if (userPayload?.error || !data?.id) {
 				throw new Error("Failed to load current user data");
 			}
 
-			Log({
-				message: "User data fetched successfully.",
-				data,
-				level: "info",
-			});
-			setUserData(data);
-
 			const serverConfig = config || (await fetchConfig());
 			if (!serverConfig?.emailEnabled) {
-				setShowVerificationModal(false);
+				Log({
+					message: "User data fetched successfully.",
+					data,
+					level: "info",
+				});
+				setUserData(data);
+				if (data.activeClass) {
+					try {
+						const joinResponse = await fetch(
+							`${formbarUrl}/api/v1/class/${data.activeClass}/join`,
+							{
+								method: "POST",
+								headers: {
+									Authorization: `${accessToken}`,
+								},
+							},
+						);
+						const joinPayload = await joinResponse.json();
+						Log({
+							message: "Re-joined active class after reconnect",
+							data: joinPayload,
+						});
+						socket?.emit("classUpdate", "");
+					} catch (joinErr) {
+						Log({
+							message: "Error rejoining class",
+							data: joinErr,
+							level: "error",
+						});
+					}
+				}
 				return;
 			}
 
@@ -317,9 +299,41 @@ const AppContent = () => {
 			const verified = Number(userDetailPayload?.data?.verified);
 
 			if (!Number.isNaN(verified)) {
-				setUserData({ ...data, verified });
+				const nextUserData = { ...data, verified };
+				Log({
+					message: "User data fetched successfully.",
+					data: nextUserData,
+					level: "info",
+				});
+				setUserData(nextUserData);
+				if (verified !== 0 && data.activeClass) {
+					try {
+						const joinResponse = await fetch(
+							`${formbarUrl}/api/v1/class/${data.activeClass}/join`,
+							{
+								method: "POST",
+								headers: {
+									Authorization: `${accessToken}`,
+								},
+							},
+						);
+						const joinPayload = await joinResponse.json();
+						Log({
+							message: "Re-joined active class after reconnect",
+							data: joinPayload,
+						});
+						socket?.emit("classUpdate", "");
+					} catch (joinErr) {
+						Log({
+							message: "Error rejoining class",
+							data: joinErr,
+							level: "error",
+						});
+					}
+				}
+			} else {
+				setUserData(data);
 			}
-			setShowVerificationModal(verified === 0);
 		} catch (err) {
 			Log({
 				message: "Error fetching user data",
@@ -328,6 +342,14 @@ const AppContent = () => {
 			});
 			setHttpErrorCount((prev) => prev + 1);
 		}
+	};
+
+	const handleLogout = () => {
+		localStorage.removeItem("refreshToken");
+		localStorage.removeItem("formbarLoginData");
+		socket?.disconnect();
+		setUserData(null);
+		navigate("/login");
 	};
 
 	const requestVerificationEmail = async () => {
@@ -357,7 +379,6 @@ const AppContent = () => {
 				content:
 					"Check your inbox and click the verification link to activate your account.",
 			});
-			setShowVerificationModal(false);
 		} catch (err) {
 			const message =
 				err instanceof Error
@@ -505,40 +526,60 @@ const AppContent = () => {
 			{contextHolder}
 			<Modal
 				title="Email Verification Required"
-				open={showVerificationModal && location.pathname !== "/login"}
-				onCancel={() => setShowVerificationModal(false)}
-				onOk={requestVerificationEmail}
-				okText="Request Verification Email"
-				cancelText="Later"
-				confirmLoading={verificationRequestLoading}
+				open={isVerificationRequired}
+				closable={false}
+				maskClosable={false}
+				keyboard={false}
+				footer={null}
 			>
-				<p>
-					Your account has not been verified yet. Request a
-					verification email to verify your account and unlock
-					restricted features.
-				</p>
+				<Space direction="vertical" size="middle">
+					<Typography.Paragraph style={{ marginBottom: 0 }}>
+						Your account has not been verified yet. You must verify
+						your email before using Formbar.
+					</Typography.Paragraph>
+					<Space wrap>
+						<Button
+							type="primary"
+							onClick={requestVerificationEmail}
+							loading={verificationRequestLoading}
+						>
+							Request Verification Email
+						</Button>
+						<Button danger onClick={handleLogout}>
+							Log Out
+						</Button>
+					</Space>
+				</Space>
 			</Modal>
-			<Routes>
-				{pages.map((page) => {
-					const Element = page.page;
-					return (
-						<Route
-							key={page.routePath}
-							path={page.routePath}
-							element={
-								<PageWrapper pageName={page.pageName}>
-									<LoadingScreen
-										socketErrors={socketErrorCount}
-										httpErrors={httpErrorCount}
-										isConnected={isConnected}
-									/>
-									<Element />
-								</PageWrapper>
-							}
-						/>
-					);
-				})}
-			</Routes>
+			{isVerificationRequired ? (
+				<LoadingScreen
+					socketErrors={socketErrorCount}
+					httpErrors={httpErrorCount}
+					isConnected={isConnected}
+				/>
+			) : (
+				<Routes>
+					{pages.map((page) => {
+						const Element = page.page;
+						return (
+							<Route
+								key={page.routePath}
+								path={page.routePath}
+								element={
+									<PageWrapper pageName={page.pageName}>
+										<LoadingScreen
+											socketErrors={socketErrorCount}
+											httpErrors={httpErrorCount}
+											isConnected={isConnected}
+										/>
+										<Element />
+									</PageWrapper>
+								}
+							/>
+						);
+					})}
+				</Routes>
+			)}
 		</>
 	);
 };
