@@ -196,23 +196,25 @@ export default function FormbarHeader() {
 						</Tooltip>
 					)}
 
-				<Tooltip
-					placement="bottomRight"
-					title={"Classes"}
-					arrow={{ pointAtCenter: true }}
-					color="blue"
-				>
-					<Button
-						type="primary"
-						variant="solid"
+				{userData && (
+					<Tooltip
+						placement="bottomRight"
+						title={"Classes"}
+						arrow={{ pointAtCenter: true }}
 						color="blue"
-						size="large"
-						style={styles.headerButton}
-						onClick={leaveClass}
 					>
-						<IonIcon icon={IonIcons.easel} size="large" />
-					</Button>
-				</Tooltip>
+						<Button
+							type="primary"
+							variant="solid"
+							color="blue"
+							size="large"
+							style={styles.headerButton}
+							onClick={leaveClass}
+						>
+							<IonIcon icon={IonIcons.easel} size="large" />
+						</Button>
+					</Tooltip>
+				)}
 
 				<div
 					style={{
@@ -245,23 +247,25 @@ export default function FormbarHeader() {
 					</Button>
 				</Tooltip>
 
-				<Tooltip
-					placement="bottomRight"
-					title="Profile"
-					arrow={{ pointAtCenter: true }}
-					color="purple"
-				>
-					<Button
-						type="primary"
-						variant="solid"
+				{userData && (
+					<Tooltip
+						placement="bottomRight"
+						title="Profile"
+						arrow={{ pointAtCenter: true }}
 						color="purple"
-						size="large"
-						style={styles.headerButton}
-						onClick={() => navigate("/profile")}
 					>
-						<IonIcon icon={IonIcons.person} size="large" />
-					</Button>
-				</Tooltip>
+						<Button
+							type="primary"
+							variant="solid"
+							color="purple"
+							size="large"
+							style={styles.headerButton}
+							onClick={() => navigate("/profile")}
+						>
+							<IonIcon icon={IonIcons.person} size="large" />
+						</Button>
+					</Tooltip>
+				)}
 
                 { isDev && (
                     <Tooltip
@@ -283,41 +287,61 @@ export default function FormbarHeader() {
                     </Tooltip>
                 )}
 
-				<Tooltip
-					placement="bottomRight"
-					title="Log Out"
-					arrow={{ pointAtCenter: true }}
-					color="magenta"
-				>
-					<Popconfirm
+				{userData ? (
+					<Tooltip
 						placement="bottomRight"
-						title={"Wait! Are you sure you would like to log out?"}
-						icon={
-							<IonIcon
-								icon={IonIcons.alertCircle}
-								color="red"
+						title="Log Out"
+						arrow={{ pointAtCenter: true }}
+						color="magenta"
+					>
+						<Popconfirm
+							placement="bottomRight"
+							title={"Wait! Are you sure you would like to log out?"}
+							icon={
+								<IonIcon
+									icon={IonIcons.alertCircle}
+									color="red"
+									size="large"
+									style={{ marginRight: "4px", marginTop: "3px" }}
+								/>
+							}
+							cancelText={"No"}
+							okText={"Yes"}
+							okType="danger"
+							onConfirm={() => {
+								logoutHandler();
+							}}
+						>
+							<Button
+								type="primary"
+								variant="solid"
+								color="magenta"
 								size="large"
-								style={{ marginRight: "4px", marginTop: "3px" }}
-							/>
-						}
-						cancelText={"No"}
-						okText={"Yes"}
-						okType="danger"
-						onConfirm={() => {
-							logoutHandler();
-						}}
+								style={styles.headerButton}
+							>
+								<IonIcon icon={IonIcons.logOut} size="large" />
+							</Button>
+						</Popconfirm>
+					</Tooltip>
+				) : (
+					<Tooltip
+						placement="bottomRight"
+						title="Log In"
+						arrow={{ pointAtCenter: true }}
+						color="green"
 					>
 						<Button
 							type="primary"
 							variant="solid"
-							color="magenta"
+							color="green"
 							size="large"
 							style={styles.headerButton}
+							onClick={() => navigate("/login")}
 						>
-							<IonIcon icon={IonIcons.logOut} size="large" />
+							<IonIcon icon={IonIcons.logIn} size="large" />
 						</Button>
-					</Popconfirm>
-				</Tooltip>
+					</Tooltip>
+				)}
 			</Flex>
 		</Flex>
 	);

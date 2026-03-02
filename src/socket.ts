@@ -73,12 +73,18 @@ export function socketLogin(token: string) {
 				let { accessToken, refreshToken } = data;
 				Log({ message: "Login successful", data: loginData });
 
+				// Delegate to a fresh socketLogin call and stop this chain
+				// so the next .then() is not reached with undefined.
 				socketLogin(refreshToken);
-				return;
+				return null;
 			}
 			return res.json();
 		})
 		.then((response) => {
+			// If the re-login fallback already called socketLogin recursively,
+			// response is null — nothing left to do in this chain.
+			if (!response) return;
+
 			const { data } = response;
 			const {
 				accessToken: newAccessToken,
@@ -108,6 +114,9 @@ export function socketLogin(token: string) {
 				data: err,
 				level: "error",
 			});
+			// Signal the app that all auth attempts have failed so it can clear
+			// stale tokens and return the user to the login page.
+			window.dispatchEvent(new CustomEvent("formbar:authfailed"));
 		});
 
 }

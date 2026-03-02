@@ -6,10 +6,11 @@ import {
 	Flex,
 	Progress,
 	Tooltip,
-	Modal,
-	InputNumber,
 	Typography,
 	Button,
+	Input,
+	message,
+	Modal,
 } from "antd";
 const { Text, Link } = Typography;
 import { IonIcon } from "@ionic/react";
@@ -19,22 +20,251 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useUserData, isMobile } from "../main";
 import { accessToken, formbarUrl } from "../socket";
 
-const correctPin = 1243;
-
 export default function Profile() {
 	const { userData } = useUserData();
-	const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
-	const [sensModalOpen, setSensModalOpen] = useState(false);
-	const [enteredPin, setEnteredPin] = useState<string | number | null>(null);
+	const [messageApi, contextHolder] = message.useMessage();
 	const navigate = useNavigate();
+	const [showSensitiveInfo, setShowSensitiveInfo] = useState(false);
+	const [sensitiveActiveKeys, setSensitiveActiveKeys] = useState<string[]>(
+		[],
+	);
+	const [sensModalOpen, setSensModalOpen] = useState(false);
+	const [firstPinModalOpen, setFirstPinModalOpen] = useState(false);
+	const [enteredPin, setEnteredPin] = useState("");
+	const [firstPin, setFirstPin] = useState("");
+	const [hasPin, setHasPin] = useState<boolean | null>(null);
 
 	const [profileProps, setProfileProps] = useState<{
 		[key: string]: string | number | undefined;
 	}>({});
 
 	const [error, setError] = useState<string | null>(null);
+	const [apiKey, setApiKey] = useState<string | null>(null);
+	const [oldPin, setOldPin] = useState("");
+	const [newPin, setNewPin] = useState("");
+	const [apiKeyLoading, setApiKeyLoading] = useState(false);
+	const [pinLoading, setPinLoading] = useState(false);
+	const [pinResetLoading, setPinResetLoading] = useState(false);
+	const [pinVerifyLoading, setPinVerifyLoading] = useState(false);
 
 	const { id } = useParams<{ id?: string }>();
+	const isOwnProfile = !id || String(id) === String(userData?.id);
+
+	const getErrorMessage = (response: any, fallback: string) => {
+		if (typeof response?.error === "string") return response.error;
+		if (response?.error?.message) return response.error.message;
+		return fallback;
+	};
+
+	const regenerateApiKey = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		setApiKeyLoading(true);
+
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/api/regenerate`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `${accessToken}`,
+					},
+				},
+			);
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				throw new Error(
+					getErrorMessage(payload, "Failed to regenerate API key."),
+				);
+			}
+
+			setApiKey(payload?.data?.apiKey || null);
+			messageApi.success("API key regenerated successfully.");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error
+					? err.message
+					: "Failed to regenerate API key.",
+			);
+		} finally {
+			setApiKeyLoading(false);
+		}
+	};
+
+	const updatePin = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		if (!/^\d{4,6}$/.test(newPin)) {
+			messageApi.error("PIN must be 4-6 numeric digits.");
+			return;
+		}
+
+		setPinLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/pin`,
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${accessToken}`,
+					},
+					body: JSON.stringify({
+						oldPin: oldPin || undefined,
+						pin: newPin,
+					}),
+				},
+			);
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				throw new Error(
+					getErrorMessage(payload, "Failed to update PIN."),
+				);
+			}
+
+			setOldPin("");
+			setNewPin("");
+			setHasPin(true);
+			messageApi.success("PIN updated successfully.");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error ? err.message : "Failed to update PIN.",
+			);
+		} finally {
+			setPinLoading(false);
+		}
+	};
+
+	const requestPinReset = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		setPinResetLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/pin/reset`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `${accessToken}`,
+					},
+				},
+			);
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				throw new Error(
+					getErrorMessage(payload, "Failed to request PIN reset."),
+				);
+			}
+
+			messageApi.success("PIN reset email sent.");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error
+					? err.message
+					: "Failed to request PIN reset.",
+			);
+		} finally {
+			setPinResetLoading(false);
+		}
+	};
+
+	const verifySensitiveInfoPin = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		if (hasPin === false) {
+			setSensModalOpen(false);
+			setEnteredPin("");
+			setShowSensitiveInfo(false);
+			setSensitiveActiveKeys([]);
+			setFirstPinModalOpen(true);
+			return;
+		}
+		if (!/^\d{4,6}$/.test(enteredPin)) {
+			messageApi.error("Enter a valid 4-6 digit PIN.");
+			return;
+		}
+
+		setPinVerifyLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/pin/verify`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${accessToken}`,
+					},
+					body: JSON.stringify({ pin: enteredPin }),
+				},
+			);
+
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				const errorMessage = getErrorMessage(payload, "Incorrect PIN.");
+				if (errorMessage.toLowerCase().includes("no pin is set")) {
+					setHasPin(false);
+					setSensModalOpen(false);
+					setEnteredPin("");
+					setShowSensitiveInfo(false);
+					setSensitiveActiveKeys([]);
+					setFirstPinModalOpen(true);
+					return;
+				}
+				throw new Error(errorMessage);
+			}
+
+			setShowSensitiveInfo(true);
+			setSensitiveActiveKeys(["1"]);
+			setSensModalOpen(false);
+			setEnteredPin("");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error ? err.message : "Failed to verify PIN.",
+			);
+		} finally {
+			setPinVerifyLoading(false);
+		}
+	};
+
+	const createFirstPin = async () => {
+		if (!userData?.id || !isOwnProfile) return;
+		if (!/^\d{4,6}$/.test(firstPin)) {
+			messageApi.error("PIN must be 4-6 numeric digits.");
+			return;
+		}
+
+		setPinLoading(true);
+		try {
+			const response = await fetch(
+				`${formbarUrl}/api/v1/user/${userData.id}/pin`,
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `${accessToken}`,
+					},
+					body: JSON.stringify({
+						pin: firstPin,
+					}),
+				},
+			);
+			const payload = await response.json();
+			if (!response.ok || payload?.error) {
+				throw new Error(
+					getErrorMessage(payload, "Failed to update PIN."),
+				);
+			}
+
+			setFirstPin("");
+			setHasPin(true);
+			setFirstPinModalOpen(false);
+			setShowSensitiveInfo(true);
+			setSensitiveActiveKeys(["1"]);
+			messageApi.success("PIN created successfully.");
+		} catch (err) {
+			messageApi.error(
+				err instanceof Error ? err.message : "Failed to create PIN.",
+			);
+		} finally {
+			setPinLoading(false);
+		}
+	};
 
 	useEffect(() => {
 		if (!userData?.id && !id) return;
@@ -64,10 +294,7 @@ export default function Profile() {
 
 				setProfileProps({
 					"Display Name": data.displayName || "N/A",
-					Email:
-						id === String(userData?.id) || !id
-							? userData?.email
-							: "N/A",
+					Email: data.email || "N/A",
 					Digipogs:
 						data.digipogs || data.digipogs == 0
 							? data.digipogs
@@ -79,6 +306,9 @@ export default function Profile() {
 							? data.pogMeter / 5
 							: 0,
 				});
+				setHasPin(
+					typeof data?.hasPin === "boolean" ? data.hasPin : null,
+				);
 				setError(null);
 			})
 			.catch((err) => {
@@ -87,12 +317,14 @@ export default function Profile() {
 					data: err,
 					level: "error",
 				});
+				setHasPin(null);
 				setError("Error fetching profile data");
 			});
 	}, [userData, id, accessToken]);
 
 	return (
 		<>
+			{contextHolder}
 			<FormbarHeader />
 
 			<Flex
@@ -194,9 +426,13 @@ export default function Profile() {
 								<Button
 									variant="solid"
 									color="blue"
-									onClick={() =>
-										navigate("/profile/transactions")
-									}
+									onClick={() => {
+										navigate(
+											id
+												? `/profile/${id}/transactions`
+												: "/profile/transactions",
+										);
+									}}
 									style={{ width: "130px" }}
 								>
 									Transactions
@@ -228,12 +464,26 @@ export default function Profile() {
 							<div
 								style={{ width: "100%" }}
 								onClick={() => {
-									if (!showSensitiveInfo)
-										setSensModalOpen(true);
+									if (!isOwnProfile || showSensitiveInfo)
+										return;
+									if (hasPin === false) {
+										setFirstPinModalOpen(true);
+										return;
+									}
+									setSensModalOpen(true);
 								}}
 							>
 								<Collapse
 									style={{ width: "100%" }}
+									activeKey={sensitiveActiveKeys}
+									onChange={(keys) => {
+										const normalized = Array.isArray(keys)
+											? keys.map(String)
+											: [String(keys)];
+										setSensitiveActiveKeys(
+											normalized.filter(Boolean),
+										);
+									}}
 									expandIcon={({ isActive }) => (
 										<IonIcon
 											icon={
@@ -244,18 +494,174 @@ export default function Profile() {
 										/>
 									)}
 									collapsible={
-										showSensitiveInfo
+										!isOwnProfile
 											? "header"
-											: "disabled"
+											: showSensitiveInfo
+												? "header"
+												: "disabled"
 									}
 									size="small"
 									items={[
 										{
 											children: (
-												<p>
-													uhh pin and api here! not
-													added yhet
-												</p>
+												<Flex vertical gap={12}>
+													{!isOwnProfile && (
+														<Text type="secondary">
+															Sensitive settings
+															are only available
+															on your own profile.
+														</Text>
+													)}
+													{isOwnProfile && (
+														<>
+															{hasPin !==
+																false && (
+																<Flex
+																	vertical
+																	gap={8}
+																>
+																	<Text
+																		strong
+																	>
+																		API Key
+																	</Text>
+																	<Button
+																		type="primary"
+																		onClick={
+																			regenerateApiKey
+																		}
+																		loading={
+																			apiKeyLoading
+																		}
+																	>
+																		Regenerate
+																		API Key
+																	</Button>
+																	{apiKey && (
+																		<Text
+																			copyable={{
+																				text: apiKey,
+																			}}
+																		>
+																			New
+																			key:{" "}
+																			{
+																				apiKey
+																			}
+																		</Text>
+																	)}
+																</Flex>
+															)}
+
+															<Flex
+																vertical
+																gap={8}
+															>
+																{hasPin ===
+																false ? (
+																	<>
+																		<Text
+																			strong
+																		>
+																			Set
+																			your
+																			first
+																			PIN
+																		</Text>
+																		<Text type="secondary">
+																			Create
+																			a
+																			4-6
+																			digit
+																			PIN
+																			to
+																			protect
+																			sensitive
+																			account
+																			information.
+																		</Text>
+																		<Button
+																			type="primary"
+																			onClick={() =>
+																				setFirstPinModalOpen(
+																					true,
+																				)
+																			}
+																		>
+																			Set
+																			PIN
+																		</Button>
+																	</>
+																) : (
+																	<>
+																		<Text
+																			strong
+																		>
+																			Update
+																			PIN
+																		</Text>
+																		<Input.Password
+																			placeholder="Current PIN (if set)"
+																			value={
+																				oldPin
+																			}
+																			onChange={(
+																				e,
+																			) =>
+																				setOldPin(
+																					e
+																						.target
+																						.value,
+																				)
+																			}
+																		/>
+																		<Input.Password
+																			placeholder="New PIN (4-6 digits)"
+																			value={
+																				newPin
+																			}
+																			onChange={(
+																				e,
+																			) =>
+																				setNewPin(
+																					e
+																						.target
+																						.value,
+																				)
+																			}
+																		/>
+																		<Button
+																			type="primary"
+																			onClick={
+																				updatePin
+																			}
+																			loading={
+																				pinLoading
+																			}
+																		>
+																			Update
+																			PIN
+																		</Button>
+																	</>
+																)}
+																<Button
+																	onClick={() => {
+																		setShowSensitiveInfo(
+																			false,
+																		);
+																		setSensitiveActiveKeys(
+																			[],
+																		);
+																	}}
+																>
+																	Lock
+																	Sensitive
+																	Info
+																</Button>
+															</Flex>
+														</>
+													)}
+												</Flex>
 											),
 											key: "1",
 											label: "Sensitive Information",
@@ -264,20 +670,17 @@ export default function Profile() {
 								/>
 							</div>
 						)}
-
 						<Modal
-							title="Show sensitive information."
+							title="Show sensitive information"
 							okText="Show"
 							cancelText="Cancel"
 							open={sensModalOpen}
-							onCancel={() => setSensModalOpen(false)}
-							onOk={() => {
-								if (Number(enteredPin) === correctPin)
-									setShowSensitiveInfo(true);
+							confirmLoading={pinVerifyLoading}
+							onCancel={() => {
 								setSensModalOpen(false);
-
-								return;
+								setEnteredPin("");
 							}}
+							onOk={verifySensitiveInfoPin}
 							closeIcon={<IonIcon icon={IonIcons.close} />}
 						>
 							<Flex
@@ -287,23 +690,68 @@ export default function Profile() {
 								align="start"
 							>
 								<Text>
-									Please enter your PIN to view sensitive
+									Enter your PIN to view sensitive account
 									information.
-									<br />
-									If you have no PIN yet, continue.
 								</Text>
-								<InputNumber
-									controls={false}
+								<Input.Password
 									placeholder="PIN"
-									onChange={setEnteredPin}
-									max={9999}
+									value={enteredPin}
+									onChange={(e) =>
+										setEnteredPin(
+											e.target.value.replace(/\D/g, ""),
+										)
+									}
+									maxLength={6}
 								/>
 								<Link
-									href="/forgot-pin"
+									onClick={() => {
+										requestPinReset();
+									}}
 									style={{ fontSize: "12px" }}
 								>
 									Forgot PIN?
 								</Link>
+								{pinResetLoading && (
+									<Text type="secondary">
+										Sending PIN reset email...
+									</Text>
+								)}
+							</Flex>
+						</Modal>
+						<Modal
+							title="Set your PIN"
+							okText="Save PIN"
+							cancelText="Cancel"
+							open={firstPinModalOpen}
+							confirmLoading={pinLoading}
+							onCancel={() => {
+								setFirstPinModalOpen(false);
+								setFirstPin("");
+							}}
+							onOk={createFirstPin}
+							closeIcon={<IonIcon icon={IonIcons.close} />}
+						>
+							<Flex
+								vertical
+								gap={10}
+								justify="start"
+								align="start"
+							>
+								<Text>
+									No PIN is set on your account yet. Enter a
+									4-6 digit PIN to protect sensitive account
+									information.
+								</Text>
+								<Input.Password
+									placeholder="New PIN (4-6 digits)"
+									value={firstPin}
+									onChange={(e) =>
+										setFirstPin(
+											e.target.value.replace(/\D/g, ""),
+										)
+									}
+									maxLength={6}
+								/>
 							</Flex>
 						</Modal>
 					</Flex>

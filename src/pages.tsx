@@ -11,6 +11,8 @@ import Transactions from "./pages/Transactions.tsx";
 import ManagerPanel from "./pages/ManagerPanel.tsx";
 import NotFound from "./pages/404.tsx";
 import { Testing } from "./pages/Testing.tsx";
+import PinResetPage from "./pages/PinReset.tsx";
+import EmailVerifyPage from "./pages/EmailVerify.tsx";
 
 import { Permissions } from "./types.ts";
 
@@ -79,9 +81,26 @@ const pages: Page[] = [
 		page: Profile,
 	},
 	{
+		pageName: "Reset PIN",
+		routePath: "/user/me/pin",
+		page: PinResetPage,
+	},
+	{
+		pageName: "Verify Email",
+		routePath: "/user/verify/email",
+		page: EmailVerifyPage,
+	},
+	{
 		pageName: "Transactions",
 		routePath: "/profile/:id?/transactions",
 		page: Transactions,
+	},
+	{
+		// Legacy OAuth redirect flow — third-party apps (e.g. Jukebar) send the user
+		// here with ?redirectURL=<callback>.  LoginPage handles the rest.
+		pageName: "OAuth",
+		routePath: "/oauth",
+		page: LoginPage,
 	},
     {
         pageName: "Testing",
