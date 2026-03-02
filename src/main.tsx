@@ -417,10 +417,11 @@ const AppContent = () => {
 			setSocketErrorCount(0); // Reset on successful connection
 			Log({ message: "Connected to server.", level: "info" });
 
-			fetchUserData();
-			if (window.location.pathname === "/login") {
-				navigate("/");
-			}
+			fetchUserData().then(() => {
+				if (window.location.pathname === "/login") {
+					navigate("/");
+				}
+			});
 			setIsConnected(true);
 		}
 
