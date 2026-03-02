@@ -190,7 +190,7 @@ export default function Student() {
 										? {
 												width: "100%",
 												height: "50%",
-												paddingTop: "120px",
+												paddingTop: "260px",
 												paddingBottom: "120px",
 											}
 										: {
@@ -201,7 +201,7 @@ export default function Student() {
 								}
 							>
                                 <FullCircularPoll
-                                    pollAnswers={answerState}
+                                    poll={classData.poll}
                                     size={pollWidth}
                                 />
 							</Flex>

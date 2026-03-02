@@ -2,7 +2,6 @@ import LoginPage from "./pages/Login.tsx";
 import ControlPanel from "./pages/ControlPanel.tsx";
 import Profile from "./pages/Profile.tsx";
 import Student from "./pages/Student.tsx";
-import InfoPage from "./pages/InfoPage.tsx";
 import NewsPage from "./pages/NewsPage.tsx";
 import StudentBar from "./pages/StudentBar.tsx";
 import ClassesPage from "./pages/Classes.tsx";
@@ -49,11 +48,6 @@ const pages: Page[] = [
 		pageName: "Student Bar",
 		routePath: "/studentbar",
 		page: StudentBar,
-	},
-	{
-		pageName: "Info Page",
-		routePath: "/info",
-		page: InfoPage,
 	},
 	{
 		pageName: "Home",

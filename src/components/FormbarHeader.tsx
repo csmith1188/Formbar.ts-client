@@ -216,13 +216,15 @@ export default function FormbarHeader() {
 					</Tooltip>
 				)}
 
-				<div
+				{
+                
+                userData && (<div
 					style={{
 						borderRight: `2px solid ${isDark ? "#fff3" : "#0003"}`,
 						borderRadius: "999px",
 						height: "30px",
 					}}
-				/>
+				/>)}
 
 				<Tooltip
 					placement="bottomRight"
@@ -287,7 +289,7 @@ export default function FormbarHeader() {
                     </Tooltip>
                 )}
 
-				{userData ? (
+				{userData && (
 					<Tooltip
 						placement="bottomRight"
 						title="Log Out"
@@ -322,24 +324,6 @@ export default function FormbarHeader() {
 								<IonIcon icon={IonIcons.logOut} size="large" />
 							</Button>
 						</Popconfirm>
-					</Tooltip>
-				) : (
-					<Tooltip
-						placement="bottomRight"
-						title="Log In"
-						arrow={{ pointAtCenter: true }}
-						color="green"
-					>
-						<Button
-							type="primary"
-							variant="solid"
-							color="green"
-							size="large"
-							style={styles.headerButton}
-							onClick={() => navigate("/login")}
-						>
-							<IonIcon icon={IonIcons.logIn} size="large" />
-						</Button>
 					</Tooltip>
 				)}
 			</Flex>

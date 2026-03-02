@@ -1,5 +1,5 @@
 import { IonIcon } from "@ionic/react";
-import { Button, Flex, InputNumber, Select, Tooltip } from "antd";
+import { Button, Flex, InputNumber, Select, Tooltip, notification } from "antd";
 import { Activity, useState, useEffect } from "react";
 import { textColorForBackground } from "../CustomStyleFunctions";
 import { PermissionLevels, type Student } from "../types";
@@ -257,6 +257,24 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 	const [awardDigipogs, setAwardDigipogs] = useState<number>(0);
 	const { userData } = useUserData();
 
+	const [api, contextHolder] = notification.useNotification();
+
+	const showSuccessNotification = (message: string) => {
+		api["success"]({
+			title: "Awarded",
+			description: message,
+			placement: "bottom",
+		});
+	};
+
+	const showErrorNotification = (message: string) => {
+		api["error"]({
+			title: "Error",
+			description: message,
+			placement: "bottom",
+		});
+	};
+
     function awardDigipogsAPI(studentId: string, amount: number) {
         fetch(`${formbarUrl}/api/v1/digipogs/award`, {
             method: "POST",
@@ -269,17 +287,18 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
         .then((res) => res.json())
         .then((data) => {
             if (data.success) {
-                alert(`Awarded ${amount} digipogs to student.`);
+                showSuccessNotification(`Awarded ${amount} digipogs to student.`);
             } else {
-                alert("Failed to award digipogs.");
+                showErrorNotification("Failed to award digipogs.");
             }
         })
         .catch(() => {
-            alert("Failed to award digipogs.");
+            showErrorNotification("Failed to award digipogs.");
         });        
     }
 
 	return (
+        <>{contextHolder}
 		<AccordionCollapse
 			categories={[
 				{
@@ -531,5 +550,6 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 				},
 			]}
 		/>
+        </>
 	);
 }

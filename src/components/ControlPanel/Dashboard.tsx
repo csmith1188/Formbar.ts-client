@@ -178,7 +178,7 @@ export default function Dashboard({
 			<Segmented
 				options={[
 					"Dashboard",
-					// 'Classroom View',
+					'Classroom View',
 				]}
 				onChange={(e) => {
 					e === "Dashboard" ? setView("dash") : setView("class");

@@ -37,12 +37,22 @@ export default function TimerPage() {
                                 <Flex justify='center' align='center' vertical gap={10}>
                                     <Title level={5} style={{margin:0}}>{timer.name}</Title>
                                     <Progress 
-                                        type="circle"
+                                        type="dashboard"
                                         percent={100}
                                         size={70}
                                         format={() => timer.duration.toString() + "s"}
+                                        strokeColor={{
+                                            '0%': 'rgb(94, 158, 230)',
+                                            '100%': 'rgba(41, 96, 167, 0.9)',
+                                        }}
+                                        styles={{
+                                            indicator: {
+                                                color: 'white',
+                                            }
+                                        }}
+                                        strokeLinecap='round'
                                     />
-                                    <Button type='primary'>Start Timer</Button>
+                                    <Button style={{cursor:'not-allowed', opacity: 0.5}} type='primary'>Start Timer</Button>
                                 </Flex>
                             </Card>
                         )

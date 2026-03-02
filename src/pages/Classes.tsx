@@ -328,6 +328,7 @@ export default function ClassesPage() {
 									type="default"
 									color="danger"
 									variant="solid"
+                                    style={{cursor:'not-allowed', opacity: 0.5}}
 								>
 									Delete{isMobileView ? "" : " Class"}
 								</Button>

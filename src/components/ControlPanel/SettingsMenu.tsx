@@ -12,6 +12,7 @@ import {
 	Collapse,
 	Modal,
 	Tooltip,
+    notification,
 } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { IonIcon } from "@ionic/react";
@@ -30,6 +31,16 @@ export default function SettingsMenu() {
 
     const [classTags, setClassTags] = useState<string[]>(classData?.tags || []);
     const [newTagInput, setNewTagInput] = useState<string>("");
+
+	const [api, contextHolder] = notification.useNotification();
+
+	const showErrorNotification = (message: string) => {
+		api["error"]({
+			title: "Error",
+			description: message,
+			placement: "bottom",
+		});
+	};
 
 	const [classLinks, setClassLinks] = useState<
 		{ name: string; url: string }[]
@@ -62,7 +73,7 @@ export default function SettingsMenu() {
 
     function tryAddLink() {
         if (!newLinkInput.name || !newLinkInput.url) {
-            alert("Please fill out both the link name and URL.");
+            showErrorNotification("Please fill out both the link name and URL.");
             return;
         }
 
@@ -70,7 +81,7 @@ export default function SettingsMenu() {
         try {
             new URL("https://" + newLinkInput.url.replace(/^https?:\/\//, ''));
         } catch (e) {
-            alert("Please enter a valid URL.");
+            showErrorNotification("Please enter a valid URL.");
             return;
         }
 
@@ -88,12 +99,12 @@ export default function SettingsMenu() {
                 setClassLinks([...classLinks, newLinkInput]);
                 setNewLinkInput({ name: "", url: "" });
             } else {
-                alert("Failed to add link.");
+                showErrorNotification("Failed to add link.");
             }
         })
         .catch((err) => {
             console.error("Error adding link:", err);
-            alert("An error occurred while adding the link.");
+            showErrorNotification("An error occurred while adding the link.");
         });
 
     }
@@ -112,18 +123,18 @@ export default function SettingsMenu() {
             if (data.success) {
                 setClassLinks(classLinks.filter(link => link.url !== linkToRemove.url));
             } else {
-                alert("Failed to remove link.");
+                showErrorNotification("Failed to remove link.");
             }
         })
         .catch((err) => {
             console.error("Error removing link:", err);
-            alert("An error occurred while removing the link.");
+            showErrorNotification("An error occurred while removing the link.");
         });
     }
 
     function tryAddTag() {
         if (!newTagInput) {
-            alert("Please enter a tag name.");
+            showErrorNotification("Please enter a tag name.");
             return;
         }
 
@@ -140,19 +151,19 @@ export default function SettingsMenu() {
             if (data.success) {
                 setClassTags([...classTags, newTagInput]);
             } else {
-                alert("Failed to add tag.");
+                showErrorNotification("Failed to add tag.");
             }
         })
         .catch((err) => {
             console.error("Error adding tag:", err);
-            alert("An error occurred while adding the tag.");
+            showErrorNotification("An error occurred while adding the tag.");
         });
     }
 
 	const {isDark} = useTheme();
 
 	return (
-		<>
+		<>{contextHolder}
 			<Flex
 				gap={50}
 				style={{ height: "100%", width: "100%", overflowY: "auto" }}
@@ -183,7 +194,7 @@ export default function SettingsMenu() {
 									placeholder="Class Name"
 									defaultValue={classData?.className}
 								/>
-								<Button type="primary">Change Class Name</Button>
+								<Button type="primary" style={{cursor:'not-allowed', opacity: 0.5}}>Change Class Name</Button>
 							</Flex>
 
 							<Flex
@@ -192,10 +203,10 @@ export default function SettingsMenu() {
 								justify="center"
 								align="center"
 							>
-								<Button variant="solid" color="danger">
+								<Button variant="solid" color="danger" style={{cursor:'not-allowed', opacity: 0.5}}>
 									Kick All Students
 								</Button>
-								<Button variant="solid" color="danger">
+								<Button variant="solid" color="danger" style={{cursor:'not-allowed', opacity: 0.5}}>
 									Regenerate Code
 								</Button>
 							</Flex>
@@ -238,6 +249,7 @@ export default function SettingsMenu() {
 								checkedChildren={<CheckOutlined />}
 								unCheckedChildren={<CloseOutlined />}
 								defaultChecked
+                                 style={{cursor:'not-allowed', opacity: 0.5}}
 							/>
 							Guest
 							<Text type="secondary">
@@ -249,6 +261,7 @@ export default function SettingsMenu() {
 								checkedChildren={<CheckOutlined />}
 								unCheckedChildren={<CloseOutlined />}
 								defaultChecked
+                                 style={{cursor:'not-allowed', opacity: 0.5}}
 							/>
 							Mods
 							<Text type="secondary">
@@ -260,6 +273,7 @@ export default function SettingsMenu() {
 								checkedChildren={<CheckOutlined />}
 								unCheckedChildren={<CloseOutlined />}
 								defaultChecked
+                                 style={{cursor:'not-allowed', opacity: 0.5}}
 							/>
 							Teachers
 							<Text type="secondary">

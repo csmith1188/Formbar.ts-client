@@ -139,8 +139,12 @@ export type Student = {
 export type Poll = {
 	id: string;
 	prompt: string;
-	answers: any[];
+	responses: any[];
 	blind: boolean;
 	allowTextResponses: boolean;
 	allowMultipleResponses: boolean;
+    allowVoteChanges: boolean;
+    status: boolean;
+    totalResponders: number;
+    totalResponses: number;
 };

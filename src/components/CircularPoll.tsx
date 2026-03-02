@@ -1,5 +1,5 @@
 import { Progress } from "antd";
-import type { PollAnswer } from "../types";
+import type { Poll, PollAnswer } from "../types";
 
 type CircularPollProperties = {
 	percentage: number;
@@ -9,18 +9,14 @@ type CircularPollProperties = {
 };
 
 type PollObjectProperties = {
-	pollAnswers: Array<PollAnswer>;
+	poll: Poll;
 	size?: number;
 };
 
 export default function FullCircularPoll({
-	pollAnswers,
+	poll,
 	size = 400,
 }: PollObjectProperties) {
-	const totalResponses = pollAnswers.reduce(
-		(acc, curr) => acc + curr.responses,
-		0,
-	);
 
 	return (
 		<div
@@ -30,10 +26,30 @@ export default function FullCircularPoll({
 				height: `${size}px`,
 			}}
 		>
+            {/* Timer */}
+            {/* <Progress
+                style={{
+                    position: 'absolute',
+                    pointerEvents: 'none',
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                }}
+                type="dashboard"
+                percent={100}
+                strokeColor={{
+                    '0%': 'rgb(94, 158, 230)',
+                    '100%': 'rgba(41, 96, 167, 0.9)',
+                }}
+                size={size / 2}
+            /> */}
 			<Progress
 				style={{
 					position: "absolute" as "absolute",
 					pointerEvents: "none",
+                    left: "50%",
+                    top: "50%",
+                    transform: "translate(-50%, -50%)",
 				}}
 				type="circle"
 				percent={100}
@@ -52,28 +68,41 @@ export default function FullCircularPoll({
 					},
 				}}
 			/>
-			{pollAnswers.map((answer, index) => (
-				<CircularPoll
-					key={index}
-					percentage={
-						answer.responses === 0
-							? 0
-							: (answer.responses / totalResponses) * 100
-					}
-					color={answer.color}
-					offset={pollAnswers
-						.slice(0, index)
-						.reduce(
-							(acc, curr) =>
-								acc +
-								(curr.responses === 0
-									? 0
-									: (curr.responses / totalResponses) * 100),
-							0,
-						)}
-					size={size}
-				/>
-			))}
+			{
+				poll.blind ? (
+                    <CircularPoll
+						percentage={
+							poll.totalResponses / poll.totalResponders * 100
+						}
+						color={"#ff9f22"}
+						offset={0}
+						size={size}
+					/>
+                ) : (
+					poll.responses.map((answer, index) => (
+					<CircularPoll
+						key={index}
+						percentage={
+							answer.responses === 0
+								? 0
+								: (answer.responses / poll.totalResponders) * 100
+						}
+						color={answer.color}
+						offset={poll.responses
+							.slice(0, index)
+							.reduce(
+								(acc, curr) =>
+									acc +
+									(curr.responses === 0
+										? 0
+										: (curr.responses / poll.totalResponders) * 100),
+								0,
+							)}
+						size={size}
+					/>
+				))
+				)
+			}
 		</div>
 	);
 }
@@ -111,7 +140,9 @@ export function CircularPoll({
 			<Progress
 				style={{
 					position: "absolute" as "absolute",
-					transform: `rotate(${offsetDeg}deg)`,
+                    left: "50%",
+                    top: "50%",
+					transform: `translate(-50%, -50%) rotate(${offsetDeg}deg)`,
 					transition:
 						"transform var(--ant-motion-duration-slow) ease",
 					pointerEvents: "none",

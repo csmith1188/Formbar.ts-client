@@ -2,8 +2,7 @@ import { io, Socket } from "socket.io-client";
 import Log from "./debugLogger";
 
 //! ONLY UNTIL LOGIN IS IMPLEMENTED
-export const prodUrl = "https://formbeta.yorktechapps.com";
-export const formbarUrl = "http://localhost:420";
+export const formbarUrl = import.meta.env.VITE_FORMBAR_API_URL || "http://localhost:420";
 
 export let refreshToken: string;
 export let accessToken: string;

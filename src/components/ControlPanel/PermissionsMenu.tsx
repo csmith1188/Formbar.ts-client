@@ -1,7 +1,8 @@
-import { useClassData } from "../../main";
+import { useClassData, useTheme } from "../../main";
 import { Table, Typography } from "antd";
 const { Title } = Typography;
 import type { TableProps } from "antd";
+import { darkMode, lightMode } from "../../../themes/ThemeConfig";
 
 const permissionOptions = [
 	{
@@ -39,6 +40,7 @@ permissionOptions.forEach((option) => {
 
 export default function PermissionsMenu() {
 	const { classData } = useClassData();
+    const { isDark } = useTheme();
 
 	let sortedPermissions = classData?.permissions
 		? Object.entries(classData.permissions).sort((a, b) =>
@@ -61,13 +63,29 @@ export default function PermissionsMenu() {
 	return (
 		<>
 			<Title style={{ marginBottom: "50px" }}>Permissions</Title>
+            <p>no endpoint to edit</p>
 
 			<Table
 				columns={columns}
 				dataSource={data}
-				bordered
 				pagination={false}
-				style={{ width: "80%", margin: "0 auto" }}
+				style={{ width: "80%", margin: "0 auto"}}
+
+                // styles={{
+                //     header: {
+                //         cell: {
+                //             background: isDark ? darkMode.components.Card.colorBgContainer : lightMode.components.Card.colorBgContainer,
+                //             borderColor: isDark ? darkMode.components.Card.colorBorderSecondary : lightMode.components.Card.colorBorderSecondary,
+                //         }
+                //     },
+                //     body: {
+                //         cell: {
+                //             background: isDark ? darkMode.components.Card.colorBgContainer : lightMode.components.Card.colorBgContainer,
+                //             borderColor: isDark ? darkMode.components.Card.colorBorderSecondary : lightMode.components.Card.colorBorderSecondary,
+
+                //         }
+                //     }
+                // }}
 			/>
 		</>
 	);

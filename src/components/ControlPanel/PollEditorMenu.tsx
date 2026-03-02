@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Input, Switch, Typography } from "antd";
+import { Button, Card, Flex, Input, Switch, Tooltip, Typography, notification } from "antd";
 const { Title, Text } = Typography;
 import { useClassData, useTheme } from "../../main";
 import PollEditorResponse from "../PollEditorResponse";
@@ -80,6 +80,16 @@ export default function PollsEditorMenu() {
     const { isDark } = useTheme();
     const { classData } = useClassData();
 
+	const [api, contextHolder] = notification.useNotification();
+
+	const showErrorNotification = (message: string) => {
+		api["error"]({
+			title: "Error",
+			description: message,
+			placement: "bottom",
+		});
+	};
+
     const [pollProperties, setPollProperties] = useState<PollProperties>({
         prompt: "Custom Poll",
         answers: [
@@ -97,25 +107,36 @@ export default function PollsEditorMenu() {
     });
 
     function startCustomPoll() {
-        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/create`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify(pollProperties),
-        })
-        .then((res) => res.json())
-        .then((data) => {
-            console.log("Custom poll started:", data);
-            socket?.emit("classUpdate", ""); // Refresh class data to show new poll
-        })
-        .catch((err) => {
-            console.error("Error starting custom poll:", err);
-        });
+        //? Use fetch WHEN IT ACTUALLY WORKS.
+        // fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/create`, {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //         "Authorization": `Bearer ${accessToken}`,
+        //     },
+        //     body: JSON.stringify(pollProperties),
+        // })
+        // .then((res) => res.json())
+        // .then((data) => {
+        //     console.log("Custom poll started:", data);
+        //     socket?.emit("classUpdate", ""); // Refresh class data to show new poll
+        // })
+        // .catch((err) => {
+        //     console.error("Error starting custom poll:", err);
+        // });
+
+		if (!classData?.isActive) {
+			showErrorNotification(
+                "Class is not active.",
+            );
+			return;
+		}
+
+        socket && socket.emit("startPoll", pollProperties);
     }
 
     return (
+        <>{contextHolder}
         <Flex vertical align="center" justify="start" style={{ height: "100%", padding: "20px", flex: 1 }}>
             <Title>Poll Editor</Title>
             
@@ -142,45 +163,49 @@ export default function PollsEditorMenu() {
                             <Switch onChange={(e) => setPollProperties({...pollProperties, blind: e})} />
                         </Flex>
 
-                        <Flex align="center" justify="space-between">
+                        <Flex align="center" justify="space-between" style={{cursor:'not-allowed', opacity: 0.5}}>
                             Multiple Answer Poll
                             <Switch onChange={(e) => setPollProperties({...pollProperties, allowMultipleResponses: e})} />
                         </Flex>
 
                         <Flex align="center" justify="space-between" gap={10} style={{marginTop: '10px'}}>
-                            <Button type="primary"
-                                onClick={() => {
-                                    // Change all answers to "Answer {index}"
-                                    setPollProperties({
-                                        ...pollProperties,
-                                        answers: pollProperties.answers.map((answer, index) => ({
-                                            ...answer,
-                                            answer: `Answer ${index + 1}`,
-                                        })),
-                                    });
-                                }}
-                            >
-                                Reset Answers
-                            </Button>
-                            <Button type="primary"
-                                onClick={() => {
-                                    let colors = generateColors(pollProperties.answers.length);
+                            <Tooltip title="Reset answers to 'Answer X'.">
+                                <Button type="primary"
+                                    onClick={() => {
+                                        // Change all answers to "Answer {index}"
+                                        setPollProperties({
+                                            ...pollProperties,
+                                            answers: pollProperties.answers.map((answer, index) => ({
+                                                ...answer,
+                                                answer: `Answer ${index + 1}`,
+                                            })),
+                                        });
+                                    }}
+                                >
+                                    Reset Answers
+                                </Button>
+                            </Tooltip>
+                            <Tooltip title="Assign each answer a unique color.">
+                                <Button type="primary"
+                                    onClick={() => {
+                                        let colors = generateColors(pollProperties.answers.length);
 
-                                    // Change all answers to a color from the generated colors array
-                                    setPollProperties({
-                                        ...pollProperties,
-                                        answers: pollProperties.answers.map((answer, index) => ({
-                                            ...answer,
-                                            color: colors[index],
-                                        })),
-                                    });
-                                }}
-                            >
-                                Auto Color
-                            </Button>
+                                        // Change all answers to a color from the generated colors array
+                                        setPollProperties({
+                                            ...pollProperties,
+                                            answers: pollProperties.answers.map((answer, index) => ({
+                                                ...answer,
+                                                color: colors[index],
+                                            })),
+                                        });
+                                    }}
+                                >
+                                    Auto Color
+                                </Button>
+                            </Tooltip>
                         </Flex>
 
-                        <Flex align="center" justify="space-between" gap={10}>
+                        <Flex align="center" justify="space-between" gap={10} style={{cursor:'not-allowed', opacity: 0.5}}>
                             <Button variant="solid" color="green">
                                 Save in My Polls
                             </Button>
@@ -236,5 +261,6 @@ export default function PollsEditorMenu() {
                 </Card>
             </Flex>
         </Flex>
+        </>
     );
 }

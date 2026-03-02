@@ -3,9 +3,20 @@ const { Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { useMobileDetect } from "../main";
 import { Link } from "react-router";
+import { useUserData } from "../main";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function NewsPage() {
 	const isMobileView = useMobileDetect();
+    const { userData } = useUserData();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if(!userData) {
+            navigate("/login");
+        }
+    }, [userData, navigate]);
 
 	return (
 		<>
