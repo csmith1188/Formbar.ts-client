@@ -14,7 +14,7 @@ export default function FormbarHeader() {
 	const { isDark, toggleTheme } = useTheme();
 	const navigate = useNavigate();
 	const isMobileView = useMobileDetect();
-	const { userData } = useUserData();
+	const { userData, setUserData } = useUserData();
 
 	const headerStyles = {
 		...styles.formbarHeader,
@@ -42,6 +42,7 @@ export default function FormbarHeader() {
 		localStorage.removeItem("accessToken");
 		localStorage.removeItem("refreshToken");
 		socket?.disconnect();
+        setUserData(null);
 		navigate("/login");
 	}
 
