@@ -341,7 +341,12 @@ export default function Profile() {
 			<Flex
 				align="center"
 				justify="center"
-				style={{ padding: "20px", height: "100%", width: "100%" }}
+				style={{
+					padding: "20px",
+					height: "100%",
+					width: "100%",
+					overflowY: "auto",
+				}}
 			>
 				{!error && (
 					<Card
@@ -351,6 +356,11 @@ export default function Profile() {
 							top: "80px",
 							left: "50%",
 							transform: "translateX(-50%)",
+							backdropFilter: "blur(16px)",
+							WebkitBackdropFilter: "blur(16px)",
+							borderRadius: 16,
+							border: "1px solid rgba(255,255,255,0.1)",
+							boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
 						}}
 						loading={profileProps["Pog Meter"] === undefined}
 					>
@@ -374,8 +384,8 @@ export default function Profile() {
 												] as number
 											}
 											strokeColor={{
-												"0%": "#108ee9",
-												"100%": "#aa68d0",
+												"0%": "#3b82f6",
+												"100%": "#a855f7",
 											}}
 											size={["", 40]}
 											styles={{
@@ -399,7 +409,16 @@ export default function Profile() {
 				)}
 
 				<Card
-					style={{ margin: "20px", width: "600px" }}
+					style={{
+						margin: "20px",
+						width: "600px",
+						backdropFilter: "blur(20px)",
+						WebkitBackdropFilter: "blur(20px)",
+						borderRadius: 20,
+						border: "1px solid rgba(255,255,255,0.1)",
+						boxShadow: "0 8px 40px rgba(0,0,0,0.25)",
+						animation: "slideInUp 0.35s ease both",
+					}}
 					loading={error === null && !profileProps["Display Name"]}
 				>
 					<Flex

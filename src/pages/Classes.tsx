@@ -2,16 +2,17 @@ import { Button, Card, Flex, Input, Select, Typography } from "antd";
 const { Title, Text } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import Log from "../debugLogger";
-import { useUserData } from "../main";
+import { useUserData, useTheme } from "../main";
 import type { CardStylesType } from "antd/es/card/Card";
 import { useMobileDetect } from "../main";
-import { accessToken, formbarUrl, socket } from "../socket";
+import { accessToken, formbarUrl } from "../socket";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function ClassesPage() {
 	const navigate = useNavigate();
 	const { userData, setUserData } = useUserData();
+	const { isDark } = useTheme();
 	const isMobileView = useMobileDetect();
 
 	const [joinClassCode, setJoinClassCode] = useState<string>("");
@@ -26,11 +27,6 @@ export default function ClassesPage() {
 	const [selectedClass, setSelectedClass] = useState<number | null>(null);
 
 	const [createClassName, setCreateClassName] = useState<string>("");
-
-	let cardStyle = { width: "350px", height: "230px" };
-	if (isMobileView) {
-		cardStyle = { width: "300px", height: "200px" };
-	}
 
 	useEffect(() => {
 		if (!userData) return;
@@ -286,12 +282,15 @@ export default function ClassesPage() {
 				vertical
 				align="center"
 				justify="center"
-				style={{ padding: "20px", height: "100%", width: "100%" }}
-				gap={!isMobileView ? 50 : 30}
+				style={{ padding: "20px", height: "100%", width: "100%", overflowY: "auto" }}
+				gap={!isMobileView ? 40 : 24}
 			>
-				<div style={{ position: "static", textAlign: "center" }}>
-					<Title>{!isMobileView ? "Manage " : ""}Your Classes</Title>
-					<Text>
+				{/* Page heading */}
+				<div style={{ textAlign: "center", animation: "slideInUp 0.35s ease both" }}>
+					<Title style={{ marginBottom: 4, fontWeight: 800, letterSpacing: "-0.02em" }}>
+						{!isMobileView ? "Manage " : ""}Your Classes
+					</Title>
+					<Text style={{ fontSize: 15, opacity: 0.65 }}>
 						Enter
 						{userData?.permissions && userData.permissions >= 4
 							? ", create,"
@@ -299,156 +298,162 @@ export default function ClassesPage() {
 						or join a class quickly
 					</Text>
 				</div>
+
+				{/* Cards */}
 				<Flex
-					align="center"
+					align="stretch"
 					justify="center"
-					gap={20}
-					style={{ width: "100%" }}
+					gap={isMobileView ? 16 : 20}
+					style={{ width: "100%", maxWidth: 1100 }}
 					wrap="wrap"
 				>
+					{/* Enter a Class */}
 					<Card
-						title="Enter a Class"
-						style={{...cardStyle}}
+						title={
+							<Flex align="center" gap={8} justify="center">
+								<span>🚪</span>
+								<span>Enter a Class</span>
+							</Flex>
+						}
+						style={{
+							...cardStyle(isMobileView),
+							backdropFilter: "blur(16px)",
+							WebkitBackdropFilter: "blur(16px)",
+							border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.08)",
+							boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.35)" : "0 8px 32px rgba(0,0,0,0.08)",
+							borderRadius: 20,
+						}}
 						styles={cardStyles}
 						loading={!userData}
 					>
-						<Flex
-							vertical
-							gap={20}
-							align="center"
-							justify="center"
-							style={{ height: "100%" }}
-						>
+						<Flex vertical gap={16} align="center" justify="center" style={{ height: "100%" }}>
 							<Select
-								style={{ width: "100%", padding: "6px" }}
+								style={{ width: "100%" }}
 								placeholder="Select a class to enter"
 								value={selectedClass}
 								onChange={(value) => setSelectedClass(value)}
+								size="large"
 							>
 								{ownedClasses.length > 0 && (
-									<Select.OptGroup label="Owned Classes">
-										{ownedClasses.length > 0 &&
-											ownedClasses.map((cls) => (
-												<Select.Option
-													key={cls.id}
-													value={cls.id}
-												>
-													{cls.name}
-												</Select.Option>
-											))}
+									<Select.OptGroup label="📌 Owned Classes">
+										{ownedClasses.map((cls) => (
+											<Select.Option key={cls.id} value={cls.id}>
+												{cls.name}
+											</Select.Option>
+										))}
 									</Select.OptGroup>
 								)}
-
 								{joinedClasses.length > 0 && (
-									<Select.OptGroup label="Joined Classes">
-										{joinedClasses.length > 0 &&
-											joinedClasses.map((cls) => (
-												<Select.Option
-													key={cls.id}
-													value={cls.id}
-												>
-													{cls.name}
-												</Select.Option>
-											))}
+									<Select.OptGroup label="🎓 Joined Classes">
+										{joinedClasses.map((cls) => (
+											<Select.Option key={cls.id} value={cls.id}>
+												{cls.name}
+											</Select.Option>
+										))}
 									</Select.OptGroup>
 								)}
 							</Select>
-							<Flex
-								align="center"
-								justify="center"
-								gap={10}
-								wrap="wrap"
-								style={{ width: "100%" }}
-							>
+							<Flex align="center" justify="center" gap={10} wrap="wrap" style={{ width: "100%" }}>
 								<Button
 									type="primary"
+									size="large"
+									style={{ flex: 1, minWidth: 100, fontWeight: 600, borderRadius: 10 }}
 									onClick={() => enterClass()}
 								>
 									Enter{isMobileView ? "" : " Class"}
 								</Button>
-                                {
-                                    userData && userData.permissions >= 4 && (
-                                        <Button
-                                            type="default"
-                                            color="danger"
-                                            variant="solid"
-                                            onClick={() => deleteClass()}
-                                        >
-                                            Delete{isMobileView ? "" : " Class"}
-                                        </Button>
-                                    )
-                                }
+								{userData && userData.permissions >= 4 && (
+									<Button
+										size="large"
+										color="danger"
+										variant="solid"
+										style={{ fontWeight: 600, borderRadius: 10 }}
+										onClick={() => deleteClass()}
+									>
+										Delete
+									</Button>
+								)}
 							</Flex>
 						</Flex>
 					</Card>
-					<Card
-						title="Create a Class"
-						style={{...cardStyle, animationDelay: '0.05s'}}
-						styles={cardStyles}
-						loading={
-							!(
-								userData &&
-								userData.permissions &&
-								userData.permissions >= 4
-							)
-						}
-						hidden={
-							!(
-								userData &&
-								userData.permissions &&
-								userData.permissions >= 4
-							)
-						}
-					>
-						<Flex
-							vertical
-							gap={20}
-							align="center"
-							justify="center"
-							style={{ height: "100%" }}
+
+					{/* Create a Class */}
+					{userData && userData.permissions && userData.permissions >= 4 && (
+						<Card
+							title={
+								<Flex align="center" gap={8} justify="center">
+									<span>✨</span>
+									<span>Create a Class</span>
+								</Flex>
+							}
+							style={{
+								...cardStyle(isMobileView),
+								animationDelay: "0.05s",
+								backdropFilter: "blur(16px)",
+								WebkitBackdropFilter: "blur(16px)",
+								border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.08)",
+								boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.35)" : "0 8px 32px rgba(0,0,0,0.08)",
+								borderRadius: 20,
+							}}
+							styles={cardStyles}
 						>
-							<Input
-								style={{ width: "100%" }}
-								placeholder="Class Name"
-								value={createClassName}
-								onChange={(e) =>
-									setCreateClassName(e.target.value)
-								}
-							/>
-							<Button
-								type="primary"
-								style={{ width: "100%" }}
-								onClick={() => createClass()}
-							>
-								Create{isMobileView ? "" : " Class"}
-							</Button>
-						</Flex>
-					</Card>
+							<Flex vertical gap={16} align="center" justify="center" style={{ height: "100%" }}>
+								<Input
+									size="large"
+									style={{ width: "100%" }}
+									placeholder="Class Name"
+									value={createClassName}
+									onChange={(e) => setCreateClassName(e.target.value)}
+									onPressEnter={() => createClass()}
+								/>
+								<Button
+									type="primary"
+									size="large"
+									style={{ width: "100%", fontWeight: 600, borderRadius: 10 }}
+									onClick={() => createClass()}
+									disabled={!createClassName.trim()}
+								>
+									Create{isMobileView ? "" : " Class"}
+								</Button>
+							</Flex>
+						</Card>
+					)}
+
+					{/* Join a Class */}
 					<Card
-						title="Join a Class"
-						style={{...cardStyle, animationDelay: '0.1s'}}
+						title={
+							<Flex align="center" gap={8} justify="center">
+								<span>🔗</span>
+								<span>Join a Class</span>
+							</Flex>
+						}
+						style={{
+							...cardStyle(isMobileView),
+							animationDelay: "0.1s",
+							backdropFilter: "blur(16px)",
+							WebkitBackdropFilter: "blur(16px)",
+							border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.08)",
+							boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.35)" : "0 8px 32px rgba(0,0,0,0.08)",
+							borderRadius: 20,
+						}}
 						styles={cardStyles}
 						loading={!userData}
 					>
-						<Flex
-							vertical
-							gap={20}
-							align="center"
-							justify="center"
-							style={{ height: "100%" }}
-						>
+						<Flex vertical gap={16} align="center" justify="center" style={{ height: "100%" }}>
 							<Input
+								size="large"
 								style={{ width: "100%" }}
 								placeholder="Class Code"
 								value={joinClassCode}
-								onChange={(e) =>
-									setJoinClassCode(e.target.value)
-								}
+								onChange={(e) => setJoinClassCode(e.target.value)}
+								onPressEnter={joinClass}
 							/>
 							<Button
 								type="primary"
-								style={{ width: "100%" }}
+								size="large"
+								style={{ width: "100%", fontWeight: 600, borderRadius: 10 }}
 								onClick={joinClass}
+								disabled={!joinClassCode.trim()}
 							>
 								Join{isMobileView ? "" : " Class"}
 							</Button>
@@ -460,16 +465,24 @@ export default function ClassesPage() {
 	);
 }
 
+const cardStyle = (isMobileView: boolean) => ({
+	width: isMobileView ? "calc(100vw - 40px)" : "320px",
+	minHeight: isMobileView ? "180px" : "220px",
+});
+
 const cardStyles = {
-    root: {
-        opacity: 0,
-        animation: 'appear 0.3s ease-in-out forwards',
-    },
+	root: {
+		opacity: 0,
+		animation: "appear 0.35s ease-in-out forwards",
+	},
 	title: {
 		width: "100%",
 		textAlign: "center",
+		fontSize: 16,
+		fontWeight: 700,
 	},
 	body: {
 		height: "calc(100% - 64px)",
+		padding: "20px 24px",
 	},
 } as CardStylesType;

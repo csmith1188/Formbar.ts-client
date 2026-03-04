@@ -11,11 +11,9 @@ import {
 	Select,
 	Tooltip,
 	Input,
-	Spin,
 	Skeleton,
 } from "antd";
 import { type UserData } from "../types";
-import { LoadingOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 
 import { IonIcon } from "@ionic/react";
@@ -29,6 +27,7 @@ export default function ManagerPanel() {
 	>("Users");
 	const [users, setUsers] = useState<Record<string, UserData>>({});
 	const [classrooms, setClassrooms] = useState<any[]>([]);
+	void classrooms; // fetched but not yet displayed
 	const [initialLoad, setInitialLoad] = useState(true);
 
 	useEffect(() => {

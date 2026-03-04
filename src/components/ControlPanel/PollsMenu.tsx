@@ -116,10 +116,6 @@ export default function PollsMenu({
 		});
 	};
 
-    function getPoll(id: number) {
-        return defaultPolls.filter((e) => e.id == id)[0];
-    }
-
 	function startPoll(id: number) {
 
         const poll = { ...defaultPolls.filter((e) => e.id == id)[0] };

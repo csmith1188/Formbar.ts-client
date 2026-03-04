@@ -11,14 +11,7 @@ const { Title } = Typography;
 
 export default function StudentBar() {
 	const [classData, setClassData] = useState<any>(null);
-	const [answerState, setAnswerState] = useState<any>([]);
 	const isMobileView = useMobileDetect();
-
-	const [pollWidth, setPollWidth] = useState<number>(
-		!isMobileView
-			? Math.min(window.innerWidth / 2 - 20, window.innerHeight - 200)
-			: Math.min(window.innerWidth - 40, window.innerHeight / 2 - 100),
-	);
 
 	function Respond(response: string) {
 		if (!socket || !socket.connected) {
@@ -33,33 +26,7 @@ export default function StudentBar() {
 	}
 
 	useEffect(() => {
-		function handleResize() {
-			if (!isMobileView) {
-				setPollWidth(
-					Math.min(
-						window.innerWidth / 2 - 20,
-						window.innerHeight - 200,
-					),
-				);
-			} else {
-				setPollWidth(
-					Math.min(
-						window.innerWidth - 40,
-						window.innerHeight / 2 - 100,
-					),
-				);
-			}
-		}
-
-		window.addEventListener("resize", handleResize);
-
-		return () => {
-			window.removeEventListener("resize", handleResize);
-		};
-	}, [isMobileView]);
-
-	useEffect(() => {
-		if (!socket) return; // Don't set up listener if socket isn't ready
+		if (!socket) return;
 
 		function classUpdate(classData: any) {
 			setClassData(classData);
@@ -68,16 +35,6 @@ export default function StudentBar() {
 				data: classData,
 				level: "info",
 			});
-
-			let answers = [];
-
-			for (let answer of classData.poll.responses) {
-				let percentage =
-					(answer.responses / classData.poll.totalResponders) * 100;
-				answers.push({ percentage: percentage, color: answer.color });
-			}
-
-			setAnswerState(answers);
 		}
 
 		socket.on("classUpdate", classUpdate);

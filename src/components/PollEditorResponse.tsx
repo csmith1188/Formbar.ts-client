@@ -1,6 +1,5 @@
 import { Checkbox, Flex, Tooltip, Input, InputNumber, Button, ColorPicker } from "antd";
 
-import { useTheme } from "../main";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 

@@ -1,5 +1,26 @@
 @import url(./outfit.css);
 
+/* ===== CSS Variables ===== */
+:root {
+	--glass-dark: rgba(255, 255, 255, 0.05);
+	--glass-light: rgba(255, 255, 255, 0.72);
+	--glass-border-dark: rgba(255, 255, 255, 0.1);
+	--glass-border-light: rgba(0, 0, 0, 0.08);
+	--blur-sm: blur(8px);
+	--blur-md: blur(16px);
+	--blur-lg: blur(24px);
+	--shadow-glow-blue: 0 0 40px rgba(59, 130, 246, 0.25);
+	--shadow-card: 0 8px 32px rgba(0, 0, 0, 0.18);
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+	--transition-fast: 0.15s ease;
+	--transition-base: 0.25s ease;
+	--transition-slow: 0.4s ease;
+}
+
+/* ===== Reset ===== */
 * {
 	margin: 0;
 	padding: 0;
@@ -26,7 +47,7 @@ body,
 }
 
 #root:has(div.formbarHeader) {
-	padding-top: 60px;
+	padding-top: 64px;
 }
 
 body {
@@ -36,6 +57,23 @@ body {
 	overflow: hidden;
 }
 
+/* ===== Custom Scrollbar ===== */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: rgba(128, 128, 180, 0.35);
+	border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(128, 128, 180, 0.6);
+}
+
+/* ===== Ion Icons ===== */
 ion-icon {
 	height: 100%;
 	aspect-ratio: 1;
@@ -46,6 +84,7 @@ ion-icon[size="large"] {
 	width: 1.5rem;
 }
 
+/* ===== Utility Classes ===== */
 .centered-icon-btn {
 	display: flex !important;
 	align-items: center !important;
@@ -57,6 +96,15 @@ ion-icon[size="large"] {
 	margin: 0 !important;
 }
 
+/* Glass card utility */
+.glass-card {
+	backdrop-filter: var(--blur-md);
+	-webkit-backdrop-filter: var(--blur-md);
+	border: 1px solid var(--glass-border-dark);
+	box-shadow: var(--shadow-card);
+}
+
+/* ===== Ant Design Overrides ===== */
 .ant-progress-circle,
 .ant-progress-circle-path {
 	transition-duration: 1s !important;
@@ -74,6 +122,41 @@ ion-icon[size="large"] {
 .ant-progress-circle {
 	overflow: visible !important;
 }
+
+/* Card hover lift effect */
+.ant-card {
+	transition: transform var(--transition-base), box-shadow var(--transition-base) !important;
+}
+.ant-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22) !important;
+}
+
+/* Buttons */
+.ant-btn {
+	font-weight: 500 !important;
+	letter-spacing: 0.01em;
+	transition: all var(--transition-fast) !important;
+}
+.ant-btn:not(:disabled):hover {
+	filter: brightness(1.1);
+	transform: translateY(-1px);
+}
+.ant-btn:not(:disabled):active {
+	transform: translateY(0px);
+}
+
+/* Input focus ring */
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+.ant-select-focused .ant-select-selector {
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* ===== Animations ===== */
 @keyframes bounce {
 	0%,
 	100% {
@@ -81,33 +164,58 @@ ion-icon[size="large"] {
 		text-shadow: none;
 	}
 	50% {
-		transform: translateY(-5px);
-		text-shadow: 0 0 15px #1aa8d5;
+		transform: translateY(-6px);
+		text-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
 	}
 }
 
 .bounce {
 	display: inline-block;
-	animation: bounce 1s infinite ease-in-out;
+	animation: bounce 1.2s infinite ease-in-out;
 }
 
-.bounce:nth-child(2) {
-	animation-delay: 0.2s;
+.bounce:nth-child(2) { animation-delay: 0.15s; }
+.bounce:nth-child(3) { animation-delay: 0.3s; }
+.bounce:nth-child(4) { animation-delay: 0.45s; }
+.bounce:nth-child(5) { animation-delay: 0.6s; }
+.bounce:nth-child(6) { animation-delay: 0.75s; }
+.bounce:nth-child(7) { animation-delay: 0.9s; }
+
+@keyframes appear {
+	0% {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
-.bounce:nth-child(3) {
-	animation-delay: 0.4s;
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
-.bounce:nth-child(4) {
-	animation-delay: 0.6s;
+
+@keyframes slideInUp {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
-.bounce:nth-child(5) {
-	animation-delay: 0.8s;
+
+@keyframes shimmer {
+	0% { background-position: -200% 0; }
+	100% { background-position: 200% 0; }
 }
-.bounce:nth-child(6) {
-	animation-delay: 1s;
-}
-.bounce:nth-child(7) {
-	animation-delay: 1.2s;
+
+@keyframes pulseGlow {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+	50% { box-shadow: 0 0 20px 4px rgba(59, 130, 246, 0.3); }
 }
 
 .border {
@@ -134,15 +242,4 @@ label.correctAnswer .ant-checkbox-inner::after {
 .ant-color-picker-trigger > .ant-color-picker-color-block-inner {
 	height: 100% !important;
 	width: 100% !important;
-}
-
-@keyframes appear {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }

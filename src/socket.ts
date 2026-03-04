@@ -69,7 +69,7 @@ export function socketLogin(token: string) {
 				}
 				const loginData = await loginResponse.json();
 				const { data } = loginData;
-				let { accessToken, refreshToken } = data;
+				let { refreshToken } = data;
 				Log({ message: "Login successful", data: loginData });
 
 				// Delegate to a fresh socketLogin call and stop this chain
@@ -120,7 +120,7 @@ export function socketLogin(token: string) {
 
 }
 
-let tokenRefreshInterval = setInterval(() => {
+setInterval(() => {
     if (refreshToken) {
         socketLogin(refreshToken);
     }

@@ -5,8 +5,6 @@ import {
 	Input,
 	Button,
 	Switch,
-	Image,
-	Splitter,
 	Space,
 	Divider,
 	Collapse,

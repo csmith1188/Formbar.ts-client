@@ -1,5 +1,5 @@
 import { Progress } from "antd";
-import type { Poll, PollAnswer } from "../types";
+import type { Poll } from "../types";
 import { useTheme } from "../main";
 
 type CircularPollProperties = {

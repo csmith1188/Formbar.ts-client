@@ -2,7 +2,6 @@ import {
     Button,
     Flex,
     Typography,
-    Tooltip,
 } from 'antd';
 
 const { Title, Text } = Typography;

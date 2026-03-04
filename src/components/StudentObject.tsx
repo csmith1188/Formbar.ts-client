@@ -1,4 +1,4 @@
-import { Badge, Button, Checkbox, Flex, Modal, Switch, Typography } from "antd";
+import { Badge, Button, Flex, Modal, Typography } from "antd";
 import { StudentAccordion } from "./AccordionCollapse";
 import { useClassData } from "../main";
 const { Text } = Typography;

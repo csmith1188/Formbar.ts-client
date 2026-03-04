@@ -1,8 +1,7 @@
-import { useClassData, useTheme } from "../../main";
+import { useClassData } from "../../main";
 import { Table, Typography } from "antd";
 const { Title } = Typography;
 import type { TableProps } from "antd";
-import { darkMode, lightMode } from "../../../themes/ThemeConfig";
 
 const permissionOptions = [
 	{
@@ -40,7 +39,6 @@ permissionOptions.forEach((option) => {
 
 export default function PermissionsMenu() {
 	const { classData } = useClassData();
-    const { isDark } = useTheme();
 
 	let sortedPermissions = classData?.permissions
 		? Object.entries(classData.permissions).sort((a, b) =>

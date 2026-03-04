@@ -1,4 +1,4 @@
-import { Button, Masonry, Flex, Input, Badge, Tooltip } from "antd";
+import { Button, Flex, Input, Badge, Tooltip } from "antd";
 import { accessToken, formbarUrl } from "../socket";
 import { useState } from "react";
 import FormbarHeader from "../components/FormbarHeader";
@@ -21,25 +21,24 @@ const testFuncs = [
 
     { name: 'Get Me', func: getMe, hasArgs: false, category: 'User', method: 'GET', testedWorks: true },
     { name: 'Get User', func: getUser, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
-    { name: 'Get User Class', func: getUserClass, hasArgs: true, category: 'User', method: 'GET' },
+    { name: 'Get User Class', func: getUserClass, hasArgs: true, category: 'User', method: 'GET', testedWorks: "Only if class started" },
     { name: 'Get User Classes', func: getUserClasses, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
     { name: 'Delete User', func: deleteUser, hasArgs: true, category: 'User', method: 'DELETE', testedWorks: true },
     { name: 'Change Perm (email|perm)', func: changePerm, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
     { name: 'Ban User', func: banUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
     { name: 'Unban User', func: unbanUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
     { name: 'Verify User', func: verifyUser, hasArgs: true, category: 'User', method: 'PATCH' },
-    { name: 'Regenerate API Key', func: regenerateApiKey, hasArgs: true, category: 'User', method: 'PATCH' },
-    { name: 'Update PIN', func: updatePin, hasArgs: true, category: 'User', method: 'PATCH' },
-    { name: 'Request PIN Reset', func: requestPinReset, hasArgs: true, category: 'User', method: 'POST' },
-    { name: 'Reset PIN (Token)', func: resetPinWithToken, hasArgs: true, category: 'User', method: 'PATCH' },
+    { name: 'Regenerate API Key', func: regenerateApiKey, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
+    { name: 'Update PIN', func: updatePin, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
+    { name: 'Request PIN Reset', func: requestPinReset, hasArgs: true, category: 'User', method: 'POST', testedWorks: true },
+    { name: 'Reset PIN (Token)', func: resetPinWithToken, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
 
     // Class endpoints (from attachments)
     { name: 'Get Class', func: getClass, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
-    { name: 'Get Class Active', func: getClassActive, hasArgs: true, category: 'Class', method: 'GET' },
-    { name: 'Get Class Banned', func: getClassBanned, hasArgs: true, category: 'Class', method: 'GET' },
-    { name: 'Get Class Links', func: getClassLinks, hasArgs: true, category: 'Class', method: 'GET' },
-    { name: 'Get Class Permissions', func: getClassPermissions, hasArgs: true, category: 'Class', method: 'GET' },
-    { name: 'Get Class Students', func: getClassStudents, hasArgs: true, category: 'Class', method: 'GET' },
+    { name: 'Get Class Active', func: getClassActive, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
+    { name: 'Get Class Banned', func: getClassBanned, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
+    { name: 'Get Class Permissions', func: getClassPermissions, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
+    { name: 'Get Class Students', func: getClassStudents, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
     { name: 'Create Class', func: createClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
     { name: 'End Class', func: endClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
     { name: 'Join Class', func: joinClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
@@ -62,17 +61,17 @@ const testFuncs = [
 
     // Class - Help
     { name: 'Delete Help Request', func: deleteHelpRequest, hasArgs: true, category: 'Class - Help', method: 'DELETE', testedWorks: true },
-    { name: 'Request Help', func: requestClassHelp, hasArgs: true, category: 'Class - Help', method: 'POST' },
+    { name: 'Request Help', func: requestClassHelp, hasArgs: true, category: 'Class - Help', method: 'POST', testedWorks: true },
 
     // Room
     { name: 'Leave Room', func: leaveRoom, hasArgs: true, category: 'Room', method: 'DELETE', testedWorks: true },
-    { name: 'Get Room Tags', func: getRoomTags, hasArgs: false, category: 'Room', method: 'GET' },
+    { name: 'Get Room Tags', func: getRoomTags, hasArgs: false, category: 'Room', method: 'GET', testedWorks: true },
     { name: 'Join Room By Code', func: joinRoomByCode, hasArgs: true, category: 'Room', method: 'POST' },
     { name: 'Set Room Tags', func: setRoomTags, hasArgs: true, category: 'Room', method: 'PUT' },
 
     // Room - Links
     { name: 'Remove Room Link', func: removeRoomLink, hasArgs: true, category: 'Room - Links', method: 'DELETE' },
-    { name: 'Get Room Links', func: getRoomLinks, hasArgs: true, category: 'Room - Links', method: 'GET' },
+    { name: 'Get Room Links', func: getRoomLinks, hasArgs: true, category: 'Room - Links', method: 'GET', testedWorks: true },
     { name: 'Add Room Link', func: addRoomLink, hasArgs: true, category: 'Room - Links', method: 'POST' },
     { name: 'Update Room Link', func: updateRoomLink, hasArgs: true, category: 'Room - Links', method: 'PUT' },
 
@@ -90,8 +89,8 @@ const testFuncs = [
     { name: 'Get Manager', func: getManager, hasArgs: false, category: 'Manager', method: 'GET', testedWorks: true },
 
     // Logs
-    { name: 'Get Logs', func: getLogs, hasArgs: false, category: 'Logs', method: 'GET' },
-    { name: 'Get Log File', func: getLogFile, hasArgs: true, category: 'Logs', method: 'GET' },
+    { name: 'Get Logs', func: getLogs, hasArgs: false, category: 'Logs', method: 'GET', testedWorks: true },
+    { name: 'Get Log File', func: getLogFile, hasArgs: true, category: 'Logs', method: 'GET', testedWorks: true },
 
     // OAuth
     { name: 'OAuth Authorize', func: oauthAuthorize, hasArgs: false, category: 'OAuth', method: 'GET' },
@@ -99,7 +98,7 @@ const testFuncs = [
     { name: 'OAuth Token', func: oauthToken, hasArgs: true, category: 'OAuth', method: 'POST' },
 
     // User
-    { name: 'Get User Transactions', func: getUserTransactions, hasArgs: true, category: 'User', method: 'GET' },
+    { name: 'Get User Transactions', func: getUserTransactions, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
 
     // Pools
     { name: 'Get User Pools', func: getUserPools, hasArgs: false, category: 'Pools', method: 'GET' },
@@ -387,17 +386,6 @@ async function getClassBanned(inputValue: string) {
         console.log("Get Class Banned:", data);
     } catch (err) {
         console.error("Error getting class banned:", err);
-    }
-}
-
-async function getClassLinks(inputValue: string) {
-    if (!inputValue) return console.warn('getClassLinks requires an id');
-    try {
-        const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/links`, getFetchOptions());
-        const data = await res.json();
-        console.log("Get Class Links:", data);
-    } catch (err) {
-        console.error("Error getting class links:", err);
     }
 }
 

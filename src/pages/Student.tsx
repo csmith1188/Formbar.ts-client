@@ -16,9 +16,7 @@ export default function Student() {
 	const { userData: initialUserData } = useUserData();
 	const [userData, setUserData] = useState<any>(null);
 	const [classData, setClassData] = useState<any>(null);
-	const [answerState, setAnswerState] = useState<any>([]);
 	const isMobileView = useMobileDetect();
-	const [lastPollData, setLastPollData] = useState<any>(null);
 
 	const [textResponse, setTextResponse] = useState<string>("");
 	const lastPollDataRef = useRef<any>(null);
@@ -94,7 +92,6 @@ export default function Student() {
 
 			setClassData(classData);
 			lastPollDataRef.current = classData.poll;
-			setLastPollData(classData.poll);
 			Log({
 				message: "Class Update received.",
 				data: classData,
@@ -125,7 +122,6 @@ export default function Student() {
 					});
 				});
 
-			setAnswerState(classData.poll.responses);
 		}
 
 		socket.on("classUpdate", classUpdate);
@@ -153,14 +149,20 @@ export default function Student() {
 		<>
 			<FormbarHeader />
 
+			{/* Poll prompt */}
 			<Title
 				style={{
 					position: "absolute",
 					transform: "translate(-50%)",
 					left: "50%",
-					top: "90px",
-					width: "100%",
+					top: "82px",
+					width: "90%",
 					textAlign: "center",
+					fontWeight: 700,
+					letterSpacing: "-0.02em",
+					fontSize: isMobileView ? "1.4rem" : "2rem",
+					pointerEvents: "none",
+					zIndex: 1,
 				}}
 			>
 				{classData?.poll.prompt}
@@ -169,14 +171,8 @@ export default function Student() {
 			{userData?.break !== true ? (
 				<>
 					<Flex
-						style={
-							!isMobileView
-								? { width: "100%", height: "100%" }
-								: { width: "100%", height: "100%" }
-						}
-						justify={
-							classData?.poll.status ? "space-around" : "center"
-						}
+						style={{ width: "100%", height: "100%" }}
+						justify={classData?.poll.status ? "space-around" : "center"}
 						align="center"
 						vertical={isMobileView || !classData?.poll.status}
 					>
@@ -200,10 +196,7 @@ export default function Student() {
 											}
 								}
 							>
-                                <FullCircularPoll
-                                    poll={classData.poll}
-                                    size={pollWidth}
-                                />
+								<FullCircularPoll poll={classData.poll} size={pollWidth} />
 							</Flex>
 						) : null}
 
@@ -217,60 +210,62 @@ export default function Student() {
 										? { width: "100%", height: "50%" }
 										: { width: "50%", padding: "0 20px" }
 								}
-								gap={10}
+								gap={12}
 							>
 								{classData?.poll.allowTextResponses ? (
 									<Input.TextArea
 										style={{
-											width: "50%",
+											width: isMobileView ? "85%" : "50%",
 											resize: "none",
-											height: "200px",
+											height: "160px",
 											textAlign: "center",
+											borderRadius: 12,
+											fontSize: 15,
 										}}
+										placeholder="Type your response..."
 										value={textResponse}
-										onChange={(e) =>
-											setTextResponse(e.target.value)
-										}
-									></Input.TextArea>
+										onChange={(e) => setTextResponse(e.target.value)}
+									/>
 								) : null}
 								<Flex
 									gap={10}
 									style={{ width: "100%" }}
 									justify="center"
 									align="center"
-                                    wrap
+									wrap
 								>
-									{classData?.poll.responses.map(
-										(resp: any, index: number) => (
-											<PollButton
-												key={index}
-												answerData={{
-													answer: resp.answer,
-													color: resp.color,
-												}}
-												Respond={Respond}
-											/>
-										),
-									)}
+									{classData?.poll.responses.map((resp: any, index: number) => (
+										<PollButton
+											key={index}
+											answerData={{ answer: resp.answer, color: resp.color }}
+											Respond={Respond}
+										/>
+									))}
 								</Flex>
 								{classData?.poll.allowVoteChanges ? (
 									<PollButton
-										answerData={{
-											answer: "remove",
-											color: "#ff0000",
-										}}
+										answerData={{ answer: "remove", color: "#ef4444" }}
 										Respond={Respond}
 									/>
 								) : null}
 							</Flex>
-						) : !classData?.poll.prompt  ? (
-							<Title>There is no current poll.</Title>
-						) : (
-                            null
-						)}
+						) : !classData?.poll.prompt ? (
+							<Flex vertical align="center" gap={12}>
+								<Title style={{ opacity: 0.6, fontWeight: 300, letterSpacing: "-0.02em" }}>
+									No active poll right now.
+								</Title>
+								<Text style={{ opacity: 0.4, fontSize: 15 }}>
+									Sit tight — your teacher will start one shortly.
+								</Text>
+							</Flex>
+						) : null}
 
 						{!classData?.isActive ? (
-							<Title>Class is not active.</Title>
+							<Flex vertical align="center" gap={12}>
+								<Title style={{ opacity: 0.6, fontWeight: 300 }}>
+									Class is not active.
+								</Title>
+							</Flex>
 						) : null}
 					</Flex>
 
@@ -285,12 +280,15 @@ export default function Student() {
 						height: "80vh",
 						flexDirection: "column",
 						textAlign: "center",
+						gap: 16,
 					}}
 				>
-					<Title>You are currently on a break.</Title>
-					<Text>
-						Please wait until your break is over to participate in
-						polls.
+					<span style={{ fontSize: 48 }}>☕</span>
+					<Title style={{ fontWeight: 600, letterSpacing: "-0.02em" }}>
+						You are currently on a break.
+					</Title>
+					<Text style={{ opacity: 0.55, fontSize: 15 }}>
+						Please wait until your break is over to participate in polls.
 					</Text>
 				</Flex>
 			)}

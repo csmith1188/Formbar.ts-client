@@ -250,191 +250,197 @@ export default function LoginPage() {
 					align="center"
 					justify="center"
 					style={{
-						width: isMobileView ? "calc(100% - 40px)" : "600px",
+						width: isMobileView ? "calc(100% - 32px)" : "480px",
+						animation: "slideInUp 0.4s ease both",
 					}}
-					gap={20}
+					gap={24}
 				>
-					{isMobileView ? (
-						<Title style={{ fontWeight: 400, fontSize: "8vw" }}>
-							Welcome to&nbsp;
-							<span style={{ fontWeight: 700 }}>
-								<span className="bounce">F</span>
-								<span className="bounce">o</span>
-								<span className="bounce">r</span>
-								<span className="bounce">m</span>
-								<span className="bounce">b</span>
-								<span className="bounce">a</span>
-								<span className="bounce">r</span>
-							</span>
-						</Title>
-					) : (
-						<Title style={{ fontWeight: 400 }}>
-							Welcome to&nbsp;
-							<span style={{ fontWeight: 700 }}>
-								<span className="bounce">F</span>
-								<span className="bounce">o</span>
-								<span className="bounce">r</span>
-								<span className="bounce">m</span>
-								<span className="bounce">b</span>
-								<span className="bounce">a</span>
-								<span className="bounce">r</span>
-							</span>
-						</Title>
-					)}
+					{/* Logo + Title */}
+					<Flex vertical align="center" gap={8}>
+						<img
+							src="/img/FormbarLogo-Circle.png"
+							alt="Formbar Logo"
+							style={{
+								height: isMobileView ? 56 : 72,
+								filter: "drop-shadow(0 4px 20px rgba(59,130,246,0.5))",
+								marginBottom: 4,
+							}}
+						/>
+						{isMobileView ? (
+							<Title style={{ fontWeight: 400, fontSize: "7vw", margin: 0, textAlign: "center" }}>
+								Welcome to&nbsp;
+								<span style={{ fontWeight: 800 }}>
+									<span className="bounce">F</span>
+									<span className="bounce">o</span>
+									<span className="bounce">r</span>
+									<span className="bounce">m</span>
+									<span className="bounce">b</span>
+									<span className="bounce">a</span>
+									<span className="bounce">r</span>
+								</span>
+							</Title>
+						) : (
+							<Title style={{ fontWeight: 300, fontSize: 38, margin: 0, textAlign: "center", letterSpacing: "-0.02em" }}>
+								Welcome to{" "}
+								<span style={{ fontWeight: 800 }}>
+									<span className="bounce">F</span>
+									<span className="bounce">o</span>
+									<span className="bounce">r</span>
+									<span className="bounce">m</span>
+									<span className="bounce">b</span>
+									<span className="bounce">a</span>
+									<span className="bounce">r</span>
+								</span>
+							</Title>
+						)}
+					</Flex>
 
+					{/* Mode switcher */}
 					<Segmented
-						options={[
-							"Login",
-							"Sign Up",
-							// 'Guest'
-						]}
+						options={["Login", "Sign Up"]}
 						onChange={setMode}
 						value={mode}
+						style={{ width: "100%" }}
 					/>
 
-					<Card title={mode}>
+					{/* Auth Card */}
+					<Card
+						style={{
+							width: "100%",
+							backdropFilter: "blur(20px)",
+							WebkitBackdropFilter: "blur(20px)",
+							border: isDark
+								? "1px solid rgba(255,255,255,0.1)"
+								: "1px solid rgba(0,0,0,0.08)",
+							boxShadow: isDark
+								? "0 8px 40px rgba(0,0,0,0.4), 0 0 60px rgba(59,130,246,0.08)"
+								: "0 8px 40px rgba(0,0,0,0.1), 0 0 60px rgba(37,99,235,0.06)",
+							borderRadius: 20,
+						}}
+						styles={{
+							body: { padding: "28px 32px" },
+						}}
+					>
 						<form onSubmit={handleSubmit}>
-							{
-								<>
-									{(mode === "Guest" ||
-										mode === "Sign Up") && (
+							<Flex vertical gap={12}>
+								{(mode === "Guest" || mode === "Sign Up") && (
+									<Input
+										size="large"
+										placeholder="Display Name"
+										prefix={<span style={{ opacity: 0.5, marginRight: 4 }}>👤</span>}
+										style={{
+											color: displayName.length > 3
+												? isDark ? "#e8edf5" : "#1a202c"
+												: displayName.length > 0 ? "#ef4444" : undefined,
+										}}
+										value={displayName}
+										onChange={(e) => setDisplayName(e.target.value)}
+									/>
+								)}
+
+								{mode !== "Guest" && (
+									<>
 										<Input
-											placeholder="Display Name"
+											size="large"
+											placeholder="Email address"
+											prefix={<span style={{ opacity: 0.5, marginRight: 4 }}>✉️</span>}
 											style={{
-												marginBottom: "10px",
-												color:
-													displayName.length > 3
-														? isDark
-															? "white"
-															: "black"
-														: "red",
+												color: emailRegex.test(email) || email.length === 0
+													? isDark ? "#e8edf5" : "#1a202c"
+													: "#ef4444",
 											}}
-											value={displayName}
-											onChange={(e) =>
-												setDisplayName(e.target.value)
-											}
+											value={email}
+											onChange={(e) => setEmail(e.target.value)}
 										/>
-									)}
-
-									{mode !== "Guest" && (
-										<>
-											<Input
-												placeholder="Email"
-												style={{
-													marginBottom: "10px",
-													color:
-														emailRegex.test(
-															email,
-														) || email.length === 0
-															? isDark
-																? "white"
-																: "black"
-															: "red",
-												}}
-												value={email}
-												onChange={(e) =>
-													setEmail(e.target.value)
-												}
-											/>
-											<Input.Password
-												placeholder="Password"
-												style={{
-													marginBottom: "10px",
-													color:
-														password.length >= 5
-															? isDark
-																? "white"
-																: "black"
-															: "red",
-												}}
-												value={password}
-												onChange={(e) =>
-													setPassword(e.target.value)
-												}
-											/>
-										</>
-									)}
-
-									{mode === "Sign Up" && (
 										<Input.Password
-											placeholder="Confirm Password"
-											style={{ marginBottom: "10px" }}
-											value={confirmPassword}
-											styles={{
-												root: {
-													color:
-														password ==
-															confirmPassword &&
-														confirmPassword.length >=
-															5
-															? isDark
-																? "white"
-																: "black"
-															: "red",
-												},
+											size="large"
+											placeholder="Password"
+											prefix={<span style={{ opacity: 0.5, marginRight: 4 }}>🔒</span>}
+											style={{
+												color: password.length >= 5
+													? isDark ? "#e8edf5" : "#1a202c"
+													: password.length > 0 ? "#ef4444" : undefined,
 											}}
-											onChange={(e) => {
-												setConfirmPassword(
-													e.target.value,
-												);
-											}}
+											value={password}
+											onChange={(e) => setPassword(e.target.value)}
 										/>
-									)}
-								</>
-							}
+									</>
+								)}
 
-							<Button
-								htmlType="submit"
-								type="primary"
-								loading={isSubmitting}
-								style={{ marginTop: "10px", width: "100%" }}
-								disabled={
-									isSubmitting || (
-									mode === "Login"
-										? !(
-												email &&
-												password &&
-												emailRegex.test(email) &&
-												password.length >= 5
-											)
-										: mode === "Sign Up"
-											? !(
-													displayName &&
-													email &&
-													emailRegex.test(email) &&
-													password &&
-													confirmPassword &&
-													password ===
-														confirmPassword &&
-													displayName.length > 3 &&
-													password.length >= 5 &&
-													confirmPassword.length >= 5
-												)
-											: mode === "Guest"
-												? !(
-														displayName &&
-														displayName.length > 3
-													)
-												: true
-									)
-								}
-							>
-								{mode === "Guest" ? "Continue as Guest" : mode}
-							</Button>
+								{mode === "Sign Up" && (
+									<Input.Password
+										size="large"
+										placeholder="Confirm Password"
+										prefix={<span style={{ opacity: 0.5, marginRight: 4 }}>🔒</span>}
+										styles={{
+											root: {
+												color: password === confirmPassword && confirmPassword.length >= 5
+													? isDark ? "#e8edf5" : "#1a202c"
+													: confirmPassword.length > 0 ? "#ef4444" : undefined,
+											},
+										}}
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+									/>
+								)}
+
+								<Button
+									htmlType="submit"
+									type="primary"
+									size="large"
+									loading={isSubmitting}
+									style={{
+										width: "100%",
+										height: 48,
+										marginTop: 4,
+										fontWeight: 600,
+										fontSize: 16,
+										letterSpacing: "0.01em",
+										borderRadius: 12,
+										boxShadow: isDark
+											? "0 4px 20px rgba(59,130,246,0.4)"
+											: "0 4px 20px rgba(37,99,235,0.25)",
+									}}
+									disabled={
+										isSubmitting || (
+										mode === "Login"
+											? !(email && password && emailRegex.test(email) && password.length >= 5)
+											: mode === "Sign Up"
+												? !(displayName && email && emailRegex.test(email) && password && confirmPassword && password === confirmPassword && displayName.length > 3 && password.length >= 5 && confirmPassword.length >= 5)
+												: mode === "Guest"
+													? !(displayName && displayName.length > 3)
+													: true
+										)
+									}
+								>
+									{mode === "Guest" ? "Continue as Guest" : mode}
+								</Button>
+							</Flex>
 						</form>
 					</Card>
 
-					{/* Google OAuth — shown only when the server has it enabled */}
+					{/* Google OAuth */}
 					{googleOauthEnabled && (
 						<>
-							<Divider style={{ margin: "0" }}>or</Divider>
+							<Divider style={{ margin: "0", opacity: 0.5 }}>or continue with</Divider>
 							<Button
-								style={{ width: "100%" }}
+								size="large"
+								style={{
+									width: "100%",
+									height: 48,
+									fontWeight: 500,
+									borderRadius: 12,
+									backdropFilter: "blur(10px)",
+									border: isDark
+										? "1px solid rgba(255,255,255,0.12)"
+										: "1px solid rgba(0,0,0,0.1)",
+									background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.85)",
+								}}
 								icon={
 									<img
 										src="https://www.google.com/favicon.ico"
 										alt="Google"
-										style={{ width: 16, height: 16, verticalAlign: "middle" }}
+										style={{ width: 18, height: 18, verticalAlign: "middle" }}
 									/>
 								}
 								onClick={() => {

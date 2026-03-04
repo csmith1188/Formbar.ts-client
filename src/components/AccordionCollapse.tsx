@@ -255,7 +255,7 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 	const { classData } = useClassData();
 
 	const [awardDigipogs, setAwardDigipogs] = useState<number>(0);
-	const { userData } = useUserData();
+	const { userData: _userData } = useUserData();
 
 	const [api, contextHolder] = notification.useNotification();
 

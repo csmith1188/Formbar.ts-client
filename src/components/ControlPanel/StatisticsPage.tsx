@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import { useClassData, useTheme } from "../../main";
+import { useClassData } from "../../main";
 import { Card, Flex, Statistic, Tooltip, Typography } from "antd";
 const { Title } = Typography;
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { themeColors } from "../../../themes/ThemeConfig";
 
 
 export default function Statistics() {
 	const { classData } = useClassData();
-    const { isDark } = useTheme();
 
 	const students =
 		classData && classData.students

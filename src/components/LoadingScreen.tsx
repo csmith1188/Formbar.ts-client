@@ -20,14 +20,29 @@ export default function LoadingScreen({
 				justify="center"
 				align="center"
 				vertical
-				gap={20}
+				gap={28}
 			>
+				{/* Logo */}
+				<img
+					src="/img/FormbarLogo-Circle.png"
+					alt="Formbar Logo"
+					style={{
+						height: 80,
+						filter: "drop-shadow(0 0 30px rgba(59,130,246,0.7)) brightness(1.2)",
+						animation: isConnected ? "none" : "pulseGlow 2s ease-in-out infinite",
+					}}
+				/>
+
+				{/* Title */}
 				<Title
 					style={{
-						color: "#fff9",
-						fontSize: "120px",
-						fontWeight: 700,
+						color: "#ffffffee",
+						fontSize: "80px",
+						fontWeight: 800,
 						marginBottom: "0",
+						letterSpacing: "-0.04em",
+						lineHeight: 1,
+						textShadow: "0 0 40px rgba(59,130,246,0.4)",
 					}}
 				>
 					<span className="bounce">F</span>
@@ -38,63 +53,60 @@ export default function LoadingScreen({
 					<span className="bounce">a</span>
 					<span className="bounce">r</span>
 				</Title>
-				{isConnected ? (
-					<IonIcon
-						icon={IonIcons.checkmark}
-						style={{
-							height: "48px",
-							fontSize: "48px",
-							color: "#fff",
-						}}
-					/>
-				) : socketErrors < 5 ? (
-					<Spin
-						size="large"
-						indicator={<LoadingOutlined />}
-						styles={{
-							indicator: {
-								color: "#fff",
-							},
-						}}
-					/>
-				) : (
-					<IonIcon
-						icon={IonIcons.close}
-						style={{
-							height: "48px",
-							fontSize: "48px",
-							color: "#fff",
-						}}
-					/>
-				)}
 
-				<Text
-					style={{
-						color: "#fff7",
-						fontSize: "20px",
-						fontWeight: 500,
-						marginTop: "0",
-					}}
-				>
-					{!isConnected ? randomText() : "Loading panel..."}
-				</Text>
+				{/* Status indicator */}
+				<Flex vertical align="center" gap={10}>
+					{isConnected ? (
+						<Flex align="center" gap={8}>
+							<IonIcon
+								icon={IonIcons.checkmarkCircle}
+								style={{
+									height: "28px",
+									fontSize: "28px",
+									color: "#4ade80",
+								}}
+							/>
+							<Text style={{ color: "#ffffff99", fontSize: "16px", fontWeight: 500 }}>
+								Loading panel...
+							</Text>
+						</Flex>
+					) : socketErrors < 5 ? (
+						<Flex align="center" gap={12}>
+							<Spin
+								size="large"
+								indicator={<LoadingOutlined />}
+								styles={{ indicator: { color: "#93c5fd" } }}
+							/>
+							<Text style={{ color: "#ffffff99", fontSize: "16px", fontWeight: 500 }}>
+								{randomText()}
+							</Text>
+						</Flex>
+					) : (
+						<Flex align="center" gap={8}>
+							<IonIcon
+								icon={IonIcons.closeCircle}
+								style={{
+									height: "28px",
+									fontSize: "28px",
+									color: "#f87171",
+								}}
+							/>
+							<Text style={{ color: "#ffffff99", fontSize: "16px", fontWeight: 500 }}>
+								Connection failed
+							</Text>
+						</Flex>
+					)}
 
-				{isConnected ? null : (
-					<Text
-						style={{
-							color: "#fff5",
-							fontSize: "12px",
-							fontWeight: 400,
-							marginTop: "0",
-						}}
-					>
-						{httpErrors === 0
-							? "Connecting to server..."
-							: httpErrors < 5
-								? `Trying again... (Attempt ${httpErrors})...`
-								: "Connection failed. Is the server running?"}
+					<Text style={{ color: "#ffffff50", fontSize: "13px", fontWeight: 400 }}>
+						{!isConnected
+							? httpErrors === 0
+								? "Connecting to server..."
+								: httpErrors < 5
+									? `Retrying... (Attempt ${httpErrors})`
+									: "Is the server running?"
+							: null}
 					</Text>
-				)}
+				</Flex>
 			</Flex>
 		</>
 	);
@@ -123,12 +135,11 @@ const hideLoadingStyle = {
 	position: "absolute",
 	top: 0,
 	left: 0,
-	background:
-		"linear-gradient(rgba(95, 122, 158, 1) 0%, rgba(28, 68, 124, 1) 100%)",
+	background: "linear-gradient(135deg, #0d1b2a 0%, #0a2540 50%, #0d1b2a 100%)",
 	zIndex: 9000,
 	opacity: 0,
 	pointerEvents: "none",
-	transition: "opacity 0.5s ease-out",
+	transition: "opacity 0.6s ease-out",
 } as React.CSSProperties;
 
 const showLoadingStyle = {
@@ -137,7 +148,6 @@ const showLoadingStyle = {
 	position: "absolute",
 	top: 0,
 	left: 0,
-	background:
-		"linear-gradient(rgba(95, 122, 158, 1) 0%, rgba(28, 68, 124, 1) 100%)",
+	background: "linear-gradient(135deg, #0d1b2a 0%, #0a2540 50%, #0d1b2a 100%)",
 	zIndex: 9000,
 } as React.CSSProperties;

@@ -1,4 +1,4 @@
-import { Button, Flex, Tooltip, Popconfirm, Badge } from "antd";
+import { Button, Flex, Tooltip, Popconfirm } from "antd";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,6 @@ import Log from "../debugLogger";
 import { isDev, useMobileDetect, useTheme, useUserData } from "../main";
 import { themeColors, version } from "../../themes/ThemeConfig";
 
-import pages from "../pages";
 import { accessToken, formbarUrl, socket } from "../socket";
 
 export default function FormbarHeader() {
@@ -16,27 +15,17 @@ export default function FormbarHeader() {
 	const isMobileView = useMobileDetect();
 	const { userData, setUserData } = useUserData();
 
-	const headerStyles = {
-		...styles.formbarHeader,
-		background: isDark
-			? themeColors.dark.header.background
-			: themeColors.light.header.background,
-	};
+	const headerBg = isDark
+		? themeColors.dark.header.background
+		: themeColors.light.header.background;
+
+	const headerBorder = isDark
+		? themeColors.dark.header.border
+		: themeColors.light.header.border;
 
 	const primaryTextColor = isDark
 		? themeColors.dark.text.primary
 		: themeColors.light.text.primary;
-
-	const secondaryTextColor = isDark
-		? themeColors.dark.text.secondary
-		: themeColors.light.text.secondary;
-
-	// Sort pages alphabetically by pageName
-	const sortedPages = [...pages].sort((a, b) =>
-		(a.pageName ?? "")
-			.toLowerCase()
-			.localeCompare((b.pageName ?? "").toLowerCase()),
-	);
 
 	function logoutHandler() {
 		localStorage.removeItem("accessToken");
@@ -77,26 +66,39 @@ export default function FormbarHeader() {
 			});
 	}
 
+	const headerStyles: React.CSSProperties = {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		width: "100%",
+		height: "64px",
+		padding: "0 20px",
+		zIndex: 100,
+		background: headerBg,
+		backdropFilter: "blur(20px)",
+		WebkitBackdropFilter: "blur(20px)",
+		borderBottom: `1px solid ${headerBorder}`,
+		boxShadow: isDark
+			? "0 1px 32px rgba(0,0,0,0.35)"
+			: "0 1px 24px rgba(0,0,0,0.08)",
+	};
+
 	return (
 		<Flex
 			style={headerStyles}
 			align="center"
 			className="formbarHeader"
 			justify="space-between"
-			gap="16"
+			gap="12"
 		>
+			{/* Left side: Logo / Brand */}
 			{isMobileView ? (
 				<Flex align="center" justify="center">
 					<Tooltip
 						title={
 							<span>
 								Formbar{" "}
-								<span
-									style={{
-										marginLeft: "4px",
-										fontWeight: "600",
-									}}
-								>
+								<span style={{ marginLeft: "4px", fontWeight: "600" }}>
 									v{version}
 								</span>
 							</span>
@@ -109,34 +111,33 @@ export default function FormbarHeader() {
 							src="/img/FormbarLogo-Circle.png"
 							alt="Formbar Logo"
 							style={{
-								height: 40,
-								filter: "drop-shadow(0 0 5px rgba(0,0,0,0.5))",
+								height: 38,
+								filter: "drop-shadow(0 0 8px rgba(59,130,246,0.5))",
+								cursor: "pointer",
 							}}
+							onClick={() => navigate("/")}
 						/>
 					</Tooltip>
 				</Flex>
 			) : (
-                <>
-				<h1
-					style={{
-						...styles.formbarHeader.text,
-						color: primaryTextColor,
-						cursor: "pointer",
-					}}
-					onClick={() => navigate("/")}
-				>
-					Formbar
-				</h1>
-                {/* <Badge count={1} size="small">
-                    <Button style={{marginLeft: 10}} type="primary" shape="square" variant="solid" color="default" size="large"
-                        onClick={() => navigate("/profile")}
-                    >
-                        <IonIcon icon={IonIcons.notifications} size="large" />
-                    </Button>
-                </Badge> */}
-                </>
+				<Flex align="center" gap={10} style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
+					<img
+						src="/img/FormbarLogo-Circle.png"
+						alt="Formbar Logo"
+						style={{
+							height: 36,
+							filter: "drop-shadow(0 0 8px rgba(59,130,246,0.45))",
+						}}
+					/>
+					<span style={styles.brandText(isDark, primaryTextColor)}>
+						Formbar
+					</span>
+					<span style={styles.versionBadge(isDark)}>v{version}</span>
+				</Flex>
 			)}
-			<Flex align="center" justify="center" gap={10}>
+
+			{/* Right side: Action buttons */}
+			<Flex align="center" justify="center" gap={6}>
 				{userData &&
 				userData.activeClass &&
 				userData.classPermissions &&
@@ -198,10 +199,7 @@ export default function FormbarHeader() {
 								style={styles.headerButton}
 								onClick={() => navigate("/manager")}
 							>
-								<IonIcon
-									icon={IonIcons.briefcase}
-									size="large"
-								/>
+								<IonIcon icon={IonIcons.briefcase} size="large" />
 							</Button>
 						</Tooltip>
 					)}
@@ -226,21 +224,15 @@ export default function FormbarHeader() {
 					</Tooltip>
 				)}
 
-				{
-                
-                userData && (<div
-					style={{
-						borderRight: `2px solid ${isDark ? "#fff3" : "#0003"}`,
-						borderRadius: "999px",
-						height: "30px",
-					}}
-				/>)}
+				{userData && (
+					<div style={styles.divider(isDark)} />
+				)}
 
 				<Tooltip
 					placement="bottomRight"
 					title={isDark ? "Light Mode" : "Dark Mode"}
 					arrow={{ pointAtCenter: true }}
-					color={isDark ? "#aac" : "#222"}
+					color={isDark ? "#334155" : "#1e293b"}
 				>
 					<Button
 						variant="solid"
@@ -248,8 +240,11 @@ export default function FormbarHeader() {
 						size="large"
 						style={{
 							...styles.headerButton,
-							backgroundColor: isDark ? "#aac" : "#222",
-							color: isDark ? "#222" : "#ddd",
+							background: isDark
+								? "rgba(255,255,255,0.1)"
+								: "rgba(0,0,0,0.07)",
+							color: isDark ? "#e2e8f0" : "#334155",
+							border: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"}`,
 						}}
 					>
 						<IonIcon
@@ -342,43 +337,44 @@ export default function FormbarHeader() {
 }
 
 const styles = {
-	formbarHeader: {
-		position: "absolute" as "absolute",
-		top: 0,
-		left: 0,
-		width: "100%",
-		height: "64px",
-		padding: "0 32px",
+	brandText: (_isDark: boolean, color: string): React.CSSProperties => ({
+		fontSize: "22px",
+		fontWeight: 700,
+		color: color,
+		letterSpacing: "-0.01em",
+		userSelect: "none",
+	}),
 
-		zIndex: 2,
+	versionBadge: (isDark: boolean): React.CSSProperties => ({
+		fontSize: "11px",
+		fontWeight: 600,
+		padding: "2px 7px",
+		borderRadius: "999px",
+		background: isDark ? "rgba(59,130,246,0.2)" : "rgba(37,99,235,0.12)",
+		color: isDark ? "#93c5fd" : "#2563eb",
+		border: isDark ? "1px solid rgba(59,130,246,0.3)" : "1px solid rgba(37,99,235,0.2)",
+		letterSpacing: "0.02em",
+		alignSelf: "center",
+		marginTop: "2px",
+	}),
 
-		borderBottom: "3px solid #00000050",
-
-		background: "linear-gradient(90deg, #1CB5E0 0%, #000851 100%)",
-
-		text: {
-			fontSize: "36px",
-			position: "relative" as "relative",
-			color: "white",
-		},
-
-		version: {
-			fontSize: "18px",
-			marginTop: "auto",
-			marginBottom: "5px",
-			marginLeft: "8px",
-			fontWeight: "300" as "300",
-			color: "#ffffffaa",
-		},
-	},
+	divider: (isDark: boolean): React.CSSProperties => ({
+		width: "1px",
+		height: "28px",
+		borderRadius: "999px",
+		background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+		margin: "0 2px",
+	}),
 
 	headerButton: {
 		border: "none",
-		padding: "0 20px",
-		boxShadow: "0 2px 0px rgba(0,0,0,0.2)",
-	},
-
-	headerButtonHover: {
-		filter: "brightness(1.1)",
-	},
+		width: "42px",
+		height: "42px",
+		padding: "0",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		borderRadius: "10px",
+		flexShrink: 0,
+	} as React.CSSProperties,
 };

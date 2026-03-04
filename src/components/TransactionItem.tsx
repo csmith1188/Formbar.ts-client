@@ -4,7 +4,6 @@ const { Text } = Typography;
 
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { useUserData } from "../main";
 
 export default function TransactionItem({
 	transaction,
@@ -13,8 +12,6 @@ export default function TransactionItem({
 	transaction: Transaction;
 	userId: number | undefined;
 }) {
-	const { userData } = useUserData();
-
 	return (
 		<Flex
 			gap={10}
