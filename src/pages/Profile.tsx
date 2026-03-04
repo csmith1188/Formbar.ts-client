@@ -11,6 +11,7 @@ import {
 	Input,
 	message,
 	Modal,
+    Space,
 } from "antd";
 const { Text, Link } = Typography;
 import { IonIcon } from "@ionic/react";
@@ -19,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useUserData, isMobile } from "../main";
 import { accessToken, formbarUrl } from "../socket";
+import CountUp from 'react-countup';
 
 export default function Profile() {
 	const { userData } = useUserData();
@@ -55,6 +57,15 @@ export default function Profile() {
 		if (response?.error?.message) return response.error.message;
 		return fallback;
 	};
+
+    const fakeApiKey = () => {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let result = "";
+        for (let i = 0; i < 80; i++) {
+            result += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+        return result;
+    }
 
 	const regenerateApiKey = async () => {
 		if (!userData?.id || !isOwnProfile) return;
@@ -452,7 +463,13 @@ export default function Profile() {
 
 						{!error &&
 							Object.entries(profileProps).map(([key, value]) =>
-								key == "Pog Meter" || value == "N/A" ? null : (
+								key == "Pog Meter" || value == "N/A" ? 
+                                key == "Digipogs" ? (
+                                    <p key={key} style={infoStyle}>
+										<strong>{key}:</strong>
+										<strong>{<CountUp end={Number(value)} duration={1} />}</strong>
+									</p>
+                                ) : null : (
 									<p key={key} style={infoStyle}>
 										<strong>{key}:</strong>
 										{value}
@@ -520,36 +537,38 @@ export default function Profile() {
 																	vertical
 																	gap={8}
 																>
-																	<Text
-																		strong
-																	>
-																		API Key
-																	</Text>
-																	<Button
-																		type="primary"
-																		onClick={
-																			regenerateApiKey
-																		}
-																		loading={
-																			apiKeyLoading
-																		}
-																	>
-																		Regenerate
-																		API Key
-																	</Button>
-																	{apiKey && (
-																		<Text
-																			copyable={{
-																				text: apiKey,
-																			}}
-																		>
-																			New
-																			key:{" "}
-																			{
-																				apiKey
-																			}
-																		</Text>
-																	)}
+                                                                    <Flex justify="space-between" align="center">
+                                                                        <Text
+                                                                            strong
+                                                                        >
+                                                                            API Key
+                                                                        </Text>
+                                                                        <Button
+                                                                            type="primary"
+                                                                            onClick={
+                                                                                regenerateApiKey
+                                                                            }
+                                                                            loading={
+                                                                                apiKeyLoading
+                                                                            }
+                                                                        >
+                                                                            Regenerate
+                                                                            API Key
+                                                                        </Button>
+                                                                    </Flex>
+                                                                    {
+                                                                        apiKey ? (
+                                                                            <Space.Compact style={{height:40}}>
+                                                                                <Input disabled value={apiKey}/>
+                                                                                <Button style={{height:'100%'}} variant="solid" type="primary" onClick={() => {
+                                                                                    window.navigator.clipboard.writeText(apiKey);
+                                                                                    messageApi.success("API key copied to clipboard.");
+                                                                                }}>Copy</Button>
+                                                                            </Space.Compact>
+                                                                        ) : (
+                                                                            <Input disabled value={fakeApiKey()} style={{height:40, filter:'blur(3px)', pointerEvents:"none"}}/>
+                                                                        )
+                                                                    }
 																</Flex>
 															)}
 
@@ -600,48 +619,50 @@ export default function Profile() {
 																			Update
 																			PIN
 																		</Text>
-																		<Input.Password
-																			placeholder="Current PIN (if set)"
-																			value={
-																				oldPin
-																			}
-																			onChange={(
-																				e,
-																			) =>
-																				setOldPin(
-																					e
-																						.target
-																						.value,
-																				)
-																			}
-																		/>
-																		<Input.Password
-																			placeholder="New PIN (4-6 digits)"
-																			value={
-																				newPin
-																			}
-																			onChange={(
-																				e,
-																			) =>
-																				setNewPin(
-																					e
-																						.target
-																						.value,
-																				)
-																			}
-																		/>
-																		<Button
-																			type="primary"
-																			onClick={
-																				updatePin
-																			}
-																			loading={
-																				pinLoading
-																			}
-																		>
-																			Update
-																			PIN
-																		</Button>
+                                                                        <Flex gap={10} align="center">
+                                                                            <Input.Password
+                                                                                placeholder="Current PIN"
+                                                                                value={
+                                                                                    oldPin
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    setOldPin(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                            <Input.Password
+                                                                                placeholder="New PIN"
+                                                                                value={
+                                                                                    newPin
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    setNewPin(
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                            <Button
+                                                                                type="primary"
+                                                                                onClick={
+                                                                                    updatePin
+                                                                                }
+                                                                                loading={
+                                                                                    pinLoading
+                                                                                }
+                                                                            >
+                                                                                Update
+                                                                                PIN
+                                                                            </Button>
+                                                                        </Flex>
 																	</>
 																)}
 																<Button

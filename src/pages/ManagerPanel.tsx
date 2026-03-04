@@ -29,6 +29,7 @@ export default function ManagerPanel() {
 	>("Users");
 	const [users, setUsers] = useState<Record<string, UserData>>({});
 	const [classrooms, setClassrooms] = useState<any[]>([]);
+	const [initialLoad, setInitialLoad] = useState(true);
 
 	useEffect(() => {
 		if (!accessToken) return;
@@ -54,6 +55,18 @@ export default function ManagerPanel() {
 				});
 			});
 	}, [accessToken]);
+
+	useEffect(() => {
+		// After users load, wait for animation to complete then disable it
+		if (Object.keys(users).length > 0 && initialLoad) {
+			const userCount = Object.keys(users).length;
+			const animationDuration = (userCount * 0.05 + 0.3) * 1000; // Convert to ms
+			const timer = setTimeout(() => {
+				setInitialLoad(false);
+			}, animationDuration);
+			return () => clearTimeout(timer);
+		}
+	}, [users, initialLoad]);
 
 	function handleVerify(userId: number) {
 		fetch(`${formbarUrl}/api/v1/user/${userId}/verify`, {
@@ -166,8 +179,8 @@ export default function ManagerPanel() {
 
 					<Row gutter={[8, 8]} style={{ margin: "10px" }}>
 						{Object.keys(users).length > 0 ? (
-							filteredUsers.map((user) => (
-								<Col span={4} key={user.id}>
+							filteredUsers.map((user, k) => (
+								<Col span={4} key={user.id} style={initialLoad ? {opacity: 0, animation: 'appear 0.3s ease-in-out forwards', animationDelay: `${k * 0.05}s`} : {}}>
 									<Card
 										title={
 											user.displayName ||

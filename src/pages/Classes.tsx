@@ -308,7 +308,7 @@ export default function ClassesPage() {
 				>
 					<Card
 						title="Enter a Class"
-						style={cardStyle}
+						style={{...cardStyle}}
 						styles={cardStyles}
 						loading={!userData}
 					>
@@ -383,7 +383,7 @@ export default function ClassesPage() {
 					</Card>
 					<Card
 						title="Create a Class"
-						style={cardStyle}
+						style={{...cardStyle, animationDelay: '0.05s'}}
 						styles={cardStyles}
 						loading={
 							!(
@@ -426,7 +426,7 @@ export default function ClassesPage() {
 					</Card>
 					<Card
 						title="Join a Class"
-						style={cardStyle}
+						style={{...cardStyle, animationDelay: '0.1s'}}
 						styles={cardStyles}
 						loading={!userData}
 					>
@@ -461,6 +461,10 @@ export default function ClassesPage() {
 }
 
 const cardStyles = {
+    root: {
+        opacity: 0,
+        animation: 'appear 0.3s ease-in-out forwards',
+    },
 	title: {
 		width: "100%",
 		textAlign: "center",
