@@ -1,7 +1,9 @@
-import { Button, Masonry, Flex, Input, Badge, Tooltip } from "antd";
+import { Button, Flex, Input, Badge, Tooltip } from "antd";
 import { accessToken, formbarUrl } from "../socket";
 import { useState } from "react";
 import FormbarHeader from "../components/FormbarHeader";
+import { useUserData } from "../main";
+import type { CurrentUserData } from "../types";
 
 const getFetchOptions = (method = "GET", body?: any) => {
     const opts: RequestInit = {
@@ -15,92 +17,91 @@ const getFetchOptions = (method = "GET", body?: any) => {
     return opts;
 }
 
-const testFuncs = [
+type TestEntry = {
+    name: string;
+    func: (...args: any[]) => any;
+    hasArgs: boolean;
+    category: string;
+    method: string;
+    testedWorks?: boolean | string;
+    hint?: string;
+    autoArg?: (u: CurrentUserData | null) => string;
+    autoBody?: (u: CurrentUserData | null) => string;
+};
+
+const testFuncs: TestEntry[] = [
     { name: 'Clear Console', func: () => console.clear(), hasArgs: false, category: 'System', method: 'DELETE', testedWorks: true },
     { name: 'Certs', func: certs, hasArgs: false, category: 'System', method: 'GET', testedWorks: true },
 
     { name: 'Get Me', func: getMe, hasArgs: false, category: 'User', method: 'GET', testedWorks: true },
-    { name: 'Get User', func: getUser, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
-    { name: 'Get User Class', func: getUserClass, hasArgs: true, category: 'User', method: 'GET', testedWorks: "Only if class started" },
-    { name: 'Get User Classes', func: getUserClasses, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
-    { name: 'Delete User', func: deleteUser, hasArgs: true, category: 'User', method: 'DELETE', testedWorks: true },
-    { name: 'Change Perm (email|perm)', func: changePerm, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
-    { name: 'Ban User', func: banUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
-    { name: 'Unban User', func: unbanUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
-    { name: 'Verify User', func: verifyUser, hasArgs: true, category: 'User', method: 'PATCH' },
-    { name: 'Regenerate API Key', func: regenerateApiKey, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
-    { name: 'Update PIN', func: updatePin, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
-    { name: 'Request PIN Reset', func: requestPinReset, hasArgs: true, category: 'User', method: 'POST', testedWorks: true },
-    { name: 'Reset PIN (Token)', func: resetPinWithToken, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true },
+    { name: 'Get User', func: getUser, hasArgs: true, category: 'User', method: 'GET', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Get User Class', func: getUserClass, hasArgs: true, category: 'User', method: 'GET', testedWorks: "Only if class started", hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Get User Classes', func: getUserClasses, hasArgs: true, category: 'User', method: 'GET', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Delete User', func: deleteUser, hasArgs: true, category: 'User', method: 'DELETE', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Change Perm (email|perm)', func: changePerm, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true, hint: 'email|perm', autoArg: u => u ? `${u.email}|2` : '' },
+    { name: 'Ban User', func: banUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Unban User', func: unbanUser, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Verify User', func: verifyUser, hasArgs: true, category: 'User', method: 'PATCH', hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Regenerate API Key', func: regenerateApiKey, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Update PIN', func: updatePin, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true, hint: 'id|newPin|oldPin(optional)', autoArg: u => u ? `${u.id}|` : '' },
+    { name: 'Request PIN Reset', func: requestPinReset, hasArgs: true, category: 'User', method: 'POST', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
+    { name: 'Reset PIN (Token)', func: resetPinWithToken, hasArgs: true, category: 'User', method: 'PATCH', testedWorks: true, hint: '{"pin":"1234","token":"..."}' },
 
-    // Class endpoints (from attachments)
-    { name: 'Get Class', func: getClass, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
-    { name: 'Get Class Active', func: getClassActive, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
-    { name: 'Get Class Banned', func: getClassBanned, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
-    { name: 'Get Class Permissions', func: getClassPermissions, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
-    { name: 'Get Class Students', func: getClassStudents, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started' },
-    { name: 'Create Class', func: createClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
-    { name: 'End Class', func: endClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
-    { name: 'Join Class', func: joinClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
-    { name: 'Leave Class', func: leaveClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
-    { name: 'Start Class', func: startClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true },
+    { name: 'Get Class', func: getClass, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Get Class Active', func: getClassActive, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Get Class Banned', func: getClassBanned, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Get Class Permissions', func: getClassPermissions, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Get Class Students', func: getClassStudents, hasArgs: true, category: 'Class', method: 'GET', testedWorks: 'Only if class started', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Create Class', func: createClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true, hint: 'Class name or JSON', autoArg: _ => 'Test Class' },
+    { name: 'End Class', func: endClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Join Class', func: joinClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Leave Class', func: leaveClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Start Class', func: startClass, hasArgs: true, category: 'Class', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
 
-    // Class - Polls
-    { name: 'Get Class Polls', func: getClassPolls, hasArgs: true, category: 'Class - Polls', method: 'GET' },
-    { name: 'Get Class Current Poll', func: getClassPollCurrent, hasArgs: true, category: 'Class - Polls', method: 'GET', testedWorks: true },
-    { name: 'Clear Class Poll', func: clearClassPolls, hasArgs: true, category: 'Class - Polls', method: 'POST', testedWorks: true },
-    { name: 'Create Class Poll', func: createClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST' },
-    { name: 'End Class Poll', func: endClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST', testedWorks: true },
-    { name: 'Response to Poll', func: respondClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST' },
+    { name: 'Get Class Polls', func: getClassPolls, hasArgs: true, category: 'Class - Polls', method: 'GET', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Get Class Current Poll', func: getClassPollCurrent, hasArgs: true, category: 'Class - Polls', method: 'GET', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Clear Class Poll', func: clearClassPolls, hasArgs: true, category: 'Class - Polls', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Create Class Poll', func: createClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? ''), autoBody: _ => '{"prompt":"Test?","answers":[{"answer":"Yes"},{"answer":"No"}]}' },
+    { name: 'End Class Poll', func: endClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Response to Poll', func: respondClassPoll, hasArgs: true, category: 'Class - Polls', method: 'POST', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? ''), autoBody: _ => '{"response":"Yes"}' },
 
-    // Class - Breaks
-    { name: 'End Own Break', func: endOwnBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST' },
-    { name: 'Request Break', func: requestBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', testedWorks: true },
-    { name: 'Approve Break', func: approveBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', testedWorks: true },
-    { name: 'Deny Break', func: denyBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST' },
+    { name: 'End Own Break', func: endOwnBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Request Break', func: requestBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Approve Break', func: approveBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', testedWorks: true, hint: 'classId|userId', autoArg: u => u ? `${u.activeClass ?? ''}|${u.id}` : '' },
+    { name: 'Deny Break', func: denyBreak, hasArgs: true, category: 'Class - Breaks', method: 'POST', hint: 'classId|userId', autoArg: u => u ? `${u.activeClass ?? ''}|${u.id}` : '' },
 
-    // Class - Help
-    { name: 'Delete Help Request', func: deleteHelpRequest, hasArgs: true, category: 'Class - Help', method: 'DELETE', testedWorks: true },
-    { name: 'Request Help', func: requestClassHelp, hasArgs: true, category: 'Class - Help', method: 'POST', testedWorks: true },
+    { name: 'Delete Help Request', func: deleteHelpRequest, hasArgs: true, category: 'Class - Help', method: 'DELETE', testedWorks: true, hint: 'classId|userId', autoArg: u => u ? `${u.activeClass ?? ''}|${u.id}` : '' },
+    { name: 'Request Help', func: requestClassHelp, hasArgs: true, category: 'Class - Help', method: 'POST', testedWorks: true, hint: 'Class ID', autoArg: u => String(u?.activeClass ?? '') },
 
-    // Room
-    { name: 'Leave Room', func: leaveRoom, hasArgs: true, category: 'Room', method: 'DELETE', testedWorks: true },
+    { name: 'Leave Room', func: leaveRoom, hasArgs: true, category: 'Room', method: 'DELETE', testedWorks: true, hint: 'Room ID', autoArg: u => String(u?.activeClass ?? '') },
     { name: 'Get Room Tags', func: getRoomTags, hasArgs: false, category: 'Room', method: 'GET', testedWorks: true },
-    { name: 'Join Room By Code', func: joinRoomByCode, hasArgs: true, category: 'Room', method: 'POST' },
-    { name: 'Set Room Tags', func: setRoomTags, hasArgs: true, category: 'Room', method: 'PUT' },
+    { name: 'Join Room By Code', func: joinRoomByCode, hasArgs: true, category: 'Room', method: 'POST', hint: 'Room code' },
+    { name: 'Set Room Tags', func: setRoomTags, hasArgs: true, category: 'Room', method: 'PUT', hint: 'tag1,tag2 or JSON' },
 
-    // Room - Links
-    { name: 'Remove Room Link', func: removeRoomLink, hasArgs: true, category: 'Room - Links', method: 'DELETE' },
-    { name: 'Get Room Links', func: getRoomLinks, hasArgs: true, category: 'Room - Links', method: 'GET', testedWorks: true },
-    { name: 'Add Room Link', func: addRoomLink, hasArgs: true, category: 'Room - Links', method: 'POST' },
-    { name: 'Update Room Link', func: updateRoomLink, hasArgs: true, category: 'Room - Links', method: 'PUT' },
+    { name: 'Remove Room Link', func: removeRoomLink, hasArgs: true, category: 'Room - Links', method: 'DELETE', hint: 'roomId or roomId|linkId', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Get Room Links', func: getRoomLinks, hasArgs: true, category: 'Room - Links', method: 'GET', testedWorks: true, hint: 'Room ID', autoArg: u => String(u?.activeClass ?? '') },
+    { name: 'Add Room Link', func: addRoomLink, hasArgs: true, category: 'Room - Links', method: 'POST', hint: 'roomId|{"url":"...","label":"..."}', autoArg: u => String(u?.activeClass ?? ''), autoBody: _ => '{"url":"https://example.com","label":"Example"}' },
+    { name: 'Update Room Link', func: updateRoomLink, hasArgs: true, category: 'Room - Links', method: 'PUT', hint: 'roomId|{"id":1,...}', autoArg: u => String(u?.activeClass ?? '') },
 
-    // Digipogs
-    { name: 'Award Digipogs', func: awardDigipogs, hasArgs: true, category: 'Digipogs', method: 'POST' },
-    { name: 'Transfer Digipogs', func: transferDigipogs, hasArgs: true, category: 'Digipogs', method: 'POST' },
+    { name: 'Award Digipogs', func: awardDigipogs, hasArgs: true, category: 'Digipogs', method: 'POST', hint: 'userId|amount or JSON', autoArg: u => u ? `${u.id}|1` : '' },
+    { name: 'Transfer Digipogs', func: transferDigipogs, hasArgs: true, category: 'Digipogs', method: 'POST', hint: 'toUserId|amount or JSON', autoArg: u => u ? `${u.id}|1` : '' },
 
-    // IP Management
-    { name: 'Remove IP', func: removeIP, hasArgs: true, category: 'IP', method: 'DELETE' },
-    { name: 'Get IP List', func: getIPList, hasArgs: true, category: 'IP', method: 'GET', testedWorks: true },
-    { name: 'Toggle IP', func: toggleIP, hasArgs: true, category: 'IP', method: 'POST' },
-    { name: 'Update IP', func: updateIP, hasArgs: true, category: 'IP', method: 'PUT' },
+    { name: 'Remove IP', func: removeIP, hasArgs: true, category: 'IP', method: 'DELETE', hint: 'type|id' },
+    { name: 'Get IP List', func: getIPList, hasArgs: true, category: 'IP', method: 'GET', testedWorks: true, hint: 'allowlist or denylist', autoArg: _ => 'allowlist' },
+    { name: 'Toggle IP', func: toggleIP, hasArgs: true, category: 'IP', method: 'POST', hint: 'allowlist or denylist', autoArg: _ => 'allowlist' },
+    { name: 'Update IP', func: updateIP, hasArgs: true, category: 'IP', method: 'PUT', hint: 'type|id|json' },
 
-    // Manager
     { name: 'Get Manager', func: getManager, hasArgs: false, category: 'Manager', method: 'GET', testedWorks: true },
 
-    // Logs
     { name: 'Get Logs', func: getLogs, hasArgs: false, category: 'Logs', method: 'GET', testedWorks: true },
-    { name: 'Get Log File', func: getLogFile, hasArgs: true, category: 'Logs', method: 'GET', testedWorks: true },
+    { name: 'Get Log File', func: getLogFile, hasArgs: true, category: 'Logs', method: 'GET', testedWorks: true, hint: 'Log filename', autoArg: _ => `app-${new Date().toISOString().slice(0, 10)}.ndjson` },
 
-    // OAuth
     { name: 'OAuth Authorize', func: oauthAuthorize, hasArgs: false, category: 'OAuth', method: 'GET' },
-    { name: 'OAuth Revoke', func: oauthRevoke, hasArgs: true, category: 'OAuth', method: 'POST' },
-    { name: 'OAuth Token', func: oauthToken, hasArgs: true, category: 'OAuth', method: 'POST' },
+    { name: 'OAuth Revoke', func: oauthRevoke, hasArgs: true, category: 'OAuth', method: 'POST', hint: 'token or {"token":"..."}' },
+    { name: 'OAuth Token', func: oauthToken, hasArgs: true, category: 'OAuth', method: 'POST', hint: '{"grant_type":"..."}' },
 
-    // User
-    { name: 'Get User Transactions', func: getUserTransactions, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
+    { name: 'Get User Transactions', func: getUserTransactions, hasArgs: true, category: 'User', method: 'GET', testedWorks: true, hint: 'User ID', autoArg: u => String(u?.id ?? '') },
 
-    // Pools
     { name: 'Get User Pools', func: getUserPools, hasArgs: false, category: 'Pools', method: 'GET' },
 ]
 
@@ -117,49 +118,250 @@ function getButtonStyle(method?: string) {
 }
 
 export function Testing() {
-    const [inputValue, setInputValue] = useState("");
-    const [bodyValue, setBodyValue] = useState("");
+    const { userData } = useUserData();
+
+    // Expanded test name (one expanded at a time)
+    const [expanded, setExpanded] = useState<string | null>(null);
+
+    // Per-test arg / body overrides (only committed when user types)
+    const [testArgs, setTestArgs] = useState<Record<string, string>>({});
+    const [testBodies, setTestBodies] = useState<Record<string, string>>({});
+
+    // Per-test run state + result
+    const [results, setResults] = useState<Record<string, { status: 'idle' | 'running' | 'ok' | 'error'; output?: string }>>({});
+    const [autoRunning, setAutoRunning] = useState(false);
+
+    // Get the effective arg for a test: override > autofill > ''
+    const getArg = (test: TestEntry) =>
+        testArgs[test.name] !== undefined ? testArgs[test.name] : (test.autoArg?.(userData) ?? '');
+    const getBody = (test: TestEntry) =>
+        testBodies[test.name] !== undefined ? testBodies[test.name] : (test.autoBody?.(userData) ?? '');
+
+    const captureAndRun = async (test: TestEntry, arg: string, body: string) => {
+        setResults(prev => ({ ...prev, [test.name]: { status: 'running' } }));
+        const lines: string[] = [];
+        let isError = false;
+
+        const origLog = console.log;
+        const origError = console.error;
+        const origWarn = console.warn;
+        const capture = (isErr: boolean, ...args: any[]) => {
+            const val = args.length > 1 ? args[1] : args[0];
+            lines.push(typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val));
+            if (isErr) isError = true;
+        };
+        console.log = (...a) => { origLog(...a); capture(false, ...a); };
+        console.error = (...a) => { origError(...a); capture(true, ...a); };
+        console.warn = (...a) => { origWarn(...a); capture(true, ...a); };
+
+        try {
+            await (test.hasArgs ? test.func(arg, body) : test.func());
+        } catch (e: any) {
+            lines.push(String(e));
+            isError = true;
+        } finally {
+            console.log = origLog;
+            console.error = origError;
+            console.warn = origWarn;
+        }
+
+        setResults(prev => ({
+            ...prev,
+            [test.name]: { status: isError ? 'error' : 'ok', output: lines.join('\n') || '(no output)' },
+        }));
+    };
+
+    const handleButtonClick = (test: TestEntry) => {
+        if (!test.hasArgs) {
+            // No args → run immediately
+            captureAndRun(test, '', '');
+        } else {
+            // Has args → toggle expand
+            setExpanded(prev => prev === test.name ? null : test.name);
+        }
+    };
+
+    const runExpanded = (test: TestEntry) => {
+        captureAndRun(test, getArg(test), getBody(test));
+    };
+
+    const runAllNoArgs = async () => {
+        if (autoRunning) return;
+        setAutoRunning(true);
+        for (const test of testFuncs.filter(t => !t.hasArgs)) {
+            await captureAndRun(test, '', '');
+        }
+        setAutoRunning(false);
+    };
+
+    const groups = testFuncs.reduce<Record<string, TestEntry[]>>((acc, t) => {
+        const key = t.category || 'Uncategorized';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(t);
+        return acc;
+    }, {});
 
     return (
         <div style={{ padding: '0 20px' }}>
             <FormbarHeader />
-            <Flex style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }} wrap gap={16} align="start">
-                <Flex justify="center" align="center" gap={20} style={{marginTop:16}}>
-                    <h1>Testing Page</h1>
-                    <p>This page is for testing new features and components.</p>
-                    <p>Working: {testFuncs.filter(t => t.testedWorks === true).length-1}/{testFuncs.length-1}</p>
+            <Flex style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }} vertical gap={16}>
+                {/* Header */}
+                <Flex align="center" gap={16} style={{ marginTop: 16 }} wrap>
+                    <h1 style={{ margin: 0 }}>Testing Page</h1>
+                    <span style={{ opacity: 0.6 }}>
+                        Working: {testFuncs.filter(t => t.testedWorks === true).length - 1}/{testFuncs.length - 1}
+                    </span>
+                    <Button type="primary" loading={autoRunning} onClick={runAllNoArgs}>
+                        {autoRunning ? 'Running…' : '▶ Run All No-Arg Tests'}
+                    </Button>
+                    {userData && (
+                        <span style={{ opacity: 0.5, fontSize: 12 }}>
+                            Autofilling as <b>{userData.displayName}</b> (id: {userData.id}
+                            {userData.activeClass ? `, class: ${userData.activeClass}` : ''})
+                        </span>
+                    )}
                 </Flex>
-                <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Argument (id, email, or 'email|perm')"/>
-                <Input value={bodyValue} onChange={(e) => setBodyValue(e.target.value)} placeholder="Body (for POST/PUT requests)"/>
-                {
-                    // group tests by category
-                    Object.entries(testFuncs.reduce<Record<string, any[]>>((acc, t) => {
-                        const key = (t as any).category || 'Uncategorized';
-                        if (!acc[key]) acc[key] = [];
-                        acc[key].push(t);
-                        return acc;
-                    }, {})).map(([category, tests]) => (
-                        <div key={category} style={{ marginBottom: 12 }}>
-                            <h3 style={{ margin: '6px 0' }}>{category}</h3>
-                            <Flex vertical align="start" style={{ background: '#000a', padding: 8, borderRadius: 10 }} wrap gap={8}>
-                                {tests.map((test: any) => (
-                                    <Tooltip title={typeof test.testedWorks === 'string' ? test.testedWorks : test.testedWorks === true ? 'Works' : "Not working"} color={test.testedWorks === true ? 'green' : !test.testedWorks ? 'red' : 'orange'}>
-                                        <Badge dot color={test.testedWorks === true ? 'green' : !test.testedWorks ? 'red' : 'orange'}>
-                                            <Button
-                                                key={test.name}
-                                                onClick={() => test.hasArgs ? test.func(inputValue, bodyValue) : test.func()}
-                                                style={{ margin: 4 }}
-                                                type='default'
-                                                variant="solid"
-                                                color={getButtonStyle(test.method) as any}
-                                            >{test.name}</Button>
-                                        </Badge>
-                                    </Tooltip>
-                                ))}
+
+                {/* Test groups */}
+                {Object.entries(groups).map(([category, tests]) => (
+                    <div key={category} style={{ marginBottom: 8 }}>
+                        <h3 style={{ margin: '4px 0 6px' }}>{category}</h3>
+                        <div style={{ background: '#000a', padding: 8, borderRadius: 10 }}>
+                            {/* Compact button row */}
+                            <Flex wrap gap={4} style={{ marginBottom: 4 }}>
+                                {tests.map(test => {
+                                    const result = results[test.name];
+                                    const isExpanded = expanded === test.name;
+                                    const statusColor = result?.status === 'ok' ? 'green' : result?.status === 'error' ? 'red' : undefined;
+                                    return (
+                                        <Tooltip
+                                            key={test.name}
+                                            title={
+                                                typeof test.testedWorks === 'string'
+                                                    ? test.testedWorks
+                                                    : test.testedWorks === true ? 'Works' : 'Not tested / not working'
+                                            }
+                                            color={test.testedWorks === true ? 'green' : !test.testedWorks ? 'red' : 'orange'}
+                                        >
+                                            <Badge
+                                                dot
+                                                color={statusColor ?? (test.testedWorks === true ? 'green' : !test.testedWorks ? 'red' : 'orange')}
+                                            >
+                                                <Button
+                                                    loading={result?.status === 'running'}
+                                                    onClick={() => handleButtonClick(test)}
+                                                    type="default"
+                                                    variant="solid"
+                                                    color={getButtonStyle(test.method) as any}
+                                                    style={{
+                                                        outline: isExpanded ? '2px solid #fff4' : undefined,
+                                                    }}
+                                                >
+                                                    {test.name}
+                                                </Button>
+                                            </Badge>
+                                        </Tooltip>
+                                    );
+                                })}
                             </Flex>
+
+                            {/* Inline expansion for the currently opened test */}
+                            {tests.filter(t => expanded === t.name).map(test => {
+                                const result = results[test.name];
+                                const hasBody = !!test.autoBody || !!testBodies[test.name];
+                                return (
+                                    <div
+                                        key={test.name}
+                                        style={{
+                                            marginTop: 6,
+                                            padding: '8px 10px',
+                                            borderRadius: 8,
+                                            background: '#fff08',
+                                            border: '1px solid #fff2',
+                                        }}
+                                    >
+                                        <Flex gap={8} align="center" wrap>
+                                            <span style={{ fontWeight: 600, fontSize: 13 }}>{test.name}</span>
+                                            {test.hint && (
+                                                <span style={{ opacity: 0.5, fontSize: 11 }}>({test.hint})</span>
+                                            )}
+                                        </Flex>
+                                        <Flex gap={8} style={{ marginTop: 6 }} wrap>
+                                            {test.hasArgs && (
+                                                <Input
+                                                    size="small"
+                                                    style={{ flex: 2, minWidth: 200 }}
+                                                    placeholder={test.hint ?? 'Argument'}
+                                                    value={getArg(test)}
+                                                    onChange={e => setTestArgs(prev => ({ ...prev, [test.name]: e.target.value }))}
+                                                    allowClear
+                                                />
+                                            )}
+                                            {(hasBody || test.hasArgs) && (
+                                                <Input
+                                                    size="small"
+                                                    style={{ flex: 3, minWidth: 220 }}
+                                                    placeholder="Body (JSON for POST/PUT, optional)"
+                                                    value={getBody(test)}
+                                                    onChange={e => setTestBodies(prev => ({ ...prev, [test.name]: e.target.value }))}
+                                                    allowClear
+                                                />
+                                            )}
+                                            <Button
+                                                size="small"
+                                                type="primary"
+                                                loading={result?.status === 'running'}
+                                                onClick={() => runExpanded(test)}
+                                            >
+                                                Run
+                                            </Button>
+                                        </Flex>
+                                        {result && result.status !== 'running' && result.output && (
+                                            <pre style={{
+                                                marginTop: 6,
+                                                padding: '4px 8px',
+                                                borderRadius: 6,
+                                                background: result.status === 'ok' ? '#0d2b0d' : '#2b0d0d',
+                                                color: result.status === 'ok' ? '#7de87d' : '#e87d7d',
+                                                fontSize: 11,
+                                                maxHeight: 160,
+                                                overflow: 'auto',
+                                                whiteSpace: 'pre-wrap',
+                                                wordBreak: 'break-all',
+                                                margin: 0,
+                                            }}>
+                                                {result.output}
+                                            </pre>
+                                        )}
+                                    </div>
+                                );
+                            })}
+
+                            {/* Inline result for no-arg tests */}
+                            {tests.filter(t => !t.hasArgs).map(test => {
+                                const result = results[test.name];
+                                if (!result || result.status === 'running' || result.status === 'idle' || !result.output) return null;
+                                return (
+                                    <pre key={test.name} style={{
+                                        marginTop: 4,
+                                        padding: '4px 8px',
+                                        borderRadius: 6,
+                                        background: result.status === 'ok' ? '#0d2b0d' : '#2b0d0d',
+                                        color: result.status === 'ok' ? '#7de87d' : '#e87d7d',
+                                        fontSize: 11,
+                                        maxHeight: 120,
+                                        overflow: 'auto',
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-all',
+                                        margin: 0,
+                                    }}>
+                                        <span style={{ opacity: 0.5 }}>{test.name}: </span>{result.output}
+                                    </pre>
+                                );
+                            })}
                         </div>
-                    ))
-                }
+                    </div>
+                ))}
             </Flex>
         </div>
     );
