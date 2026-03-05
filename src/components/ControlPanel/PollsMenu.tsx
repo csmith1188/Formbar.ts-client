@@ -116,10 +116,6 @@ export default function PollsMenu({
 		});
 	};
 
-    function getPoll(id: number) {
-        return defaultPolls.filter((e) => e.id == id)[0];
-    }
-
 	function startPoll(id: number) {
 
         const poll = { ...defaultPolls.filter((e) => e.id == id)[0] };
@@ -254,7 +250,7 @@ export default function PollsMenu({
 			</Flex>
 			<Flex vertical align="center" justify="start" style={{ height: "100%", borderLeft: `2px solid ${isDark ? '#0002' : '#fff2'}`, paddingLeft: "20px", paddingRight: "20px", flex: 1 }}>
 				<Title>Previous Polls</Title>
-				<p>no endpoing</p>
+				<p>no endpoint</p>
 			</Flex>
 		</Flex></>
 	);

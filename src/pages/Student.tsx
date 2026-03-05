@@ -16,9 +16,9 @@ export default function Student() {
 	const { userData: initialUserData } = useUserData();
 	const [userData, setUserData] = useState<any>(null);
 	const [classData, setClassData] = useState<any>(null);
-	const [answerState, setAnswerState] = useState<any>([]);
+	// const [answerState, setAnswerState] = useState<any>([]);
 	const isMobileView = useMobileDetect();
-	const [lastPollData, setLastPollData] = useState<any>(null);
+	// const [lastPollData, setLastPollData] = useState<any>(null);
 
 	const [textResponse, setTextResponse] = useState<string>("");
 	const lastPollDataRef = useRef<any>(null);
@@ -94,7 +94,7 @@ export default function Student() {
 
 			setClassData(classData);
 			lastPollDataRef.current = classData.poll;
-			setLastPollData(classData.poll);
+			// setLastPollData(classData.poll);
 			Log({
 				message: "Class Update received.",
 				data: classData,
@@ -125,7 +125,7 @@ export default function Student() {
 					});
 				});
 
-			setAnswerState(classData.poll.responses);
+			// setAnswerState(classData.poll.responses);
 		}
 
 		socket.on("classUpdate", classUpdate);

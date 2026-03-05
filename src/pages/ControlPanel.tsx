@@ -1,23 +1,20 @@
 import {
 	Menu,
 	Flex,
-	Typography,
 	Button,
 } from "antd";
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useClassData, useTheme, useUserData } from "../main";
-import { Activity, useEffect, useState, useRef } from "react";
+import { Activity, useEffect, useState } from "react";
 
 import Dashboard from "../components/ControlPanel/Dashboard";
 import PollsMenu from "../components/ControlPanel/PollsMenu";
 import SettingsMenu from "../components/ControlPanel/SettingsMenu";
 import PermissionsMenu from "../components/ControlPanel/PermissionsMenu";
-import ClassroomPage from "../components/ControlPanel/ClassroomPage";
 import PollEditorMenu from "../components/ControlPanel/PollEditorMenu";
 
-import { themeColors } from "../../themes/ThemeConfig";
 import { accessToken, formbarUrl, socket } from "../socket";
 import Log from "../debugLogger";
 import ControlPanelPoll from "../components/BarPoll";
@@ -136,12 +133,6 @@ export default function ControlPanel() {
 	useEffect(() => {
 		setClassActive(!!classData?.isActive);
 	}, [classData?.isActive]);
-
-	const infoDivs = {
-		background: isDark
-			? themeColors.dark.information.background
-			: themeColors.light.information.background,
-	};
 
 	function openMenu(key: string) {
 		if (key === currentMenu) return;

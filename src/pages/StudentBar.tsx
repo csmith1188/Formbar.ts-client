@@ -11,7 +11,7 @@ const { Title } = Typography;
 
 export default function StudentBar() {
 	const [classData, setClassData] = useState<any>(null);
-	const [answerState, setAnswerState] = useState<any>([]);
+	// const [answerState, setAnswerState] = useState<any>([]);
 	const isMobileView = useMobileDetect();
 
 	const [pollWidth, setPollWidth] = useState<number>(
@@ -19,6 +19,8 @@ export default function StudentBar() {
 			? Math.min(window.innerWidth / 2 - 20, window.innerHeight - 200)
 			: Math.min(window.innerWidth - 40, window.innerHeight / 2 - 100),
 	);
+
+    !pollWidth;
 
 	function Respond(response: string) {
 		if (!socket || !socket.connected) {
@@ -77,7 +79,7 @@ export default function StudentBar() {
 				answers.push({ percentage: percentage, color: answer.color });
 			}
 
-			setAnswerState(answers);
+			// setAnswerState(answers);
 		}
 
 		socket.on("classUpdate", classUpdate);

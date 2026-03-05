@@ -3,7 +3,6 @@ import { Checkbox, Flex, Tooltip, Input, InputNumber, Button, ColorPicker } from
 import { getAppearAnimation, useSettings } from "../main";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { useEffect } from "react";
 
 export default function PollEditorResponse({
     answer,

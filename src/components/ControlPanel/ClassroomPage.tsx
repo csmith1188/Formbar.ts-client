@@ -1,5 +1,4 @@
 import { useClassData } from "../../main";
-import type { Student } from "../../types";
 
 const xAxis = 10;
 const yAxis = 5;

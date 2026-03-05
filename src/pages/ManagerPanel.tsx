@@ -11,11 +11,9 @@ import {
 	Select,
 	Tooltip,
 	Input,
-	Spin,
 	Skeleton,
 } from "antd";
 import { type UserData } from "../types";
-import { LoadingOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 
 import { IonIcon } from "@ionic/react";
@@ -30,11 +28,11 @@ export default function ManagerPanel() {
 	>("Users");
 	const [users, setUsers] = useState<Record<string, UserData>>({});
 	const { settings } = useSettings();
-	const [classrooms, setClassrooms] = useState<any[]>([]);
 	const [initialLoad, setInitialLoad] = useState(true);
 
 	useEffect(() => {
 		if (!accessToken) return;
+        
 
 		fetch(`${formbarUrl}/api/v1/manager/`, {
 			method: "GET",
@@ -47,7 +45,6 @@ export default function ManagerPanel() {
 				const { data } = response;
 				Log({ message: "Manager panel data", data });
 				setUsers(data.users);
-				setClassrooms(data.classrooms);
 			})
 			.catch((err) => {
 				Log({

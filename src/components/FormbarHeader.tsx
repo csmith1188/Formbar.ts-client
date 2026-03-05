@@ -1,13 +1,12 @@
-import { Button, Flex, Tooltip, Popconfirm, Badge, Modal } from "antd";
+import { Button, Flex, Tooltip, Popconfirm, Modal } from "antd";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useNavigate } from "react-router-dom";
 import Log from "../debugLogger";
 
-import { isDev, useMobileDetect, useTheme, useUserData, useSettings, getAppearAnimation } from "../main";
+import { isDev, useMobileDetect, useTheme, useUserData } from "../main";
 import { themeColors, version } from "../../themes/ThemeConfig";
 
-import pages from "../pages";
 import { accessToken, formbarUrl, socket } from "../socket";
 import { useState } from "react";
 import SettingsModal from "./SettingsModal";
@@ -17,7 +16,6 @@ export default function FormbarHeader() {
 	const navigate = useNavigate();
 	const isMobileView = useMobileDetect();
 	const { userData, setUserData } = useUserData();
-	const { settings } = useSettings();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -31,17 +29,6 @@ export default function FormbarHeader() {
 	const primaryTextColor = isDark
 		? themeColors.dark.text.primary
 		: themeColors.light.text.primary;
-
-	const secondaryTextColor = isDark
-		? themeColors.dark.text.secondary
-		: themeColors.light.text.secondary;
-
-	// Sort pages alphabetically by pageName
-	const sortedPages = [...pages].sort((a, b) =>
-		(a.pageName ?? "")
-			.toLowerCase()
-			.localeCompare((b.pageName ?? "").toLowerCase()),
-	);
 
 	function logoutHandler() {
 		localStorage.removeItem("accessToken");

@@ -4,7 +4,7 @@ import { textColorForBackground } from "../CustomStyleFunctions";
 import { PermissionLevels, type Student } from "../types";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { useClassData, useUserData } from "../main";
+import { useClassData } from "../main";
 import { accessToken, formbarUrl, socket } from "../socket";
 
 type AccordionCategory = {
@@ -256,7 +256,6 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 	const { classData } = useClassData();
 
 	const [awardDigipogs, setAwardDigipogs] = useState<number>(0);
-	const { userData } = useUserData();
 
 	const [api, contextHolder] = notification.useNotification();
 

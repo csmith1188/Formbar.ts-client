@@ -20,8 +20,7 @@ import ClassroomPage from "../ControlPanel/ClassroomPage";
 import * as IonIcons from "ionicons/icons";
 import { IonIcon } from "@ionic/react";
 
-import { useTheme, isMobile } from "../../main";
-import { socket } from "../../socket";
+import { useTheme } from "../../main";
 
 export default function Dashboard({
 	openModalId,
@@ -198,7 +197,7 @@ export default function Dashboard({
 
 	return (
 		<>
-			{/* <Segmented
+			<Segmented
 				options={[
 					"Dashboard",
 					'Classroom View',
@@ -212,7 +211,7 @@ export default function Dashboard({
 					bottom: "20px",
 					opacity: 0.85,
 				}}
-			/> */}
+			/>
 			{currentView === "class" && <ClassroomPage />}
 			{currentView === "dash" && (
 				<Flex
@@ -496,12 +495,3 @@ export default function Dashboard({
 		</>
 	);
 }
-
-const style = {
-	filterButton: {
-		color: "white",
-	},
-	filterButtonOff: {
-		color: "red",
-	},
-};
