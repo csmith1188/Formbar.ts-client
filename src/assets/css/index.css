@@ -11,6 +11,17 @@
 		color var(--ant-motion-duration-slow) ease-in-out;
 }
 
+*::-webkit-scrollbar {
+    background: transparent;
+    width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    width: 8px;
+}
+
 html,
 body,
 #root {

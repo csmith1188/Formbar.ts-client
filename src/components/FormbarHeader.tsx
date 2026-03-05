@@ -25,6 +25,7 @@ export default function FormbarHeader() {
 		background: isDark
 			? themeColors.dark.header.background
 			: themeColors.light.header.background,
+        padding: isMobileView ? "0 16px" : "0 32px",
 	};
 
 	const primaryTextColor = isDark
@@ -73,41 +74,10 @@ export default function FormbarHeader() {
 			style={headerStyles}
 			align="center"
 			className="formbarHeader"
-			justify="space-between"
+			justify={isMobileView ? "center": "space-between"}
 			gap="16"
 		>
-			{isMobileView ? (
-				<Flex align="center" justify="center">
-					<Tooltip
-                        mouseEnterDelay={0.5}
-						title={
-							<span>
-								Formbar{" "}
-								<span
-									style={{
-										marginLeft: "4px",
-										fontWeight: "600",
-									}}
-								>
-									v{version}
-								</span>
-							</span>
-						}
-						placement="bottomLeft"
-						arrow={{ pointAtCenter: true }}
-						color="purple"
-					>
-						<img
-							src="/img/FormbarLogo-Circle.png"
-							alt="Formbar Logo"
-							style={{
-								height: 40,
-								filter: "drop-shadow(0 0 5px rgba(0,0,0,0.5))",
-							}}
-						/>
-					</Tooltip>
-				</Flex>
-			) : (
+			{!isMobileView && (
                 <>
 				<h1
 					style={{

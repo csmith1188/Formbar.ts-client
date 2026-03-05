@@ -6,13 +6,16 @@ import {
 
 const { Title, Text } = Typography;
 
-import { useTheme } from '../main';
+import { useMobileDetect, useTheme } from '../main';
 import { themeColors } from '../../themes/ThemeConfig';
 
 import { useNavigate } from 'react-router-dom';
 
 export default function NotFound() {
     const navigate = useNavigate();
+    const isMobile = useMobileDetect();
+
+    console.log('isMobile:', isMobile, 'width:', window.innerWidth);
 
     const { isDark } = useTheme();
 
@@ -21,8 +24,8 @@ export default function NotFound() {
 
     return (
         <Flex vertical justify='center' align='center' style={{ height: '100vh', backgroundColor }}>
-            <Title level={1} style={{ color: textColor }}>404 - Page Not Found</Title>
-            <Text style={{ color: textColor, marginBottom: 20 }}>
+            <Title level={isMobile ? 3 : 1} style={{ color: textColor, textAlign: 'center' }}>404 - Page Not Found</Title>
+            <Text style={{ color: textColor, marginBottom: 20, textAlign: 'center' }}>
                 Oops! The page you're looking for doesn't exist.
             </Text>
             <Button type='primary' onClick={() => navigate('/')}>

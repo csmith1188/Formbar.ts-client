@@ -2,6 +2,7 @@ import {
 	Menu,
 	Flex,
 	Button,
+    Tooltip,
 } from "antd";
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
@@ -211,90 +212,106 @@ export default function ControlPanel() {
 					vertical
 				>
 					<Activity mode={classActive ? "hidden" : "visible"}>
-						<Button
-							color="green"
-							variant="solid"
-							type="default"
-							onClick={startClass}
-						>
-							Start Class
-						</Button>
+                        <Tooltip title={isMobileDevice ? "Start Class" : ""} mouseOverDelay={0.5} placement='right' color="green">
+                            <Button
+                                color="green"
+                                variant="solid"
+                                type="default"
+                                onClick={startClass}
+                            >
+                                    {
+                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.easel} /> <IonIcon icon={IonIcons.play} /></Flex>) : "Start Class"
+                                    }
+                            </Button>
+                        </Tooltip>
 					</Activity>
 
 					<Activity mode={classActive ? "visible" : "hidden"}>
-						<Button
-							color="red"
-							variant="solid"
-							type="default"
-							onClick={endClass}
-						>
-							End Class
-						</Button>
-					</Activity>
-
-                    {
-                        classData?.poll.status && (
+                        <Tooltip title={isMobileDevice ? "End Class" : ""} mouseOverDelay={0.5} placement='right' color="red">
                             <Button
                                 color="red"
                                 variant="solid"
                                 type="default"
-                                onClick={() => {
-                                    fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/end`, {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "Authorization": `${accessToken}`,
-                                        },
-                                    })
-                                    .then((res) => {
-                                        if (!res.ok) {
-                                            throw new Error("Failed to end poll");
-                                        }
-                                        return res.json();
-                                    })
-                                    .then((data) => {
-                                        console.log("Poll ended:", data);
-                                    })
-                                    .catch((err) => {
-                                        console.error("Error ending poll:", err);
-                                    });
-                                }}
+                                onClick={endClass}
                             >
-                                End Poll
+                                    {
+                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.easel} /> <IonIcon icon={IonIcons.stop} /></Flex>) : "End Class"
+                                    }
                             </Button>
+                        </Tooltip>
+					</Activity>
+
+                    {
+                        classData?.poll.status && (
+                            <Tooltip title={isMobileDevice ? "End Poll" : ""} mouseOverDelay={0.5} placement='right' color="red">
+                                <Button
+                                    color="red"
+                                    variant="solid"
+                                    type="default"
+                                    onClick={() => {
+                                        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/end`, {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                "Authorization": `${accessToken}`,
+                                            },
+                                        })
+                                        .then((res) => {
+                                            if (!res.ok) {
+                                                throw new Error("Failed to end poll");
+                                            }
+                                            return res.json();
+                                        })
+                                        .then((data) => {
+                                            console.log("Poll ended:", data);
+                                        })
+                                        .catch((err) => {
+                                            console.error("Error ending poll:", err);
+                                        });
+                                    }}
+                                >
+                                    {
+                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.pieChart} /> <IonIcon icon={IonIcons.stop} /></Flex>) : "End Poll"
+                                    }
+                                </Button>
+                            </Tooltip>
                         )
                     }
 
                     {
                         classData?.poll.prompt && (
-                            <Button
-                                color="red"
-                                variant="solid"
-                                type="default"
-                                onClick={() => {
-                                    fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/clear`, {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "Authorization": `${accessToken}`,
-                                        },
-                                    })
-                                    .then((res) => {
-                                        if (!res.ok) {
-                                            throw new Error("Failed to clear polls");
-                                        }
-                                        return res.json();
-                                    })
-                                    .then((data) => {
-                                        console.log("Polls cleared:", data);
-                                    })
-                                    .catch((err) => {
-                                        console.error("Error clearing polls:", err);
-                                    });
-                                }}
-                            >
-                                Clear Poll
-                            </Button>
+                            <Tooltip title={isMobileDevice ? "Clear Poll" : ""} placement='right' mouseOverDelay={0.5} color="red">
+                                <Button
+                                    color="red"
+                                    variant="solid"
+                                    type="default"
+                                    onClick={() => {
+                                        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/clear`, {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                "Authorization": `${accessToken}`,
+                                            },
+                                        })
+                                        .then((res) => {
+                                            if (!res.ok) {
+                                                throw new Error("Failed to clear polls");
+                                            }
+                                            return res.json();
+                                        })
+                                        .then((data) => {
+                                            console.log("Polls cleared:", data);
+                                        })
+                                        .catch((err) => {
+                                            console.error("Error clearing polls:", err);
+                                        });
+                                    }}
+                                >
+                                    {
+                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.trash} /> <IonIcon icon={IonIcons.stop} /></Flex>) : "Clear Poll"
+                                    }
+                                </Button>
+                            </Tooltip>
                         )
                     }
 				</Flex>

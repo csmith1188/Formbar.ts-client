@@ -302,8 +302,8 @@ export default function ClassesPage() {
 				gap={!isMobileView ? 50 : 30}
 			>
 				<div style={{ position: "static", textAlign: "center" }}>
-					<Title>{!isMobileView ? "Manage " : ""}Your Classes</Title>
-					<Text>
+					<Title level={isMobileView ? 3 : 1}>{!isMobileView ? "Manage Your " : ""}Classes</Title>
+					<Text style={isMobileView ? {fontSize: 20} : {}}>
 						Enter
 						{userData?.permissions && userData.permissions >= 4
 							? ", create,"

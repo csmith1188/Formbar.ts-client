@@ -12,7 +12,7 @@ import {
 const { Text } = Typography;
 
 import { Activity, useState } from "react";
-import { useSettings } from "../main";
+import { useMobileDetect, useSettings } from "../main";
 
 type MenuItem = Required<MenuProps>['items'][number] & {
     selectedicon?: React.ReactNode;
@@ -58,6 +58,8 @@ export default function SettingsModal() {
 		setMenuItems(updatedItems);
 	}
 
+    const isMobile = useMobileDetect()
+
     return (
         <Flex style={{ width: "100%", height: "100%" }}>
             <Menu
@@ -65,11 +67,12 @@ export default function SettingsModal() {
                 defaultOpenKeys={["sub1"]}
                 mode="inline"
                 items={menuItems}
+                inlineCollapsed={isMobile}
                 theme={"dark"}
                 style={{
                     height: "100%",
-                    minWidth: "250px",
-                    maxWidth: "250px",
+                    minWidth: isMobile ? "80px" : "250px",
+                    maxWidth: isMobile ? "80px" : "250px",
                     padding: "0 10px",
                     paddingTop: "15px",
                 }}

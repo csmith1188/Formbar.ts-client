@@ -60,11 +60,12 @@ export default function EmailVerifyPage() {
 			<Flex justify="center" align="center" style={{ minHeight: "calc(100vh - 60px)", padding: "24px" }}>
 				<Card style={{ width: "100%", maxWidth: 520 }}>
 					<Flex vertical gap={12}>
-						<Title level={3} style={{ marginBottom: 0 }}>
+						<Title level={3} style={{ marginBottom: 0, textAlign: "center" }}>
 							Email Verification
 						</Title>
 						<Text
 							type={state === "error" ? "danger" : state === "success" ? "success" : undefined}
+                            style={{ textAlign: "center" }}
 						>
 							{statusMessage || "Preparing verification..."}
 						</Text>
