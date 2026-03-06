@@ -84,10 +84,21 @@ export type PollAnswer = {
 export type Transaction = {
 	amount: number;
 	date: string;
-	from_user: number | null;
-	pool: number | null;
+	from?: {
+		id: number | null;
+		type: string;
+		username?: string | null;
+	};
+	to?: {
+		id: number | null;
+		type: string;
+		username?: string | null;
+	};
 	reason: string;
-	to_user: number | null;
+	// Legacy fields kept optional for backward compatibility.
+	from_user?: number | null;
+	to_user?: number | null;
+	pool?: number | null;
 };
 
 export enum Permissions {
