@@ -12,6 +12,8 @@ export default function TransactionItem({
 	transaction: Transaction;
 	userId: number | undefined;
 }) {
+	const isOutgoing = isOutgoingTransaction(transaction, userId);
+	const direction = determineTransactionType(transaction);
 
 	return (
 		<Flex
@@ -34,9 +36,9 @@ export default function TransactionItem({
 						gap: "10px",
 					}}
 				>
-					{determineTransactionType(transaction).from}{" "}
+					{direction.from}{" "}
 					<IonIcon icon={IonIcons.arrowForward} />{" "}
-					{determineTransactionType(transaction).to}
+					{direction.to}
 				</Text>
 
 				<Text>{transaction.reason}</Text>
@@ -47,7 +49,6 @@ export default function TransactionItem({
 			<Statistic
 				title="Amount"
 				value={transaction.amount}
-				precision={2}
 				styles={{
 					title: {
 						fontSize: "16px",
@@ -57,10 +58,7 @@ export default function TransactionItem({
 					content: {
 						fontSize: "24px",
 						fontWeight: "bolder",
-						color:
-							transaction.from_user === userId
-								? "#e93241ff"
-								: "#9be65aff",
+						color: isOutgoing ? "#e93241ff" : "#9be65aff",
 					},
 				}}
 				prefix={
@@ -68,13 +66,10 @@ export default function TransactionItem({
 						style={{
 							fontSize: "24px",
 							fontWeight: "bolder",
-							color:
-								transaction.from_user === userId
-									? "#e93241ff"
-									: "#9be65aff",
+							color: isOutgoing ? "#e93241ff" : "#9be65aff",
 						}}
 					>
-						{transaction.from_user === userId ? "-" : "+"}
+						{isOutgoing ? "-" : "+"}
 					</Text>
 				}
 				suffix=""
@@ -83,33 +78,61 @@ export default function TransactionItem({
 	);
 }
 
+function isOutgoingTransaction(transaction: Transaction, userId: number | undefined): boolean {
+	if (typeof userId !== "number") return false;
+
+	if (transaction.from && (transaction.from.type === "user" || transaction.from.type === "award")) {
+		return Number(transaction.from.id) === userId;
+	}
+
+	return transaction.from_user === userId;
+}
+
 function determineTransactionType(transaction: Transaction): {
 	to: string;
 	from: string;
 } {
-	if (transaction.from_user === null && transaction.pool !== null) {
-		// Incoming from pool
+	if (transaction.from && transaction.to) {
+		return {
+			from: formatParty(transaction.from),
+			to: formatParty(transaction.to),
+		};
+	}
+
+	if (transaction.from_user === null && transaction.pool != null) {
 		return {
 			to: `User ${transaction.to_user}`,
 			from: `Pool ${transaction.pool}`,
 		};
-	} else if (transaction.to_user === null && transaction.pool !== null) {
-		// Outgoing to pool
+	}
+
+	if (transaction.to_user === null && transaction.pool != null) {
 		return {
 			to: `Pool ${transaction.pool}`,
 			from: `User ${transaction.from_user}`,
 		};
-	} else if (transaction.from_user !== null && transaction.to_user !== null) {
-		// User to user
+	}
+
+	if (transaction.from_user != null && transaction.to_user != null) {
 		return {
 			to: `User ${transaction.to_user}`,
 			from: `User ${transaction.from_user}`,
 		};
 	}
+
 	return { to: "N/A", from: "N/A" };
 }
 
-function formatDate(dateString: string): string {
+function formatParty(party: NonNullable<Transaction["from"]>): string {
+	if (party.username) return party.username;
+
+	if (party.type === "pool") return `Pool ${party.id}`;
+	if (party.type === "class") return `Class ${party.id}`;
+	if (party.type === "award") return `Award ${party.id}`;
+	return `User ${party.id}`;
+}
+
+function formatDate(dateString: string | number): string {
 	const daysOfWeek = [
 		"Sunday",
 		"Monday",
