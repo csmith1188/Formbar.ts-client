@@ -1,8 +1,14 @@
 import {
 	Menu,
+	Row,
+	Col,
 	Flex,
 	Button,
-    Tooltip,
+	Tooltip,
+	Modal,
+	Input,
+	Switch,
+	Grid,
 } from "antd";
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
@@ -26,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import TimerPage from "../components/ControlPanel/TimerPage";
 import FullCircularPoll from "../components/CircularPoll";
 import type { Poll } from "../types";
+import { textColorForBackground } from "../CustomStyleFunctions";
 
 const items = [
 	{
@@ -82,6 +89,8 @@ const items = [
 export default function ControlPanel() {
 	const { classData, setClassData } = useClassData();
 	const isMobileDevice = isMobile();
+
+    const [showPollDetails, setShowPollDetails] = useState(false);
 
     const { settings } = useSettings();
 
@@ -213,68 +222,96 @@ export default function ControlPanel() {
 					}}
 					vertical
 				>
-                    {/* <Flex justify="center" align="center" vertical>
-                    { 
-                        classData?.poll && (
-                            <Flex gap={10}>
-                                <FullCircularPoll poll={classData.poll} size={150}/>
-                                <Flex vertical gap={10} justify="center" align="center">
-                                    {
-                                        classData.poll.responses.map((resp: any, index: number) => (
-                                            <Tooltip key={index} title={`${resp.answer}: ${resp.responses} responses`} placement="right" mouseEnterDelay={0.5}>
-                                                <Flex key={index} gap={5} align="center">
-                                                    <div style={{ width: "15px", height: "15px", backgroundColor: resp.color, borderRadius: "50%" }}></div>
-                                                    <span>{resp.text}: {resp.responses}</span>
-                                                </Flex>
-                                            </Tooltip>
-                                        ))
-                                    }
-                                </Flex>
+
+                    <Modal
+                        centered
+                        title={
+                            <Input value={classData?.poll?.prompt} placeholder="Prompt" disabled style={{width:'calc(100% - 35px)'}}/>
+                        }
+                        open={showPollDetails}
+                        onCancel={() => {
+                            setShowPollDetails(false);
+                        }}
+                        destroyOnHidden
+                        footer={null}
+                    >
+                        {classData?.poll.responses.map((answer, index) => (
+                            <Button
+                                key={index}
+                                style={{
+                                    backgroundColor: answer.color,
+                                    color: textColorForBackground(
+                                        answer.color,
+                                    ),
+                                    marginTop: "5px",
+                                    width: "100%",
+                                }}
+                            >
+                                {answer.answer} - {answer.responses} votes
+                            </Button>
+                        ))}
+
+                        <Flex vertical gap={10} style={{ marginTop: "20px" }}>
+                            <Flex align="center" justify="space-between">
+                                Allow Vote Changes
+                                <Switch disabled defaultChecked={classData?.poll.allowVoteChanges}/>
                             </Flex>
-                        )
-                    }
-                    </Flex> */}
 
-                    
+                            <Flex align="center" justify="space-between">
+                                Allow Text Responses
+                                <Switch disabled defaultChecked={classData?.poll.allowTextResponses}/>
+                            </Flex>
 
+                            <Flex align="center" justify="space-between">
+                                Blind Poll
+                                <Switch disabled defaultChecked={classData?.poll.blind}/>
+                            </Flex>
 
-					<Activity mode={classActive ? "hidden" : "visible"}>
-                        <Tooltip title={isMobileDevice ? "Start Class" : ""} mouseOverDelay={0.5} placement='right' color="green">
-                            <Button
-                                color="green"
-                                variant="solid"
-                                type="default"
-                                onClick={startClass}
-                            >
-                                    {
-                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.easel} /> <IonIcon icon={IonIcons.play} /></Flex>) : "Start Class"
-                                    }
-                            </Button>
-                        </Tooltip>
-					</Activity>
+                            <Flex align="center" justify="space-between">
+                                Multiple Answer Poll
+                                <Switch disabled defaultChecked={classData?.poll.allowMultipleResponses} />
+                            </Flex>
+                        </Flex>
+                    </Modal>
 
-					<Activity mode={classActive ? "visible" : "hidden"}>
-                        <Tooltip title={isMobileDevice ? "End Class" : ""} mouseOverDelay={0.5} placement='right' color="red">
-                            <Button
-                                color="red"
-                                variant="solid"
-                                type="default"
-                                onClick={endClass}
-                            >
-                                    {
-                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.easel} /> <IonIcon icon={IonIcons.stop} /></Flex>) : "End Class"
-                                    }
-                            </Button>
-                        </Tooltip>
-					</Activity>
-
-                    {
-                        classData?.poll.status && (
-                            <Tooltip title={isMobileDevice ? "End Poll" : ""} mouseOverDelay={0.5} placement='right' color="red">
+					{/* 2x2 grid of buttons (Ant Design Row/Col) */}
+					<div style={{ width: isMobileDevice ? '60px' : '230px', marginTop: 8 }}>
+						<Row gutter={[8, 8]}>
+							<Col span={12} style={isMobileDevice ? mobileButtonColStyle : undefined}>
                                 <Button
-                                    color="red"
+                                    disabled={!classData || !classData.poll.status}
+                                    color="blue"
                                     variant="solid"
-                                    type="default"
+                                    style={buttonStyle}
+                                    styles={{
+                                        content: {
+                                            width: '100%',
+                                            whiteSpace: 'break-spaces',
+                                            overflow: 'hidden',
+                                            textOverflow: 'clip',
+                                            fontSize: isMobileDevice ? '18px' : undefined,
+                                        }
+                                    }}
+                                    onClick={() => setShowPollDetails(true)}
+                                >
+                                    Poll Details
+                                </Button>
+							</Col>
+							<Col span={12} style={isMobileDevice ? mobileButtonColStyle : undefined}>
+                                <Button
+                                    disabled={!classData || !classData.poll.status}
+                                    color="pink"
+                                    variant="solid"
+                                    style={buttonStyle}
+                                    styles={{
+                                        content: {
+                                            width: '100%',
+                                            whiteSpace: 'break-spaces',
+                                            overflow: 'hidden',
+                                            textOverflow: 'clip',
+                                            fontSize: isMobileDevice ? '18px' : undefined,
+                                        }
+                                    }}
                                     onClick={() => {
                                         fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/end`, {
                                             method: "POST",
@@ -297,21 +334,24 @@ export default function ControlPanel() {
                                         });
                                     }}
                                 >
-                                    {
-                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.pieChart} /> <IonIcon icon={IonIcons.stop} /></Flex>) : "End Poll"
-                                    }
+                                    End Poll
                                 </Button>
-                            </Tooltip>
-                        )
-                    }
-
-                    {
-                        classData?.poll.prompt && (
-                            <Tooltip title={isMobileDevice ? "Clear Poll" : ""} placement='right' mouseOverDelay={0.5} color="red">
+							</Col>
+							<Col span={12} style={isMobileDevice ? mobileButtonColStyle : undefined}>
                                 <Button
-                                    color="red"
+                                    disabled={!classData || !classData.poll.status || classData.poll.prompt == ""}
+                                    color="orange"
                                     variant="solid"
-                                    type="default"
+                                    style={buttonStyle}
+                                    styles={{
+                                        content: {
+                                            width: '100%',
+                                            whiteSpace: 'break-spaces',
+                                            overflow: 'hidden',
+                                            textOverflow: 'clip',
+                                            fontSize: isMobileDevice ? '18px' : undefined,
+                                        }
+                                    }}
                                     onClick={() => {
                                         fetch(`${formbarUrl}/api/v1/class/${classData?.id}/polls/clear`, {
                                             method: "POST",
@@ -334,13 +374,30 @@ export default function ControlPanel() {
                                         });
                                     }}
                                 >
-                                    {
-                                        isMobileDevice ? (<Flex align="center" justify="center" gap={5}><IonIcon icon={IonIcons.trash} /> <IonIcon icon={IonIcons.stop} /></Flex>) : "Clear Poll"
-                                    }
+                                    Clear Poll
                                 </Button>
-                            </Tooltip>
-                        )
-                    }
+                            </Col>
+							<Col span={12} style={isMobileDevice ? mobileButtonColStyle : undefined}>
+                                <Button
+                                    color={classData?.isActive ? "red" : "green"}
+                                    variant="solid"
+                                    style={buttonStyle}
+                                    styles={{
+                                        content: {
+                                            width: '100%',
+                                            whiteSpace: 'break-spaces',
+                                            overflow: 'hidden',
+                                            textOverflow: 'clip',
+                                            fontSize: isMobileDevice ? '18px' : undefined,
+                                        }
+                                    }}
+                                    onClick={() => {classData?.isActive ? endClass() : startClass()}}
+                                >
+                                    {classData?.isActive ? "End Class" : "Start Class"}
+                                </Button>
+							</Col>
+						</Row>
+					</div>
 				</Flex>
 
 				<div
@@ -381,4 +438,21 @@ export default function ControlPanel() {
 			</Flex>
 		</>
 	);
+}
+
+const buttonStyle = {
+    width: '100%',
+    aspectRatio: '1 / 1',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+    height: 'unset'
+}
+
+const mobileButtonColStyle = {
+    maxWidth: "100%",
+    width: "100%",
+    flex: "1 1 auto",
+    aspectRatio: "unset",
 }

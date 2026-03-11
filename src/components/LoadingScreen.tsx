@@ -118,7 +118,10 @@ function randomText() {
         "Steven, fix it!!",
         "PR #85",
         "Robert was here... It's in your skin. It's in your blood. It's in your brain. It is part of you.",
-        "Wishlist Kogama on Steam!"
+        "Wishlist Kogama on Steam!",
+        "onebar@yorktechapps.com",
+        "Loading battle pass...",
+        "Loading FormAI..."
 	];
 
 	return splashTexts[Math.floor(Math.random() * splashTexts.length)];
