@@ -228,11 +228,13 @@ const SETUP_API_PATHS: Array<{ method: HttpMethod; apiPath: string }> = [
 
 // Teardown operations run last to clean up test state.
 const TEARDOWN_API_PATHS: Array<{ method: HttpMethod; apiPath: string }> = [
+	{ method: "POST", apiPath: "/class/{id}/end" },
 	{ method: "POST", apiPath: "/class/{id}/leave" },
-	{ method: "DELETE", apiPath: "/room/{id}/leave" },
+	{ method: "POST", apiPath: "/room/{id}/leave" },
 	{ method: "PATCH", apiPath: "/user/{id}/ban" },
 	{ method: "PATCH", apiPath: "/user/{id}/unban" },
-	{ method: "POST", apiPath: "/class/{id}/end" },
+	{ method: "DELETE", apiPath: "/room/{id}" },
+	{ method: "DELETE", apiPath: "/user/{id}" },
 ];
 
 const MAIN_MUTATION_ORDER: Array<{ method: HttpMethod; apiPath: string }> = [
@@ -244,7 +246,18 @@ const MAIN_MUTATION_ORDER: Array<{ method: HttpMethod; apiPath: string }> = [
 	{ method: "POST", apiPath: "/class/{id}/polls/response" },
 	{ method: "POST", apiPath: "/class/{id}/polls/end" },
 	{ method: "POST", apiPath: "/class/{id}/polls/clear" },
+	{ method: "POST", apiPath: "/class/{id}/timer/start" },
+	{ method: "POST", apiPath: "/class/{id}/timer/end" },
+	{ method: "POST", apiPath: "/class/{id}/timer/clear" },
+	{ method: "POST", apiPath: "/room/{id}/links/add" },
+	{ method: "PUT", apiPath: "/room/{id}/links" },
+	{ method: "DELETE", apiPath: "/room/{id}/links" },
+	{ method: "POST", apiPath: "/room/{id}/links/remove" },
+	{ method: "POST", apiPath: "/room/{id}/links/change" },
+	{ method: "PUT", apiPath: "/room/tags" },
+	{ method: "POST", apiPath: "/room/tags" },
 	{ method: "POST", apiPath: "/class/{id}/help/request" },
+	{ method: "DELETE", apiPath: "/class/{id}/students/{userId}/help" },
 	{ method: "POST", apiPath: "/class/{id}/break/request" },
 	{ method: "POST", apiPath: "/class/{id}/students/{userId}/break/approve" },
 	{ method: "POST", apiPath: "/class/{id}/break/end" },
@@ -979,9 +992,6 @@ function isSecondaryActorOperation(operation: SwaggerOperation): boolean {
 		matchesOperation(operation, "POST", "/user/{id}/pin/verify") ||
 		matchesOperation(operation, "POST", "/user/{id}/pin/reset") ||
 		matchesOperation(operation, "POST", "/user/{id}/verify/request") ||
-		matchesOperation(operation, "POST", "/class/{id}/break/request") ||
-		matchesOperation(operation, "POST", "/class/{id}/break/end") ||
-		matchesOperation(operation, "POST", "/class/{id}/help/request") ||
 		matchesOperation(operation, "POST", "/class/{id}/polls/response") ||
 		matchesOperation(operation, "POST", "/class/{id}/leave") ||
 		matchesOperation(operation, "DELETE", "/room/{id}/leave") ||
@@ -1036,6 +1046,14 @@ function getParameterOverrideValue(
 		operation.apiPath.includes("/students/{userId}/") &&
 		name === "userId"
 	) {
+		// Break approve/deny target the primary user because the prerequisite
+		// break request is made by the primary actor (class owner).
+		if (
+			matchesOperation(operation, "POST", "/class/{id}/students/{userId}/break/approve") ||
+			matchesOperation(operation, "POST", "/class/{id}/students/{userId}/break/deny")
+		) {
+			return String(context.me.id);
+		}
 		return context.secondaryUser.id;
 	}
 
@@ -1579,16 +1597,17 @@ async function runOperationPrerequisites(
 		matchesOperation(operation, "POST", "/class/{id}/students/{userId}/break/deny")
 	) {
 		const classId = findInPool(context.valuePool, ["classid"]);
-		if (!classId || !context.secondaryUser.accessToken)
-			return "A temporary logged-in student is required for break approval tests.";
+		if (!classId)
+			return "A class ID is required for break approval tests.";
 
+		// Use the primary actor (class owner / Manager) to create the break
+		// request, since the secondary user joins as a Guest and lacks the
+		// CLASS.BREAK.REQUEST scope required by this endpoint.
 		const response = await callApi(`/class/${encodeURIComponent(classId)}/break/request`, "POST", {
 			body: {
 				contentType: "application/json",
 				value: { reason: "Automated test break request" },
 			},
-			authToken: context.secondaryUser.accessToken,
-			omitDefaultAuth: true,
 		});
 		if (!response.ok) {
 			return `Failed to prepare a break request: ${summarizePayload(response.body)}`;
@@ -2334,6 +2353,7 @@ export function Testing() {
 						title="Setup"
 						style={{
 							background: "#000a",
+							overflow: "hidden",
 							...getAppearAnimation(
 								settings.disableAnimations,
 								5,
@@ -2354,6 +2374,7 @@ export function Testing() {
 					title="Test Results"
 					style={{
 						background: "#000a",
+						overflow: "hidden",
 						...getAppearAnimation(settings.disableAnimations, 6),
 					}}
 				>
@@ -2371,6 +2392,7 @@ export function Testing() {
 						title="Teardown"
 						style={{
 							background: "#000a",
+							overflow: "hidden",
 							...getAppearAnimation(
 								settings.disableAnimations,
 								7,
@@ -2391,6 +2413,7 @@ export function Testing() {
 					title="Excluded From Suite"
 					style={{
 						background: "#000a",
+						overflow: "hidden",
 						...getAppearAnimation(settings.disableAnimations, 8),
 					}}
 				>
