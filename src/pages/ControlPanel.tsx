@@ -216,8 +216,6 @@ export default function ControlPanel() {
 			const t = Math.min(Math.max((now - startMs) / (endMs - startMs), 0), 1);
 			const lerpPercent = 100 * t;
 
-			console.log(`[Timer Lerp] ${lerpPercent.toFixed(2)}%`);
-
 			if (t < 1 && !cancelled) {
 				animationFrameId = requestAnimationFrame(animate);
 			}
@@ -382,10 +380,10 @@ export default function ControlPanel() {
                                             return res.json();
                                         })
                                         .then((data) => {
-                                            console.log("Poll ended:", data);
+                                            Log({message: "Poll ended:", data});
                                         })
                                         .catch((err) => {
-                                            console.error("Error ending poll:", err);
+                                            Log({message: "Error ending poll:", data: err, level: 'error'});
                                         });
                                     }}
                                 >
@@ -422,10 +420,10 @@ export default function ControlPanel() {
                                             return res.json();
                                         })
                                         .then((data) => {
-                                            console.log("Polls cleared:", data);
+                                            Log({message: "Polls cleared:", data});
                                         })
                                         .catch((err) => {
-                                            console.error("Error clearing polls:", err);
+                                            Log({message: "Error clearing polls:", data: err, level: 'error'});
                                         });
                                     }}
                                 >

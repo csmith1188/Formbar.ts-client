@@ -19,6 +19,7 @@ const { Title, Text } = Typography;
 import { useClassData, useMobileDetect, useTheme } from "../../main";
 import { useEffect, useState } from "react";
 import { accessToken, formbarUrl } from "../../socket";
+import Log from "../../debugLogger";
 
 export default function SettingsMenu() {
 	const { classData } = useClassData();
@@ -59,9 +60,7 @@ export default function SettingsMenu() {
 		})
 		.then((res) => res.json())
 		.then((data) => {
-			console.log(data)
 			if (data.success && data.data) {
-				console.log("Fetched class links:", data.data);
 				setClassLinks(data.data);
 			}
 		})
@@ -238,7 +237,7 @@ export default function SettingsMenu() {
                                             })
                                             .then((res) => res.json())
                                             .then((res) => {
-                                                console.log(res)
+                                                Log({message: "Class deleted:", data: res});
                                             })
                                         }
                                     })

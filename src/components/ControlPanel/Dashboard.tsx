@@ -190,8 +190,6 @@ export default function Dashboard({
         }
         setExcludedRespondents(newExcluded);
 
-        console.log("Emitting updateExcludedRespondents with: ", newExcluded);
-
         // socket.emit('updateExcludedRespondents', excludedRespondents);
     }
 

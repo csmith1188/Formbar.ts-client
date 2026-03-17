@@ -62,9 +62,34 @@ export default function Student() {
 		let resTextResponse = classData?.poll.allowTextResponses
 			? textResponse.trim()
 			: "";
-		socket.emit("pollResp", response, resTextResponse);
+		
+        fetch(`${formbarUrl}/api/v1/class/${classData.id}/polls/response`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                response: response,
+                textRes: resTextResponse,
+            })
+        })
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error("Failed to send poll response");
+            }
+            res.json();
+        })
+        .then((res) => {
+            console.log(res);
+        })
+        .catch((err) => {
+            console.error("Error sending poll response:", err);
+        });
+        
+
 		Log({ message: `Responded with: ${response}`, level: "info" });
-		socket.emit("classUpdate", ""); // Request updated class data after responding
+		// socket.emit("classUpdate", ""); // Request updated class data after responding
 	}
 
 	useEffect(() => {
@@ -191,8 +216,6 @@ export default function Student() {
                 const lerpPercent = 100 * t;
 
                 setTimerLerpPercent(lerpPercent);
-    
-                console.log(`[Timer Lerp] ${lerpPercent.toFixed(2)}%`);
     
                 if (t < 1 && !cancelled) {
                     animationFrameId = requestAnimationFrame(animate);

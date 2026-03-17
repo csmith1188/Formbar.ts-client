@@ -142,7 +142,8 @@ export default function FullCircularPoll({
                             transform: 'translate(-50%, -50%)',
                         }}
                         type="dashboard"
-                        percent={timer.current}
+                        percent={Math.round(timer.current)}
+                        
                         format={() => `${Math.round(timer.duration * (timer.current / 100) / 1000)}s`}
                         strokeColor={{
                             '0%': 'rgb(94, 158, 230)',

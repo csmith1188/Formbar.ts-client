@@ -3,6 +3,33 @@ import { accessToken, formbarUrl } from "../socket";
 import { useState } from "react";
 import FormbarHeader from "../components/FormbarHeader";
 import { useSettings, getAppearAnimation } from "../main";
+import Log from "../debugLogger";
+
+const console = {
+    ...globalThis.console,
+    warn: (...args: any[]) => {
+        if (!args.length) return;
+        const [first, ...rest] = args;
+        if (typeof first === "string") {
+            const data = rest.length === 0 ? null : rest.length === 1 ? rest[0] : rest;
+            Log({ message: first, data, level: "warn" });
+            return;
+        }
+        const data = args.length === 1 ? first : args;
+        Log({ message: "Warning", data, level: "warn" });
+    },
+    error: (...args: any[]) => {
+        if (!args.length) return;
+        const [first, ...rest] = args;
+        if (typeof first === "string") {
+            const data = rest.length === 0 ? null : rest.length === 1 ? rest[0] : rest;
+            Log({ message: first, data, level: "error" });
+            return;
+        }
+        const data = args.length === 1 ? first : args;
+        Log({ message: "Error", data, level: "error" });
+    },
+};
 
 const getFetchOptions = (method = "GET", body?: any) => {
     const opts: RequestInit = {
@@ -21,6 +48,7 @@ const testFuncs = [
     { name: 'Certs', func: certs, hasArgs: false, category: 'System', method: 'GET', testedWorks: true },
 
     { name: 'Get Me', func: getMe, hasArgs: false, category: 'User', method: 'GET', testedWorks: true },
+    { name: 'Get My Scopes', func: getMyScopes, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
     { name: 'Get User', func: getUser, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
     { name: 'Get User Class', func: getUserClass, hasArgs: true, category: 'User', method: 'GET' },
     { name: 'Get User Classes', func: getUserClasses, hasArgs: true, category: 'User', method: 'GET', testedWorks: true },
@@ -182,7 +210,7 @@ async function certs() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/certs`, getFetchOptions());
         const data = await res.json();
-        console.log("Certs:", data);
+        Log({ message: "Certs:", data });
     } catch (err) {
         console.error("Error fetching certs:", err);
     }
@@ -192,9 +220,19 @@ async function getMe() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/me`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Me:", data);
+        Log({ message: "Get Me:", data });
     } catch (err) {
         console.error("Error getting /me:", err);
+    }
+}
+
+async function getMyScopes(id: string) {
+    try {
+        const res = await fetch(`${formbarUrl}/api/v1/user/${id}/scopes`, getFetchOptions());
+        const data = await res.json();
+        Log({ message: "Get Scopes:", data });
+    } catch (err) {
+        console.error("Error getting scopes:", err);
     }
 }
 
@@ -203,7 +241,7 @@ async function getUser(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}`, getFetchOptions());
         const data = await res.json();
-        console.log("Get User:", data);
+        Log({ message: "Get User:", data });
     } catch (err) {
         console.error("Error getting user:", err);
     }
@@ -214,7 +252,7 @@ async function getUserClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/class`, getFetchOptions());
         const data = await res.json();
-        console.log("Get User Class:", data);
+        Log({ message: "Get User Class:", data });
     } catch (err) {
         console.error("Error getting user class:", err);
     }
@@ -225,7 +263,7 @@ async function getUserClasses(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/classes`, getFetchOptions());
         const data = await res.json();
-        console.log("Get User Classes:", data);
+        Log({ message: "Get User Classes:", data });
     } catch (err) {
         console.error("Error getting user classes:", err);
     }
@@ -236,7 +274,7 @@ async function deleteUser(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}`, getFetchOptions('DELETE'));
         const data = await res.json();
-        console.log("Delete User:", data);
+        Log({ message: "Delete User:", data });
     } catch (err) {
         console.error("Error deleting user:", err);
     }
@@ -259,7 +297,7 @@ async function changePerm(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(email)}/perm`, getFetchOptions('PATCH', body));
         const data = await res.json();
-        console.log("Change Perm:", data);
+        Log({ message: "Change Perm:", data });
     } catch (err) {
         console.error("Error changing perm:", err);
     }
@@ -270,7 +308,7 @@ async function banUser(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/ban`, getFetchOptions('PATCH'));
         const data = await res.json();
-        console.log("Ban User:", data);
+        Log({ message: "Ban User:", data });
     } catch (err) {
         console.error("Error banning user:", err);
     }
@@ -281,7 +319,7 @@ async function unbanUser(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/unban`, getFetchOptions('PATCH'));
         const data = await res.json();
-        console.log("Unban User:", data);
+        Log({ message: "Unban User:", data });
     } catch (err) {
         console.error("Error unbanning user:", err);
     }
@@ -292,7 +330,7 @@ async function verifyUser(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/verify`, getFetchOptions('PATCH'));
         const data = await res.json();
-        console.log("Verify User:", data);
+        Log({ message: "Verify User:", data });
     } catch (err) {
         console.error("Error verifying user:", err);
     }
@@ -303,7 +341,7 @@ async function regenerateApiKey(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/api/regenerate`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log("Regenerate API Key:", data);
+        Log({ message: "Regenerate API Key:", data });
     } catch (err) {
         console.error("Error regenerating API key:", err);
     }
@@ -332,7 +370,7 @@ async function updatePin(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(id)}/pin`, getFetchOptions('PATCH', body));
         const data = await res.json();
-        console.log("Update PIN:", data);
+        Log({ message: "Update PIN:", data });
     } catch (err) {
         console.error("Error updating PIN:", err);
     }
@@ -343,7 +381,7 @@ async function requestPinReset(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/pin/reset`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log("Request PIN Reset:", data);
+        Log({ message: "Request PIN Reset:", data });
     } catch (err) {
         console.error("Error requesting PIN reset:", err);
     }
@@ -362,7 +400,7 @@ async function resetPinWithToken(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/pin/reset`, getFetchOptions('PATCH', body));
         const data = await res.json();
-        console.log("Reset PIN (Token):", data);
+        Log({ message: "Reset PIN (Token):", data });
     } catch (err) {
         console.error("Error resetting PIN:", err);
     }
@@ -374,7 +412,7 @@ async function getClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Class:", data);
+        Log({ message: "Get Class:", data });
     } catch (err) {
         console.error("Error getting class:", err);
     }
@@ -385,7 +423,7 @@ async function getClassActive(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/active`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Class Active:", data);
+        Log({ message: "Get Class Active:", data });
     } catch (err) {
         console.error("Error getting class active:", err);
     }
@@ -396,7 +434,7 @@ async function getClassBanned(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/banned`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Class Banned:", data);
+        Log({ message: "Get Class Banned:", data });
     } catch (err) {
         console.error("Error getting class banned:", err);
     }
@@ -407,7 +445,7 @@ async function getClassLinks(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/links`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Class Links:", data);
+        Log({ message: "Get Class Links:", data });
     } catch (err) {
         console.error("Error getting class links:", err);
     }
@@ -418,7 +456,7 @@ async function getClassPermissions(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/permissions`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Class Permissions:", data);
+        Log({ message: "Get Class Permissions:", data });
     } catch (err) {
         console.error("Error getting class permissions:", err);
     }
@@ -429,7 +467,7 @@ async function getClassStudents(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/students`, getFetchOptions());
         const data = await res.json();
-        console.log("Get Class Students:", data);
+        Log({ message: "Get Class Students:", data });
     } catch (err) {
         console.error("Error getting class students:", err);
     }
@@ -442,7 +480,7 @@ async function createClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/create`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log("Create Class:", data);
+        Log({ message: "Create Class:", data });
     } catch (err) {
         console.error("Error creating class:", err);
     }
@@ -453,7 +491,7 @@ async function endClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/end`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log("End Class:", data);
+        Log({ message: "End Class:", data });
     } catch (err) {
         console.error("Error ending class:", err);
     }
@@ -464,7 +502,7 @@ async function joinClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/join`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log("Join Class:", data);
+        Log({ message: "Join Class:", data });
     } catch (err) {
         console.error("Error joining class:", err);
     }
@@ -475,7 +513,7 @@ async function leaveClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/leave`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log("Leave Class:", data);
+        Log({ message: "Leave Class:", data });
     } catch (err) {
         console.error("Error leaving class:", err);
     }
@@ -486,7 +524,7 @@ async function startClass(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/start`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log("Start Class:", data);
+        Log({ message: "Start Class:", data });
     } catch (err) {
         console.error("Error starting class:", err);
     }
@@ -498,7 +536,7 @@ async function getClassPolls(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Class Polls:', data);
+        Log({ message: 'Get Class Polls:', data });
     } catch (err) { console.error('Error getting class polls:', err); }
 }
 
@@ -507,7 +545,7 @@ async function getClassPollCurrent(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/current`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Class Current Poll:', data);
+        Log({ message: 'Get Class Current Poll:', data });
     } catch (err) { console.error('Error getting current poll:', err); }
 }
 
@@ -516,7 +554,7 @@ async function clearClassPolls(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/clear`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log('Clear Class Polls:', data);
+        Log({ message: 'Clear Class Polls:', data });
     } catch (err) { console.error('Error clearing polls:', err); }
 }
 
@@ -527,7 +565,7 @@ async function createClassPoll(inputValue: string, bodyValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/create`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Create Class Poll:', data);
+        Log({ message: 'Create Class Poll:', data });
     } catch (err) { console.error('Error creating poll:', err); }
 }
 
@@ -536,7 +574,7 @@ async function endClassPoll(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/end`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log('End Class Poll:', data);
+        Log({ message: 'End Class Poll:', data });
     } catch (err) { console.error('Error ending poll:', err); }
 }
 
@@ -547,7 +585,7 @@ async function respondClassPoll(inputValue: string, bodyValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/polls/response`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Respond Class Poll:', data);
+        Log({ message: 'Respond Class Poll:', data });
     } catch (err) { console.error('Error responding to poll:', err); }
 }
 
@@ -559,7 +597,7 @@ async function endOwnBreak(inputValue: string, bodyValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/break/end`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('End Own Break:', data);
+        Log({ message: 'End Own Break:', data });
     } catch (err) { console.error('Error ending own break:', err); }
 }
 
@@ -570,7 +608,7 @@ async function requestBreak(inputValue: string, bodyValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(inputValue)}/break/request`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Request Break:', data);
+        Log({ message: 'Request Break:', data });
     } catch (err) { console.error('Error requesting break:', err); }
 }
 
@@ -581,7 +619,7 @@ async function approveBreak(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(classId)}/students/${encodeURIComponent(userId)}/break/approve`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log('Approve Break:', data);
+        Log({ message: 'Approve Break:', data });
     } catch (err) { console.error('Error approving break:', err); }
 }
 
@@ -592,7 +630,7 @@ async function denyBreak(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(classId)}/students/${encodeURIComponent(userId)}/break/deny`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log('Deny Break:', data);
+        Log({ message: 'Deny Break:', data });
     } catch (err) { console.error('Error denying break:', err); }
 }
 
@@ -604,7 +642,7 @@ async function deleteHelpRequest(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(classId)}/students/${encodeURIComponent(userId)}/help`, getFetchOptions('DELETE'));
         const data = await res.json();
-        console.log('Delete Help Request:', data);
+        Log({ message: 'Delete Help Request:', data });
     } catch (err) { console.error('Error deleting help request:', err); }
 }
 
@@ -615,7 +653,7 @@ async function requestClassHelp(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/class/${encodeURIComponent(body.classId || body.id || '')}/help/request`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Request Class Help:', data);
+        Log({ message: 'Request Class Help:', data });
     } catch (err) { console.error('Error requesting help:', err); }
 }
 
@@ -625,7 +663,7 @@ async function leaveRoom(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(inputValue)}/leave`, getFetchOptions('DELETE'));
         const data = await res.json();
-        console.log('Leave Room:', data);
+        Log({ message: 'Leave Room:', data });
     } catch (err) { console.error('Error leaving room:', err); }
 }
 
@@ -633,7 +671,7 @@ async function getRoomTags() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/tags`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Room Tags:', data);
+        Log({ message: 'Get Room Tags:', data });
     } catch (err) { console.error('Error getting room tags:', err); }
 }
 
@@ -646,7 +684,7 @@ async function joinRoomByCode(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(code)}/join`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log('Join Room By Code:', data);
+        Log({ message: 'Join Room By Code:', data });
     } catch (err) { console.error('Error joining room by code:', err); }
 }
 
@@ -657,7 +695,7 @@ async function setRoomTags(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/tags`, getFetchOptions('PUT', body));
         const data = await res.json();
-        console.log('Set Room Tags:', data);
+        Log({ message: 'Set Room Tags:', data });
     } catch (err) { console.error('Error setting room tags:', err); }
 }
 
@@ -669,13 +707,13 @@ async function removeRoomLink(inputValue: string) {
         try {
             const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(roomId)}/links/${encodeURIComponent(linkId)}`, getFetchOptions('DELETE'));
             const data = await res.json();
-            console.log('Remove Room Link (by id):', data);
+            Log({ message: 'Remove Room Link (by id):', data });
         } catch (err) { console.error('Error removing room link:', err); }
     } else {
         try {
             const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(inputValue)}/links`, getFetchOptions('DELETE'));
             const data = await res.json();
-            console.log('Remove Room Link:', data);
+            Log({ message: 'Remove Room Link:', data });
         } catch (err) { console.error('Error removing room link:', err); }
     }
 }
@@ -685,7 +723,7 @@ async function getRoomLinks(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(inputValue)}/links`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Room Links:', data);
+        Log({ message: 'Get Room Links:', data });
     } catch (err) { console.error('Error getting room links:', err); }
 }
 
@@ -704,7 +742,7 @@ async function addRoomLink(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(roomId)}/links/add`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Add Room Link:', data);
+        Log({ message: 'Add Room Link:', data });
     } catch (err) { console.error('Error adding room link:', err); }
 }
 
@@ -723,7 +761,7 @@ async function updateRoomLink(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/room/${encodeURIComponent(roomId)}/links`, getFetchOptions('PUT', body));
         const data = await res.json();
-        console.log('Update Room Link:', data);
+        Log({ message: 'Update Room Link:', data });
     } catch (err) { console.error('Error updating room link:', err); }
 }
 
@@ -738,7 +776,7 @@ async function awardDigipogs(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/digipogs/award`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Award Digipogs:', data);
+        Log({ message: 'Award Digipogs:', data });
     } catch (err) { console.error('Error awarding digipogs:', err); }
 }
 
@@ -752,7 +790,7 @@ async function transferDigipogs(inputValue: string, bodyValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/digipogs/transfer`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('Transfer Digipogs:', data);
+        Log({ message: 'Transfer Digipogs:', data });
     } catch (err) { console.error('Error transferring digipogs:', err); }
 }
 
@@ -764,7 +802,7 @@ async function removeIP(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/ip/${encodeURIComponent(type)}/${encodeURIComponent(id)}`, getFetchOptions('DELETE'));
         const data = await res.json();
-        console.log('Remove IP:', data);
+        Log({ message: 'Remove IP:', data });
     } catch (err) { console.error('Error removing IP:', err); }
 }
 
@@ -773,7 +811,7 @@ async function getIPList(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/ip/${encodeURIComponent(inputValue)}`, getFetchOptions());
         const data = await res.json();
-        console.log('Get IP List:', data);
+        Log({ message: 'Get IP List:', data });
     } catch (err) { console.error('Error getting IP list:', err); }
 }
 
@@ -784,7 +822,7 @@ async function toggleIP(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/ip/${encodeURIComponent(type)}/toggle`, getFetchOptions('POST'));
         const data = await res.json();
-        console.log('Toggle IP:', data);
+        Log({ message: 'Toggle IP:', data });
     } catch (err) { console.error('Error toggling IP:', err); }
 }
 
@@ -804,7 +842,7 @@ async function updateIP(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/ip/${encodeURIComponent(type)}/${encodeURIComponent(id)}`, getFetchOptions('PUT', body));
         const data = await res.json();
-        console.log('Update IP:', data);
+        Log({ message: 'Update IP:', data });
     } catch (err) { console.error('Error updating IP:', err); }
 }
 
@@ -813,7 +851,7 @@ async function getManager() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/manager`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Manager:', data);
+        Log({ message: 'Get Manager:', data });
     } catch (err) { console.error('Error getting manager:', err); }
 }
 
@@ -821,7 +859,7 @@ async function getLogs() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/logs`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Logs:', data);
+        Log({ message: 'Get Logs:', data });
     } catch (err) { console.error('Error getting logs:', err); }
 }
 
@@ -830,7 +868,7 @@ async function getLogFile(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/logs/${encodeURIComponent(inputValue)}`, getFetchOptions());
         const data = await res.text();
-        console.log('Get Log File:', data);
+        Log({ message: 'Get Log File:', data });
     } catch (err) { console.error('Error getting log file:', err); }
 }
 
@@ -838,7 +876,7 @@ async function oauthAuthorize() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/oauth/authorize`, getFetchOptions());
         const data = await res.json();
-        console.log('OAuth Authorize:', data);
+        Log({ message: 'OAuth Authorize:', data });
     } catch (err) { console.error('Error calling oauth authorize:', err); }
 }
 
@@ -849,7 +887,7 @@ async function oauthRevoke(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/oauth/revoke`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('OAuth Revoke:', data);
+        Log({ message: 'OAuth Revoke:', data });
     } catch (err) { console.error('Error revoking oauth token:', err); }
 }
 
@@ -860,7 +898,7 @@ async function oauthToken(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/oauth/token`, getFetchOptions('POST', body));
         const data = await res.json();
-        console.log('OAuth Token:', data);
+        Log({ message: 'OAuth Token:', data });
     } catch (err) { console.error('Error requesting oauth token:', err); }
 }
 
@@ -869,7 +907,7 @@ async function getUserTransactions(inputValue: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/${encodeURIComponent(inputValue)}/transactions`, getFetchOptions());
         const data = await res.json();
-        console.log('Get User Transactions:', data);
+        Log({ message: 'Get User Transactions:', data });
     } catch (err) { console.error('Error getting user transactions:', err); }
 }
 
@@ -877,7 +915,7 @@ async function getUserPools() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/user/pools`, getFetchOptions());
         const data = await res.json();
-        console.log('Get User Pools:', data);
+        Log({ message: 'Get User Pools:', data });
     } catch (err) { console.error('Error getting user pools:', err); }
 }
 
@@ -885,7 +923,7 @@ async function getNotifications() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/notifications`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Notifications:', data);
+        Log({ message: 'Get Notifications:', data });
     } catch (err) { console.error('Error getting notifications:', err); }
 }
 
@@ -893,7 +931,7 @@ async function getNotifByID(notifId: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/notifications/${encodeURIComponent(notifId)}`, getFetchOptions());
         const data = await res.json();
-        console.log('Get Notification by ID:', data);
+        Log({ message: 'Get Notification by ID:', data });
     } catch (err) { console.error('Error getting notification by ID:', err); }
 }
 
@@ -901,7 +939,7 @@ async function markNotifAsRead(notifId: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/notifications/${encodeURIComponent(notifId)}/mark-read`, getFetchOptions("POST", { read: true }));
         const data = await res.json();
-        console.log('Mark Notification as Read:', data);
+        Log({ message: 'Mark Notification as Read:', data });
     } catch (err) { console.error('Error marking notification as read:', err); }
 }
 
@@ -909,7 +947,7 @@ async function deleteAllNotif() {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/notifications`, getFetchOptions("DELETE"));
         const data = await res.json();
-        console.log('Delete Notifications:', data);
+        Log({ message: 'Delete Notifications:', data });
     } catch (err) { console.error('Error deleting notifications:', err); }
 }
 
@@ -917,6 +955,6 @@ async function deleteNotifByID(notifId: string) {
     try {
         const res = await fetch(`${formbarUrl}/api/v1/notifications/${encodeURIComponent(notifId)}`, getFetchOptions("DELETE"));
         const data = await res.json();
-        console.log('Delete Notification by ID:', data);
+        Log({ message: 'Delete Notification by ID:', data });
     } catch (err) { console.error('Error deleting notification by ID:', err); }
 }

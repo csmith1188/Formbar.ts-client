@@ -15,8 +15,6 @@ export default function NotFound() {
     const navigate = useNavigate();
     const isMobile = useMobileDetect();
 
-    console.log('isMobile:', isMobile, 'width:', window.innerWidth);
-
     const { isDark } = useTheme();
 
     const backgroundColor = isDark ? themeColors.dark.body.background : themeColors.light.body.background;

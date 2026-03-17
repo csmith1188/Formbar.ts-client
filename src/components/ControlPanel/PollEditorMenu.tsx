@@ -120,7 +120,6 @@ export default function PollsEditorMenu() {
         // })
         // .then((res) => res.json())
         // .then((data) => {
-        //     console.log("Custom poll started:", data);
         //     socket?.emit("classUpdate", ""); // Refresh class data to show new poll
         // })
         // .catch((err) => {
@@ -285,7 +284,6 @@ export default function PollsEditorMenu() {
                                         const newAnswers = [...pollProperties.answers];
                                         newAnswers[index] = newAnswer;
                                         setPollProperties({ ...pollProperties, answers: newAnswers });
-                                        console.log(newAnswers);
                                     }}
                                     removeAnswer={() => {
                                         const newAnswers = pollProperties.answers.filter((_, i) => i !== index);

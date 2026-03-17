@@ -4,7 +4,7 @@ import {
 import { useClassData, useMobileDetect } from '../../main';
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { accessToken, formbarUrl } from '../../socket';
+import { accessToken, formbarUrl, socket } from '../../socket';
 import { useEffect } from 'react';
 
 const { Title, Text } = Typography;
@@ -31,8 +31,17 @@ export default function TimerPage() {
     const isMobile = useMobileDetect();
     const {classData} = useClassData();
 
+    function getActiveTimerDuration() {
+        if(!classData?.timer) {
+            return 0;
+        }
+        if(new Date().getTime() < classData?.timer?.startTime || new Date().getTime() > classData?.timer?.endTime) {
+            return 0;
+        }
+        return Math.max(0, (classData?.timer?.endTime - classData?.timer?.startTime) / 1000);
+    }
+
     function startTimer(duration: number) {
-        console.log(`Starting timer for ${duration} seconds`);
 
         fetch(`${formbarUrl}/api/v1/class/${classData?.id}/timer/start`, {
             method: "POST",
@@ -45,6 +54,24 @@ export default function TimerPage() {
         .then((res) => {
             if (!res.ok) {
                 throw new Error("Failed to start timer");
+            }
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+    }
+
+    function stopTimer() {
+        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/timer/clear`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            }
+        })
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error("Failed to clear timer");
             }
         })
         .catch((err) => {
@@ -85,13 +112,28 @@ export default function TimerPage() {
                                         }}
                                         strokeLinecap='round'
                                     />
-                                    <Button type='primary' onClick={()=> {startTimer(timer.duration)}}>
+                                    <Button type='primary' variant='solid' onClick={()=> {timer.duration === getActiveTimerDuration() ? stopTimer() : startTimer(timer.duration)}} color={
+                                        timer.duration === getActiveTimerDuration() ? "red" : 'green'
+                                    }>
                                         {
                                             isMobile ? (
                                                 <Flex align="center" justify="center" gap={5}>
-                                                    <IonIcon icon={IonIcons.play} />
+                                                    <IonIcon icon={timer.duration === getActiveTimerDuration() ? IonIcons.stop : IonIcons.play } />
                                                 </Flex>
-                                            ) : "Start"
+                                            ) : (
+                                                timer.duration === getActiveTimerDuration() ? "Stop" : "Start"
+                                            )
+                                        }
+                                    </Button>
+                                    <Button type='primary' variant='solid' color={"red"} disabled>
+                                        {
+                                            isMobile ? (
+                                                <Flex align="center" justify="center" gap={5}>
+                                                    <IonIcon icon={IonIcons.trash} />
+                                                </Flex>
+                                            ) : (
+                                                "Clear"
+                                            )
                                         }
                                     </Button>
                                 </Flex>
