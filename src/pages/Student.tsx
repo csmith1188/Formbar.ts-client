@@ -197,40 +197,46 @@ export default function Student() {
 
 	}, [userData, navigate]);
     
-        useEffect(() => {
-            if (!classData?.timer?.active) return;
-    
-            const startMs = toEpochMs(classData.timer.startTime);
-            const endMs = toEpochMs(classData.timer.endTime);
-    
-            if (startMs === null || endMs === null || endMs <= startMs) {
-                return;
-            }
-    
-            let animationFrameId = 0;
-            let cancelled = false;
-    
-            const animate = () => {
-                const now = Date.now();
-                const t = Math.min(Math.max((now - startMs) / (endMs - startMs), 0), 1);
-                const lerpPercent = 100 * t;
+    useEffect(() => {
+        if (!classData?.timer?.startTime || classData.timer.startTime <= 0) return;
 
-                setTimerLerpPercent(lerpPercent);
-    
-                if (t < 1 && !cancelled) {
-                    animationFrameId = requestAnimationFrame(animate);
-                }
-            };
-    
-            animationFrameId = requestAnimationFrame(animate);
-    
-            return () => {
-                cancelled = true;
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                }
-            };
-        }, [classData?.timer?.active, classData?.timer?.startTime, classData?.timer?.endTime]);
+        const timerActive = !!classData?.timer?.active;
+
+        const startMs = toEpochMs(classData.timer.startTime);
+        const endMs = toEpochMs(classData.timer.endTime);
+
+        if (startMs === null || endMs === null || endMs <= startMs) {
+            return;
+        }
+
+		const totalMs = endMs - startMs;
+
+		const updateTimerState = () => {
+            const now = Date.now();
+			const clampedNow = Math.min(Math.max(now, startMs), endMs);
+			const percent = ((clampedNow - startMs) / totalMs) * 100;
+			setTimerLerpPercent((prev) => (Math.abs(prev - percent) >= 0.5 ? percent : prev));
+        };
+
+		updateTimerState();
+
+		if (!timerActive) {
+			return;
+		}
+
+		const intervalId = window.setInterval(updateTimerState, 250);
+
+        return () => {
+			window.clearInterval(intervalId);
+        };
+    }, [classData?.timer?.startTime, classData?.timer?.endTime, classData?.timer?.active]);
+
+	const timerStartMs = toEpochMs(classData?.timer?.startTime);
+	const timerEndMs = toEpochMs(classData?.timer?.endTime);
+	const timerDurationMs =
+		timerStartMs !== null && timerEndMs !== null && timerEndMs > timerStartMs
+			? timerEndMs - timerStartMs
+			: 0;
 
 	return (
 		<>
@@ -263,7 +269,7 @@ export default function Student() {
 						align="center"
 						vertical={isMobileView || !classData?.poll.status}
 					>
-						{classData?.poll.responses.length > 0 ? (
+						{classData?.poll.responses.length > 0 || classData?.timer.startTime > 0 ? (
 							<Flex
 								justify="center"
 								align="center"
@@ -289,12 +295,9 @@ export default function Student() {
 									timer={{
 										active: classData?.timer?.active ?? false,
 										current: timerLerpPercent,
-										duration:
-											toEpochMs(classData?.timer?.endTime) !== null &&
-											toEpochMs(classData?.timer?.startTime) !== null
-												? toEpochMs(classData.timer.endTime)! - toEpochMs(classData.timer.startTime)!
-												: 0,
+										duration: timerDurationMs,
 									}}
+                                    onlyTimer={classData?.timer?.startTime && (!classData?.poll?.status && classData.poll.responses.length === 0)}
 								/>
 							</Flex>
 						) : null}
@@ -381,14 +384,14 @@ export default function Student() {
 								) : null}
                                 </Flex>
 							</Flex>
-						) : !classData?.poll.prompt  ? (
-							<Title>There is no current poll.</Title>
+						) : !classData?.poll.prompt && !classData?.timer?.startTime ? (
+							<Title style={{textAlign:'center'}}>There is no current poll.</Title>
 						) : (
                             null
 						)}
 
 						{!classData?.isActive ? (
-							<Title>Class is not active.</Title>
+							<Title style={{textAlign:'center'}}>Class is not active.</Title>
 						) : null}
 					</Flex>
 

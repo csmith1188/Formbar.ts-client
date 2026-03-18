@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Input, Select, Typography } from "antd";
+import { Button, Card, Flex, Input, Modal, Select, Typography } from "antd";
 const { Title, Text } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import Log from "../debugLogger";
@@ -14,6 +14,8 @@ export default function ClassesPage() {
 	const { userData, setUserData } = useUserData();
 	const isMobileView = useMobileDetect();
 	const { settings } = useSettings();
+
+    const [modal, contextHolder] = Modal.useModal();
 
 	const [joinClassCode, setJoinClassCode] = useState<string>("");
 
@@ -46,31 +48,35 @@ export default function ClassesPage() {
 
 	useEffect(() => {
 		if (!userData) return;
-
-		fetch(`${formbarUrl}/api/v1/user/${userData.id}/classes`, {
-			method: "GET",
-			headers: {
-				Authorization: `${accessToken}`,
-			},
-		})
-			.then((res) => res.json())
-			.then((response) => {
-				const { data } = response;
-				Log({ message: "Classes data", data });
-
-				const owned = data.filter((cls: any) => cls.isOwner === true);
-				const joined = data.filter((cls: any) => cls.isOwner === false);
-				setOwnedClasses(owned);
-				setJoinedClasses(joined);
-			})
-			.catch((err) => {
-				Log({
-					message: "Error fetching classes data",
-					data: err,
-					level: "error",
-				});
-			});
+		getClasses();
 	}, [userData]);
+
+    function getClasses() {
+        if (!userData) return;
+
+        fetch(`${formbarUrl}/api/v1/user/${userData.id}/classes`, {
+            method: "GET",
+            headers: {
+                Authorization: `${accessToken}`,
+            },
+        })
+        .then((res) => res.json())
+        .then((response) => {
+            const { data } = response;
+            Log({ message: "Classes data", data });
+            const owned = data.filter((cls: any) => cls.isOwner === true);
+            const joined = data.filter((cls: any) => cls.isOwner === false);
+            setOwnedClasses(owned);
+            setJoinedClasses(joined);
+        })
+        .catch((err) => {
+            Log({
+                message: "Error fetching classes data",
+                data: err,
+                level: "error",
+            });
+        });
+    }
 
     function deleteClass() {
         if (selectedClass === null) {
@@ -78,6 +84,29 @@ export default function ClassesPage() {
             return;
         }
         Log({ message: "Selected class for deletion", data: { selectedClass } });
+
+        modal.warning({
+            title: "Are you sure you want to delete this class?",
+            centered: true,
+            content: 'This action is irreversible, and you will not be able to recover this class.',
+            okCancel: true,
+            onOk: () => {
+                fetch(`${formbarUrl}/api/v1/room/${selectedClass}/`, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                })
+                .then((res) => res.json())
+                .then((res) => {
+                    Log({message: "Class deleted:", data: res});
+                    getClasses(); // Refresh class lists after deletion
+                    setSelectedClass(null); // Clear selected class
+                })
+            }
+        })
+
+
     }
 
 	function enterClass() {
@@ -293,6 +322,7 @@ export default function ClassesPage() {
 	return (
 		<>
 			<FormbarHeader />
+            {contextHolder}
 
 			<Flex
 				vertical

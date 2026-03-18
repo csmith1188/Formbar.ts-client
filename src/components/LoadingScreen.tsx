@@ -113,7 +113,6 @@ function randomText() {
 		"Filling Pog Meters...",
 		"Releasing Half-Life 3...",
 		"I'm the Formboy!",
-		"I'm the Femboy!",
 		"Yo, Gurt!!",,
         "Steven, fix it!!",
         "PR #85",

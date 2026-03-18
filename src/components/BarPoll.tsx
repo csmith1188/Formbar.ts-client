@@ -3,7 +3,7 @@ import { useClassData } from "../main";
 import {
 	textColorForBackground,
 	calculateFontSize,
-} from "../CustomStyleFunctions";
+} from "../GlobalFunctions";
 
 export default function ControlPanelPoll({
 	classData,

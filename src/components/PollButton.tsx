@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
 	darkenButtonColor,
 	textColorForBackground,
-} from "../CustomStyleFunctions";
+} from "../GlobalFunctions";
 
 type answer = {
 	answer: string;

@@ -9,7 +9,11 @@ import {
 	Input,
 	Switch,
 	Grid,
+    Card,
+    Progress,
+    Typography,
 } from "antd";
+const { Text } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
@@ -32,7 +36,7 @@ import { useNavigate } from "react-router-dom";
 import TimerPage from "../components/ControlPanel/TimerPage";
 import FullCircularPoll from "../components/CircularPoll";
 import type { Poll } from "../types";
-import { textColorForBackground } from "../CustomStyleFunctions";
+import { formatTime, textColorForBackground } from "../GlobalFunctions";
 
 function toEpochMs(value: unknown): number | null {
 	if (typeof value === "number" && Number.isFinite(value)) {
@@ -148,6 +152,9 @@ export default function ControlPanel() {
 	const [menuItems, setMenuItems] = useState(items);
 	const [openModalId, setOpenModalId] = useState<number | null>(null);
 
+    const [timerPercent, setTimerPercent] = useState(0);
+    const [timerRemainingSeconds, setTimerRemainingSeconds] = useState(0);
+
 	const [classActive, setClassActive] = useState<boolean>(
 		() => !!classData?.isActive,
 	);
@@ -199,37 +206,53 @@ export default function ControlPanel() {
 	}, [userData, navigate]);
 
     useEffect(() => {
-		if (!classData?.timer?.active) return;
+        if (!classData?.timer?.startTime || classData.timer.startTime <= 0) {
+            setTimerPercent(0);
+            setTimerRemainingSeconds(0);
+            return;
+        }
 
-		const startMs = toEpochMs(classData.timer.startTime);
-		const endMs = toEpochMs(classData.timer.endTime);
+        const timerActive = !!classData?.timer?.active;
+        const startMs = toEpochMs(classData.timer.startTime);
+        const endMs = toEpochMs(classData.timer.endTime);
 
-		if (startMs === null || endMs === null || endMs <= startMs) {
-			return;
-		}
+        if (startMs === null || endMs === null || endMs <= startMs) {
+            setTimerPercent(0);
+            setTimerRemainingSeconds(0);
+            return;
+        }
 
-		let animationFrameId = 0;
-		let cancelled = false;
+        const totalMs = endMs - startMs;
 
-		const animate = () => {
-			const now = Date.now();
-			const t = Math.min(Math.max((now - startMs) / (endMs - startMs), 0), 1);
-			const lerpPercent = 100 * t;
+        const updateTimerState = () => {
+            const now = Date.now();
+            const clampedNow = Math.min(Math.max(now, startMs), endMs);
+            const percent = ((clampedNow - startMs) / totalMs) * 100;
+            const remainingSeconds = Math.max(0, Math.ceil((endMs - clampedNow) / 1000));
 
-			if (t < 1 && !cancelled) {
-				animationFrameId = requestAnimationFrame(animate);
-			}
-		};
+            setTimerPercent((prev) => (Math.abs(prev - percent) >= 0.5 ? percent : prev));
+            setTimerRemainingSeconds((prev) => (prev !== remainingSeconds ? remainingSeconds : prev));
+        };
 
-		animationFrameId = requestAnimationFrame(animate);
+        updateTimerState();
 
-		return () => {
-			cancelled = true;
-			if (animationFrameId) {
-				cancelAnimationFrame(animationFrameId);
-			}
-		};
-	}, [classData?.timer?.active, classData?.timer?.startTime, classData?.timer?.endTime]);
+        if (!timerActive) {
+            return;
+        }
+
+        const intervalId = window.setInterval(updateTimerState, 250);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [classData?.timer?.startTime, classData?.timer?.endTime, classData?.timer?.active]);
+
+    const timerStartMs = toEpochMs(classData?.timer?.startTime);
+    const timerEndMs = toEpochMs(classData?.timer?.endTime);
+    const timerDurationSeconds =
+        timerStartMs !== null && timerEndMs !== null && timerEndMs > timerStartMs
+            ? Math.round((timerEndMs - timerStartMs) / 1000)
+            : 0;
 
 	return (
 		<>
@@ -237,7 +260,7 @@ export default function ControlPanel() {
 
 			<ControlPanelPoll classData={classData} height="40px" />
 
-			<Flex
+            <Flex
 				style={{
 					height: "calc(100% - 40px)",
 				}}
@@ -275,6 +298,115 @@ export default function ControlPanel() {
 					}}
 					vertical
 				>
+					{
+                        classData?.timer?.startTime ? (
+                            <Card styles={{body: {padding: '10px'}}}>
+                                <Flex align="center" justify="space-evenly" gap={10} vertical={isMobileDevice}>
+                                    <Progress
+                                        type="dashboard"
+                                        percent={Math.round(timerPercent)}
+                                        
+                                        format={() => formatTime(timerRemainingSeconds)}
+                                        strokeColor={{
+                                            '0%': 'rgb(94, 158, 230)',
+                                            '100%': 'rgba(41, 96, 167, 0.9)',
+                                        }}
+                                        strokeWidth={15}
+                                        gapDegree={50}
+                                        size={isMobileDevice ? 40 : 75}
+                                    />
+                                    {isMobileDevice ? null : <Text>{formatTime(timerDurationSeconds)} Timer</Text>}
+                                </Flex>
+                                <Flex gap={isMobileDevice ? 5 : 10} style={{marginTop: 10}} align="center" justify="center" vertical={isMobileDevice}>
+                                    <Button variant="solid" color={classData?.timer.active ? "red" : "green"} style={{marginTop: 10, width: '100%'}}
+                                        onClick={() => {
+                                            if (!classData) return;
+                                            if (classData.timer.active) {
+                                                // Pause timer
+                                                fetch(`${formbarUrl}/api/v1/class/${classData.id}/timer/pause`, {
+                                                    method: "POST",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                        "Authorization": `${accessToken}`,
+                                                    },
+                                                })
+                                                .then((res) => {
+                                                    if (!res.ok) {
+                                                        throw new Error("Failed to pause timer");
+                                                    }
+                                                    return res.json();
+                                                })
+                                                .then((data) => {
+                                                    Log({message: "Timer paused:", data});
+                                                })
+                                                .catch((err) => {
+                                                    Log({message: "Error pausing timer:", data: err, level: 'error'});
+                                                });
+                                            } else {
+                                                // Resume timer
+                                                fetch(`${formbarUrl}/api/v1/class/${classData.id}/timer/resume`, {
+                                                    method: "POST",
+                                                    headers: {
+                                                        "Content-Type": "application/json",
+                                                        "Authorization": `${accessToken}`,
+                                                    },
+                                                })
+                                                .then((res) => {
+                                                    if (!res.ok) {
+                                                        throw new Error("Failed to resume timer");
+                                                    }
+                                                    return res.json();
+                                                })
+                                                .then((data) => {
+                                                    Log({message: "Timer resumed:", data});
+                                                })
+                                                .catch((err) => {
+                                                    Log({message: "Error resuming timer:", data: err, level: 'error'});
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        {
+                                            classData?.timer.active ? (
+                                                isMobileDevice ? <IonIcon icon={IonIcons.pause} /> : "Pause"
+                                            ) : (
+                                                isMobileDevice ? <IonIcon icon={IonIcons.play} /> : "Resume"
+                                            )
+                                        }
+                                    </Button>
+                                    <Button variant="solid" color="red" style={{marginTop: 10, width: '100%'}}
+                                        onClick={() => {
+                                            if (!classData) return;
+                                            // Clear timer
+                                            fetch(`${formbarUrl}/api/v1/class/${classData.id}/timer/clear`, {
+                                                method: "POST",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                    "Authorization": `${accessToken}`,
+                                                },
+                                            })
+                                            .then((res) => {
+                                                if (!res.ok) {
+                                                    throw new Error("Failed to clear timer");
+                                                }
+                                                return res.json();
+                                            })
+                                            .then((data) => {
+                                                Log({message: "Timer cleared:", data});
+                                            })
+                                            .catch((err) => {
+                                                Log({message: "Error clearing timer:", data: err, level: 'error'});
+                                            });
+                                        }}
+                                    >
+                                        {
+                                            isMobileDevice ? <IonIcon icon={IonIcons.trash} /> : "Clear"
+                                        }
+                                    </Button>
+                                </Flex>
+                            </Card>
+                        ) : null
+                    }
 
                     <Modal
                         centered
@@ -392,7 +524,7 @@ export default function ControlPanel() {
 							</Col>
 							<Col span={12} style={isMobileDevice ? mobileButtonColStyle : undefined}>
                                 <Button
-                                    disabled={!classData || !classData.poll.status || classData.poll.prompt == ""}
+                                    disabled={!classData || classData.poll.responses.length === 0}
                                     color="orange"
                                     variant="solid"
                                     style={buttonStyle}
@@ -452,6 +584,8 @@ export default function ControlPanel() {
 						</Row>
 					</div>
 				</Flex>
+
+                
 
 				<div
 					style={{

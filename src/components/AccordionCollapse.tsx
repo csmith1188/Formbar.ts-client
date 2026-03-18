@@ -1,6 +1,6 @@
 import { Button, Flex, InputNumber, Modal, Select, Tooltip, notification } from "antd";
 import { Activity, useState, useEffect } from "react";
-import { textColorForBackground } from "../CustomStyleFunctions";
+import { textColorForBackground } from "../GlobalFunctions";
 import { PermissionLevels, type Student } from "../types";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";

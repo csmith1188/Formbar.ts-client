@@ -464,6 +464,14 @@ export default function Dashboard({
                             padding: isMobile ? "20px 15px" : "0",
                         }}
                     >
+                        {
+                            // Show message if only one student (the teacher) is in the class
+                            students.length === 1 && (
+                                <p style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.75 }}>
+                                    No students found.
+                                </p>
+                            )
+                        }
                         {displayedStudents
                             .filter((student) =>
                                 student.displayName

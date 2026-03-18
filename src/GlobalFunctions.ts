@@ -1,3 +1,12 @@
+export function formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if(mins > 0) {
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    }
+    return `${secs}s`;
+}
+
 export function textColorForBackground(bgColor: string) {
 	if (bgColor?.length === 7) {
 		let r = parseInt(bgColor.slice(1, 3), 16);

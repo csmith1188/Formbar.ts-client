@@ -47,6 +47,7 @@ export type ClassData = {
         status: boolean;
         totalResponders: number;
         totalResponses: number;
+        startTime: number;
         weight: number;
 	};
 	permissions: {

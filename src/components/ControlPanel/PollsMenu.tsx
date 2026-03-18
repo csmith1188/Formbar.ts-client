@@ -1,6 +1,6 @@
 import { Button, Divider, Flex, Input, Modal, Switch, Typography } from "antd";
 const { Text, Title } = Typography;
-import { textColorForBackground } from "../../CustomStyleFunctions";
+import { textColorForBackground } from "../../GlobalFunctions";
 import { socket } from "../../socket";
 import { isMobile, useClassData, useMobileDetect } from "../../main";
 
