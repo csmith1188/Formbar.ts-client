@@ -34,41 +34,6 @@ export default function TimerPage() {
     const [customMinutes, setCustomMinutes] = useState(1);
     const [customSeconds, setCustomSeconds] = useState(0);
 
-    function toEpochMs(value: unknown): number | null {
-        if (typeof value === 'number' && Number.isFinite(value)) {
-            return value < 1_000_000_000_000 ? value * 1000 : value;
-        }
-
-        if (typeof value === 'string') {
-            const asNumber = Number(value);
-            if (!Number.isNaN(asNumber) && Number.isFinite(asNumber)) {
-                return asNumber < 1_000_000_000_000 ? asNumber * 1000 : asNumber;
-            }
-
-            const parsedDate = Date.parse(value);
-            if (!Number.isNaN(parsedDate)) {
-                return parsedDate;
-            }
-        }
-
-        return null;
-    }
-
-    function getActiveTimerDuration() {
-        if(!classData?.timer) {
-            return 0;
-        }
-
-        const startMs = toEpochMs(classData.timer.startTime);
-        const endMs = toEpochMs(classData.timer.endTime);
-
-        if (startMs === null || endMs === null || endMs <= startMs) {
-            return 0;
-        }
-
-        return Math.max(0, Math.round((endMs - startMs) / 1000));
-    }
-
     function getCustomTimerTotalSeconds() {
         const minutes = Math.max(0, Number(customMinutes || 0));
         const seconds = Math.min(59, Math.max(0, Number(customSeconds || 0)));
@@ -82,8 +47,12 @@ export default function TimerPage() {
     }
 
     function startTimer(duration: number) {
+        if (!classData?.id) {
+            Log({ message: "Cannot start timer: no active class.", level: "warn" });
+            return;
+        }
 
-        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/timer/start`, {
+        fetch(`${formbarUrl}/api/v1/class/${classData.id}/timer/start`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

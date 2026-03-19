@@ -34,27 +34,7 @@ import Statistics from "../components/ControlPanel/StatisticsPage";
 import { isMobile } from "../main";
 import { useNavigate } from "react-router-dom";
 import TimerPage from "../components/ControlPanel/TimerPage";
-import { formatTime, textColorForBackground } from "../GlobalFunctions";
-
-function toEpochMs(value: unknown): number | null {
-	if (typeof value === "number" && Number.isFinite(value)) {
-		return value < 1_000_000_000_000 ? value * 1000 : value;
-	}
-
-	if (typeof value === "string") {
-		const asNumber = Number(value);
-		if (!Number.isNaN(asNumber) && Number.isFinite(asNumber)) {
-			return asNumber < 1_000_000_000_000 ? asNumber * 1000 : asNumber;
-		}
-
-		const parsedDate = Date.parse(value);
-		if (!Number.isNaN(parsedDate)) {
-			return parsedDate;
-		}
-	}
-
-	return null;
-}
+import { formatTime, textColorForBackground, toEpochMs } from "../GlobalFunctions";
 
 const items = [
 	{

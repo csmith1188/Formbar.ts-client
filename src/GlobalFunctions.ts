@@ -1,3 +1,23 @@
+export function toEpochMs(value: unknown): number | null {
+	if (typeof value === "number" && Number.isFinite(value)) {
+		return value < 1_000_000_000_000 ? value * 1000 : value;
+	}
+
+	if (typeof value === "string") {
+		const asNumber = Number(value);
+		if (!Number.isNaN(asNumber) && Number.isFinite(asNumber)) {
+			return asNumber < 1_000_000_000_000 ? asNumber * 1000 : asNumber;
+		}
+
+		const parsedDate = Date.parse(value);
+		if (!Number.isNaN(parsedDate)) {
+			return parsedDate;
+		}
+	}
+
+	return null;
+}
+
 export function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

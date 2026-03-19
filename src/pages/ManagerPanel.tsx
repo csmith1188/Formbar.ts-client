@@ -189,13 +189,21 @@ export default function ManagerPanel() {
                         }
                     }
                 )
-                .then((res) => res.json())
-                .then((resp) => {
-                    if(resp.success) {
-                        setIsLoading(true);
-						setInitialLoad(false);
-						setRefreshNonce((value) => value + 1);
+                .then(async (res) => {
+                    let resp: any = null;
+                    try { resp = await res.json(); } catch { resp = null; }
+                    if (!res.ok) {
+                        Log({ message: "Failed to delete user:", data: resp, level: "error" });
+                        return;
                     }
+                    if (resp?.success) {
+                        setIsLoading(true);
+                        setInitialLoad(false);
+                        setRefreshNonce((value) => value + 1);
+                    }
+                })
+                .catch((err) => {
+                    Log({ message: "Error deleting user:", data: err, level: "error" });
                 });
             }
         })
@@ -222,13 +230,21 @@ export default function ManagerPanel() {
                         }
                     }
                 )
-                .then((res) => res.json())
-                .then((resp) => {
-                    if(resp.success) {
-                        setIsLoading(true);
-						setInitialLoad(false);
-						setRefreshNonce((value) => value + 1);
+                .then(async (res) => {
+                    let resp: any = null;
+                    try { resp = await res.json(); } catch { resp = null; }
+                    if (!res.ok) {
+                        Log({ message: "Failed to ban user:", data: resp, level: "error" });
+                        return;
                     }
+                    if (resp?.success) {
+                        setIsLoading(true);
+                        setInitialLoad(false);
+                        setRefreshNonce((value) => value + 1);
+                    }
+                })
+                .catch((err) => {
+                    Log({ message: "Error banning user:", data: err, level: "error" });
                 });
             }
         })
@@ -256,13 +272,21 @@ export default function ManagerPanel() {
                         }
                     }
                 )
-                .then((res) => res.json())
-                .then((resp) => {
-                    if(resp.success) {
-                        setIsLoading(true);
-						setInitialLoad(false);
-						setRefreshNonce((value) => value + 1);
+                .then(async (res) => {
+                    let resp: any = null;
+                    try { resp = await res.json(); } catch { resp = null; }
+                    if (!res.ok) {
+                        Log({ message: "Failed to unban user:", data: resp, level: "error" });
+                        return;
                     }
+                    if (resp?.success) {
+                        setIsLoading(true);
+                        setInitialLoad(false);
+                        setRefreshNonce((value) => value + 1);
+                    }
+                })
+                .catch((err) => {
+                    Log({ message: "Error unbanning user:", data: err, level: "error" });
                 });
             }
         })

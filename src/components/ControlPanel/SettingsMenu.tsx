@@ -251,15 +251,13 @@ export default function SettingsMenu() {
                                                 Log({ message: "Class deleted:", data: body });
                                                 notification.success({
                                                     title: "Class deleted",
-                                                    message: "Class deleted",
                                                     description: "The class has been deleted successfully.",
                                                 });
                                             })
                                             .catch((error) => {
-                                                console.error("Failed to delete class:", error);
+                                                Log({ message: "Failed to delete class:", data: error, level: "error" });
                                                 notification.error({
-                                                    title: "Error",
-                                                    message: "Failed to delete class",
+                                                    title: "Failed to delete class",
                                                     description:
                                                     (error && error.message) || "An unexpected error occurred while deleting the class.",
                                                 });

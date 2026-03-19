@@ -97,11 +97,24 @@ export default function ClassesPage() {
                         Authorization: `Bearer ${accessToken}`
                     }
                 })
-                .then((res) => res.json())
-                .then((res) => {
-                    Log({message: "Class deleted:", data: res});
-                    getClasses(); // Refresh class lists after deletion
-                    setSelectedClass(null); // Clear selected class
+                .then(async (res) => {
+                    let body: any = null;
+                    try {
+                        body = await res.json();
+                    } catch {
+                        body = null;
+                    }
+                    if (!res.ok) {
+                        const message = (body && (body.detail || body.message)) || "Failed to delete class.";
+                        Log({ message: "Failed to delete class:", data: message, level: "error" });
+                        return;
+                    }
+                    Log({message: "Class deleted:", data: body});
+                    getClasses();
+                    setSelectedClass(null);
+                })
+                .catch((err) => {
+                    Log({ message: "Error deleting class:", data: err, level: "error" });
                 })
             }
         })
@@ -226,7 +239,7 @@ export default function ClassesPage() {
 		fetch(`${formbarUrl}/api/v1/class/create`, {
 			method: "POST",
 			headers: {
-				Bearer : `Bearer ${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ name: createClassName }),
