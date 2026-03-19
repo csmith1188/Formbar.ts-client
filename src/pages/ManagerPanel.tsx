@@ -83,7 +83,7 @@ export default function ManagerPanel() {
 		fetch(`${formbarUrl}/api/v1/manager/?${params.toString()}`, {
 			method: "GET",
 			headers: {
-				Authorization: `${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 			signal: abortController.signal,
 		})
@@ -93,18 +93,14 @@ export default function ManagerPanel() {
 				Log({ message: "Manager panel data", data });
 
 				const userItems = Array.isArray(data?.users) ? data.users : [];
-				const total =
-					typeof data?.pagination?.total === "number"
-						? data.pagination.total
-						: userItems.length;
 
                 const unbannedUsers = userItems.filter((user: ManagerPanelUser) => user.permissions > 0);
-                const bannedUsers = userItems.filter((user: ManagerPanelUser) => user.permissions === 0);
+                const bannedUserItems  = userItems.filter((user: ManagerPanelUser) => user.permissions === 0);
 
 				setUsers(unbannedUsers);
-                setBannedUsers(bannedUsers);
+                setBannedUsers(bannedUserItems);
 
-				setTotalUsers(total);
+				setTotalUsers(unbannedUsers.length);
 			})
 			.catch((err) => {
 				if (err?.name === "AbortError") {
@@ -146,7 +142,7 @@ export default function ManagerPanel() {
 		fetch(`${formbarUrl}/api/v1/user/${userId}/verify`, {
 			method: "PATCH",
 			headers: {
-				Authorization: `${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		})
 			.then((res) => res.json())
@@ -185,7 +181,7 @@ export default function ManagerPanel() {
                     {
                         method: "DELETE",
                         headers: {
-                            Authorization: `${accessToken}`
+                            Authorization: `Bearer ${accessToken}`
                         }
                     }
                 )
@@ -226,7 +222,7 @@ export default function ManagerPanel() {
                     {
                         method: "PATCH",
                         headers: {
-                            Authorization: `${accessToken}`
+                            Authorization: `Bearer ${accessToken}`
                         }
                     }
                 )
@@ -268,7 +264,7 @@ export default function ManagerPanel() {
                     {
                         method: "PATCH",
                         headers: {
-                            Authorization: `${accessToken}`
+                            Authorization: `Bearer ${accessToken}`
                         }
                     }
                 )
@@ -531,7 +527,7 @@ export default function ManagerPanel() {
 
 					{ isMobile ? (
                         <Flex vertical gap={10} style={{ margin: "10px" }}>
-                            {Object.keys(users).length > 0 ? (
+                            {users.length > 0 ? (
                                 users.map((user, index) => renderUserCard(user, index, true))
                             ) : (
                                 <Flex justify="center" style={{ width: "100%" }}>
@@ -541,7 +537,7 @@ export default function ManagerPanel() {
                         </Flex>
                     ) : (
                         <Row gutter={[8, 8]} style={{ margin: "10px" }}>
-                            {Object.keys(users).length > 0 ? (
+                            {users.length > 0 ? (
 								users.map((user, index) => renderUserCard(user, index, false))
                             ) : (
                                 <Flex justify="center" style={{ width: "100%" }}>

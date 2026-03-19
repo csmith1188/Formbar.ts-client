@@ -114,7 +114,7 @@ export default function PollsEditorMenu() {
         //     method: "POST",
         //     headers: {
         //         "Content-Type": "application/json",
-        //         "Authorization": `${accessToken}`,
+        //         "Authorization": `Bearer ${accessToken}`,
         //     },
         //     body: JSON.stringify(pollProperties),
         // })

@@ -303,7 +303,7 @@ export default function ControlPanel() {
                                                     method: "POST",
                                                     headers: {
                                                         "Content-Type": "application/json",
-                                                        "Authorization": `${accessToken}`,
+                                                        "Authorization": `Bearer ${accessToken}`,
                                                     },
                                                 })
                                                 .then((res) => {
@@ -324,7 +324,7 @@ export default function ControlPanel() {
                                                     method: "POST",
                                                     headers: {
                                                         "Content-Type": "application/json",
-                                                        "Authorization": `${accessToken}`,
+                                                        "Authorization": `Bearer ${accessToken}`,
                                                     },
                                                 })
                                                 .then((res) => {
@@ -358,7 +358,7 @@ export default function ControlPanel() {
                                                 method: "POST",
                                                 headers: {
                                                     "Content-Type": "application/json",
-                                                    "Authorization": `${accessToken}`,
+                                                    "Authorization": `Bearer ${accessToken}`,
                                                 },
                                             })
                                             .then((res) => {
@@ -478,7 +478,7 @@ export default function ControlPanel() {
                                             method: "POST",
                                             headers: {
                                                 "Content-Type": "application/json",
-                                                "Authorization": `${accessToken}`,
+                                                "Authorization": `Bearer ${accessToken}`,
                                             },
                                         })
                                         .then((res) => {
@@ -518,7 +518,7 @@ export default function ControlPanel() {
                                             method: "POST",
                                             headers: {
                                                 "Content-Type": "application/json",
-                                                "Authorization": `${accessToken}`,
+                                                "Authorization": `Bearer ${accessToken}`,
                                             },
                                         })
                                         .then((res) => {

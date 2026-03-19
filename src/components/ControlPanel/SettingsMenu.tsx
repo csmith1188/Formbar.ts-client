@@ -55,7 +55,7 @@ export default function SettingsMenu() {
 		fetch(`${formbarUrl}/api/v1/room/${classData.id}/links`, {
 			method: "GET",
 			headers: {
-				"Authorization": `${accessToken}`,
+				"Authorization": `Bearer ${accessToken}`,
 			}
 		})
 		.then((res) => res.json())
@@ -87,7 +87,7 @@ export default function SettingsMenu() {
         fetch(`${formbarUrl}/api/v1/room/${classData?.id}/links/add`, {
             method: "POST",
             headers: {
-                "Authorization": `${accessToken}`,
+                "Authorization": `Bearer ${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(newLinkInput)
@@ -112,7 +112,7 @@ export default function SettingsMenu() {
         fetch(`${formbarUrl}/api/v1/room/${classData?.id}/links/remove`, {
             method: "POST",
             headers: {
-                "Authorization": `${accessToken}`,
+                "Authorization": `Bearer ${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(linkToRemove)
@@ -140,7 +140,7 @@ export default function SettingsMenu() {
         fetch(`${formbarUrl}/api/v1/room/${classData?.id}/tags/`, {
             method: "PUT",
             headers: {
-                "Authorization": `${accessToken}`,
+                "Authorization": `Bearer ${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ tags: [...classTags, newTagInput] })
@@ -232,7 +232,7 @@ export default function SettingsMenu() {
                                             fetch(`${formbarUrl}/api/v1/room/${classData?.id}/`, {
                                                 method: "DELETE",
                                                 headers: {
-                                                    Authorization: `${accessToken}`
+                                                    Authorization: `Bearer ${accessToken}`
                                                 }
                                             })
                                             .then(async (response) => {
