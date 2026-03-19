@@ -4,11 +4,9 @@ import {
 	Col,
 	Flex,
 	Button,
-	Tooltip,
 	Modal,
 	Input,
 	Switch,
-	Grid,
     Card,
     Progress,
     Typography,
@@ -305,7 +303,7 @@ export default function ControlPanel() {
                                                     method: "POST",
                                                     headers: {
                                                         "Content-Type": "application/json",
-                                                        "Authorization": `Bearer ${accessToken}`,
+                                                        "Authorization": `${accessToken}`,
                                                     },
                                                 })
                                                 .then((res) => {
@@ -326,7 +324,7 @@ export default function ControlPanel() {
                                                     method: "POST",
                                                     headers: {
                                                         "Content-Type": "application/json",
-                                                        "Authorization": `Bearer ${accessToken}`,
+                                                        "Authorization": `${accessToken}`,
                                                     },
                                                 })
                                                 .then((res) => {
@@ -360,7 +358,7 @@ export default function ControlPanel() {
                                                 method: "POST",
                                                 headers: {
                                                     "Content-Type": "application/json",
-                                                    "Authorization": `Bearer ${accessToken}`,
+                                                    "Authorization": `${accessToken}`,
                                                 },
                                             })
                                             .then((res) => {
@@ -480,7 +478,7 @@ export default function ControlPanel() {
                                             method: "POST",
                                             headers: {
                                                 "Content-Type": "application/json",
-                                                "Authorization": `Bearer ${accessToken}`,
+                                                "Authorization": `${accessToken}`,
                                             },
                                         })
                                         .then((res) => {
@@ -520,7 +518,7 @@ export default function ControlPanel() {
                                             method: "POST",
                                             headers: {
                                                 "Content-Type": "application/json",
-                                                "Authorization": `Bearer ${accessToken}`,
+                                                "Authorization": `${accessToken}`,
                                             },
                                         })
                                         .then((res) => {

@@ -36,7 +36,7 @@ const getFetchOptions = (method = "GET", body?: any) => {
         method,
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
+            "Authorization": `${accessToken}`,
         },
     };
     if (body !== undefined) opts.body = JSON.stringify(body);

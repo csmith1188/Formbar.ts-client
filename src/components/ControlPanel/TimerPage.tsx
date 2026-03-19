@@ -55,7 +55,7 @@ export default function TimerPage() {
         fetch(`${formbarUrl}/api/v1/class/${classData.id}/timer/start`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: `${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ duration: duration * 1000, sound: false })

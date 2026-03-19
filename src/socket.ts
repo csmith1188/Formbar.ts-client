@@ -97,7 +97,7 @@ export function socketLogin(token: string) {
 
 			socket = io(formbarUrl, {
 				extraHeaders: {
-					authorization: `Bearer ${newAccessToken}`,
+					authorization: `${newAccessToken}`,
 				},
 				autoConnect: false,
 				reconnectionAttempts: 5,

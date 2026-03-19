@@ -49,7 +49,7 @@ export default function Student() {
         fetch(`${formbarUrl}/api/v1/class/${classData.id}/polls/response`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: `${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -135,7 +135,7 @@ export default function Student() {
 			fetch(`${formbarUrl}/api/v1/user/me`, {
 				method: "GET",
 				headers: {
-					Authorization: `Bearer ${accessToken}`,
+					Authorization: `${accessToken}`,
 				},
 			})
 				.then((res) => res.json())

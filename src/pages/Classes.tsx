@@ -6,7 +6,7 @@ import { useUserData, useSettings, getAppearAnimation } from "../main";
 import type { CardStylesType } from "antd/es/card/Card";
 import { useMobileDetect } from "../main";
 import { accessToken, formbarUrl } from "../socket";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function ClassesPage() {
@@ -57,7 +57,7 @@ export default function ClassesPage() {
         fetch(`${formbarUrl}/api/v1/user/${userData.id}/classes`, {
             method: "GET",
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: `${accessToken}`,
             },
         })
         .then((res) => res.json())
@@ -94,7 +94,7 @@ export default function ClassesPage() {
                 fetch(`${formbarUrl}/api/v1/room/${selectedClass}/`, {
                     method: "DELETE",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`
+                        Authorization: `${accessToken}`
                     }
                 })
                 .then(async (res) => {
@@ -131,7 +131,7 @@ export default function ClassesPage() {
 		fetch(`${formbarUrl}/api/v1/class/${selectedClass}/join`, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `${accessToken}`,
 			},
 		})
 			.then((res) => res.json())
@@ -143,7 +143,7 @@ export default function ClassesPage() {
 					fetch(`${formbarUrl}/api/v1/user/me`, {
 						method: "GET",
 						headers: {
-							Authorization: `Bearer ${accessToken}`,
+							Authorization: `${accessToken}`,
 						},
 					})
 						.then((res) => res.json())
@@ -185,7 +185,7 @@ export default function ClassesPage() {
         fetch(`${formbarUrl}/api/v1/class/${classId}/join`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: `${accessToken}`,
             },
         })
             .then((res) => res.json())
@@ -196,7 +196,7 @@ export default function ClassesPage() {
                     fetch(`${formbarUrl}/api/v1/user/me`, {
                         method: "GET",
                         headers: {
-                            Authorization: `Bearer ${accessToken}`,
+                            Authorization: `${accessToken}`,
                         },
                     })
                         .then((res) => res.json())
@@ -239,7 +239,7 @@ export default function ClassesPage() {
 		fetch(`${formbarUrl}/api/v1/class/create`, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `${accessToken}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ name: createClassName }),
@@ -275,7 +275,7 @@ export default function ClassesPage() {
 		fetch(`${formbarUrl}/api/v1/room/${joinClassCode}/join`, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `${accessToken}`,
 				"Content-Type": "application/json",
 			},
 		})
@@ -311,7 +311,7 @@ export default function ClassesPage() {
         fetch(`${formbarUrl}/api/v1/room/${code}/join`, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: `${accessToken}`,
                 "Content-Type": "application/json",
             },
         })

@@ -37,7 +37,7 @@ export default function Transactions() {
 			{
 				method: "GET",
 				headers: {
-					Authorization: `Bearer ${accessToken}`,
+					Authorization: `${accessToken}`,
 				},
 				signal: abortController.signal,
 			},

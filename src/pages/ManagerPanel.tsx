@@ -83,7 +83,7 @@ export default function ManagerPanel() {
 		fetch(`${formbarUrl}/api/v1/manager/?${params.toString()}`, {
 			method: "GET",
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `${accessToken}`,
 			},
 			signal: abortController.signal,
 		})
@@ -146,7 +146,7 @@ export default function ManagerPanel() {
 		fetch(`${formbarUrl}/api/v1/user/${userId}/verify`, {
 			method: "PATCH",
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `${accessToken}`,
 			},
 		})
 			.then((res) => res.json())
@@ -185,7 +185,7 @@ export default function ManagerPanel() {
                     {
                         method: "DELETE",
                         headers: {
-                            Authorization: `Bearer ${accessToken}`
+                            Authorization: `${accessToken}`
                         }
                     }
                 )
@@ -226,7 +226,7 @@ export default function ManagerPanel() {
                     {
                         method: "PATCH",
                         headers: {
-                            Authorization: `Bearer ${accessToken}`
+                            Authorization: `${accessToken}`
                         }
                     }
                 )
@@ -268,7 +268,7 @@ export default function ManagerPanel() {
                     {
                         method: "PATCH",
                         headers: {
-                            Authorization: `Bearer ${accessToken}`
+                            Authorization: `${accessToken}`
                         }
                     }
                 )

@@ -5,14 +5,14 @@ import { useNavigate } from "react-router-dom";
 import Log from "../debugLogger";
 
 import { isDev, useMobileDetect, useTheme, useUserData } from "../main";
-import { themeColors, version } from "../../themes/ThemeConfig";
+import { themeColors } from "../../themes/ThemeConfig";
 
 import { accessToken, formbarUrl, socket } from "../socket";
 import { useState } from "react";
 import SettingsModal from "./SettingsModal";
 
 export default function FormbarHeader() {
-	const { isDark, toggleTheme } = useTheme();
+	const { isDark } = useTheme();
 	const navigate = useNavigate();
 	const isMobileView = useMobileDetect();
 	const { userData, setUserData } = useUserData();
@@ -85,7 +85,7 @@ export default function FormbarHeader() {
 		fetch(`${formbarUrl}/api/v1/class/${userData?.activeClass}/leave`, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `${accessToken}`,
 			},
 		})
 			.then((res) => res.json())

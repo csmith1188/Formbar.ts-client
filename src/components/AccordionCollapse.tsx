@@ -280,7 +280,7 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
         fetch(`${formbarUrl}/api/v1/digipogs/award`, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${accessToken}`,
+                "Authorization": `${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ studentId, amount })

@@ -1,7 +1,6 @@
 import {
 	Button,
 	Flex,
-	Segmented,
 	Tooltip,
 	Typography,
 	Input,
@@ -33,7 +32,6 @@ export default function Dashboard({
 
 	const [allResponseModalOpen, setAllResponseModalOpen] =
 		useState<boolean>(false);
-	const [currentView, setView] = useState<"dash" | "class">("dash");
 	const [searchQuery, setSearchQuery] = useState<string>("");
 
 	const [sortType, setSortType] = useState<
