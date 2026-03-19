@@ -303,7 +303,7 @@ const AppContent = () => {
 			const userResponse = await fetch(`${formbarUrl}/api/v1/user/me`, {
 				method: "GET",
 				headers: {
-					Authorization: `${accessToken}`,
+					Authorization: `Bearer ${accessToken}`,
 				},
 			});
 
@@ -328,7 +328,7 @@ const AppContent = () => {
 				{
 					method: "GET",
 					headers: {
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 				},
 			);
@@ -374,7 +374,7 @@ const AppContent = () => {
 				{
 					method: "POST",
 					headers: {
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 				},
 			);

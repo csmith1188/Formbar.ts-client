@@ -43,6 +43,7 @@ export default function Student() {
 	const [textResponse, setTextResponse] = useState<string>("");
 	const [selectedResponses, setSelectedResponses] = useState<string[]>([]);
     const [timerLerpPercent, setTimerLerpPercent] = useState<number>(0);
+    const [timerRemainingSeconds, setTimerRemainingSeconds] = useState(0);
 	const lastPollDataRef = useRef<any>(null);
 
 	const [pollWidth, setPollWidth] = useState<number>(
@@ -52,14 +53,22 @@ export default function Student() {
 	);
 
 	function Respond(response: string | string[]) {
-		let resTextResponse = classData?.poll.allowTextResponses
+		let resTextResponse = classData?.poll?.allowTextResponses
 			? textResponse.trim()
 			: "";
+
+        if (!classData || !classData.id) {
+            Log({
+                message: "Attempted to respond to poll before classData was available.",
+                level: "warn",
+            });
+            return;
+        }
 		
         fetch(`${formbarUrl}/api/v1/class/${classData.id}/polls/response`, {
             method: "POST",
             headers: {
-                Authorization: accessToken,
+                Authorization: `Bearer ${accessToken}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -71,13 +80,13 @@ export default function Student() {
             if (!res.ok) {
                 throw new Error("Failed to send poll response");
             }
-            res.json();
+            return res.json();
         })
         .then((res) => {
-            console.log(res);
+            Log({ message: "Poll response sent successfully.", data: res });
         })
         .catch((err) => {
-            console.error("Error sending poll response:", err);
+            Log({ message: "Error sending poll response:", data: err, level: "error" });
         });
         
 
@@ -145,7 +154,7 @@ export default function Student() {
 			fetch(`${formbarUrl}/api/v1/user/me`, {
 				method: "GET",
 				headers: {
-					Authorization: `${accessToken}`,
+					Authorization: `Bearer ${accessToken}`,
 				},
 			})
 				.then((res) => res.json())
@@ -208,7 +217,10 @@ export default function Student() {
             const now = Date.now();
 			const clampedNow = Math.min(Math.max(now, startMs), endMs);
 			const percent = ((clampedNow - startMs) / totalMs) * 100;
+            const remainingSeconds = Math.max(0, Math.ceil((endMs - clampedNow) / 1000));
+
 			setTimerLerpPercent((prev) => (Math.abs(prev - percent) >= 0.5 ? percent : prev));
+            setTimerRemainingSeconds((prev) => (prev !== remainingSeconds ? remainingSeconds : prev));
         };
 
 		updateTimerState();
@@ -289,8 +301,9 @@ export default function Student() {
 										active: classData?.timer?.active ?? false,
 										current: timerLerpPercent,
 										duration: timerDurationMs,
+                                        remainingSeconds: timerRemainingSeconds,
 									}}
-                                    onlyTimer={classData?.timer?.startTime && (!classData?.poll?.status && classData.poll.responses.length === 0)}
+                                    onlyTimer={!!classData?.timer?.startTime && (!classData?.poll?.status && classData.poll.responses.length === 0)}
 								/>
 							</Flex>
 						) : null}

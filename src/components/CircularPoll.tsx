@@ -18,14 +18,15 @@ type PollObjectProperties = {
         active: boolean;
         current: number;
         duration: number;
-    }
+        remainingSeconds: number;
+    };
     onlyTimer?: boolean;
 };
 
 export default function FullCircularPoll({
 	poll,
 	size = 400,
-    timer = { active: false, current: 0, duration: 0 },
+    timer = { active: false, current: 0, duration: 0, remainingSeconds: 0 },
     onlyTimer = false,
 }: PollObjectProperties) {
     const { isDark } = useTheme();
@@ -146,7 +147,7 @@ export default function FullCircularPoll({
                         type="dashboard"
                         percent={Math.round(timer.current)}
                         
-                        format={() => `${formatTime(Math.round(timer.duration * (timer.current / 100) / 1000))}`}
+                        format={() => `${formatTime(timer.remainingSeconds)}`}
                         strokeColor={{
                             '0%': 'rgb(94, 158, 230)',
                             '100%': 'rgba(41, 96, 167, 0.9)',

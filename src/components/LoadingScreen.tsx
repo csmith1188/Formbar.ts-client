@@ -113,7 +113,7 @@ function randomText() {
 		"Filling Pog Meters...",
 		"Releasing Half-Life 3...",
 		"I'm the Formboy!",
-		"Yo, Gurt!!",,
+		"Yo, Gurt!!",
         "Steven, fix it!!",
         "PR #85",
         "Robert was here... It's in your skin. It's in your blood. It's in your brain. It is part of you.",

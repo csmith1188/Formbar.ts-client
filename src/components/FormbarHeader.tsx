@@ -85,7 +85,7 @@ export default function FormbarHeader() {
 		fetch(`${formbarUrl}/api/v1/class/${userData?.activeClass}/leave`, {
 			method: "POST",
 			headers: {
-				Authorization: `${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		})
 			.then((res) => res.json())

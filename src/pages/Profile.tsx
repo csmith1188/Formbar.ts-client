@@ -79,7 +79,7 @@ export default function Profile() {
 				{
 					method: "POST",
 					headers: {
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 				},
 			);
@@ -118,7 +118,7 @@ export default function Profile() {
 					method: "PATCH",
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 					body: JSON.stringify({
 						oldPin: oldPin || undefined,
@@ -155,7 +155,7 @@ export default function Profile() {
 				{
 					method: "POST",
 					headers: {
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 				},
 			);
@@ -201,7 +201,7 @@ export default function Profile() {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 					body: JSON.stringify({ pin: enteredPin }),
 				},
@@ -250,7 +250,7 @@ export default function Profile() {
 					method: "PATCH",
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 					},
 					body: JSON.stringify({
 						pin: firstPin,
@@ -285,7 +285,7 @@ export default function Profile() {
 		fetch(`${formbarUrl}/api/v1/user/${id ? id : userData?.id}`, {
 			method: "GET",
 			headers: {
-				Authorization: `${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		})
 			.then((res) => res.json())

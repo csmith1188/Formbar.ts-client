@@ -4,7 +4,7 @@ export function formatTime(seconds: number): string {
     if(mins > 0) {
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     }
-    return `${secs}s`;
+    return `${secs}`;
 }
 
 export function textColorForBackground(bgColor: string) {

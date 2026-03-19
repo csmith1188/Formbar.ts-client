@@ -53,7 +53,7 @@ export function socketLogin(token: string) {
 		.then(async (res) => {
 			if (!res.ok) {
 				// localStorage.removeItem('refreshToken');
-				console.error(new Error("Failed to refresh token"));
+				Log({ message: "Failed to refresh token", level: "error" });
 
 				const loginResponse = await fetch(
 					`${formbarUrl}/api/v1/auth/login`,
@@ -97,7 +97,7 @@ export function socketLogin(token: string) {
 
 			socket = io(formbarUrl, {
 				extraHeaders: {
-					authorization: newAccessToken,
+					authorization: `Bearer ${newAccessToken}`,
 				},
 				autoConnect: false,
 				reconnectionAttempts: 5,

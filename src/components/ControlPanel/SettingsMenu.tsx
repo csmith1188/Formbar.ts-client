@@ -65,7 +65,7 @@ export default function SettingsMenu() {
 			}
 		})
 		.catch((err) => {
-			console.error("Error fetching class links:", err);
+			Log({ message: "Error fetching class links:", data: err, level: "error" });
 		});
 		
 	}, [classData]);
@@ -102,7 +102,7 @@ export default function SettingsMenu() {
             }
         })
         .catch((err) => {
-            console.error("Error adding link:", err);
+            Log({ message: "Error adding link:", data: err, level: "error" });
             showErrorNotification("An error occurred while adding the link.");
         });
 
@@ -126,7 +126,7 @@ export default function SettingsMenu() {
             }
         })
         .catch((err) => {
-            console.error("Error removing link:", err);
+            Log({ message: "Error removing link:", data: err, level: "error" });
             showErrorNotification("An error occurred while removing the link.");
         });
     }
@@ -154,7 +154,7 @@ export default function SettingsMenu() {
             }
         })
         .catch((err) => {
-            console.error("Error adding tag:", err);
+            Log({ message: "Error adding tag:", data: err, level: "error" });
             showErrorNotification("An error occurred while adding the tag.");
         });
     }
@@ -235,41 +235,34 @@ export default function SettingsMenu() {
                                                     Authorization: `Bearer ${accessToken}`
                                                 }
                                             })
-                                            .then((res) => res.json())
-                                            .then((res) => {
-                                                Log({message: "Class deleted:", data: res});
-                                                                                                 if (!res.ok) {
-                                                     return res
-                                                         .json()
-                                                         .catch(() => {
-                                                             throw new Error("Failed to delete class.");
-                                                         })
-                                                         .then((body: any) => {
-                                                             const message =
-                                                                 (body && (body.detail || body.message)) ||
-                                                                 "Failed to delete class.";
-                                                             throw new Error(message);
-                                                         });
-                                                 }
-                                                 return res.json();
-                                             })
-                                             .then((res) => {
-                                                 Log({ message: "Class deleted:", data: res });
-                                                 notification.success({
+                                            .then(async (response) => {
+                                                let body: any = null;
+                                                try {
+                                                    body = await response.json();
+                                                } catch {
+                                                    body = null;
+                                                }
+                                                if (!response.ok) {
+                                                    const message =
+                                                        (body && (body.detail || body.message)) ||
+                                                        "Failed to delete class.";
+                                                    throw new Error(message);
+                                                }
+                                                Log({ message: "Class deleted:", data: body });
+                                                notification.success({
                                                     title: "Class deleted",
-                                                     message: "Class deleted",
-                                                     description: "The class has been deleted successfully.",
-                                                 });
-                                             })
-                                             .catch((error) => {
-                                                 console.error("Failed to delete class:", error);
-                                                 notification.error({
-                                                        title: "Error",
-                                                     message: "Failed to delete class",
-                                                     description:
-                                                         (error && error.message) ||
-                                                         "An unexpected error occurred while deleting the class.",
-                                                 });
+                                                    message: "Class deleted",
+                                                    description: "The class has been deleted successfully.",
+                                                });
+                                            })
+                                            .catch((error) => {
+                                                console.error("Failed to delete class:", error);
+                                                notification.error({
+                                                    title: "Error",
+                                                    message: "Failed to delete class",
+                                                    description:
+                                                    (error && error.message) || "An unexpected error occurred while deleting the class.",
+                                                });
                                             });
                                         }
                                     })

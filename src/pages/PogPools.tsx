@@ -61,7 +61,7 @@ export default function PogPools() {
 
 		fetch(`${formbarUrl}/api/v1/user/${userData.id}/pools?limit=${pageSize}&offset=${offset}`, {
 			headers: {
-				Authorization: accessToken,
+				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
 			},
 			method: "GET",

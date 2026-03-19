@@ -6,6 +6,7 @@ import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { accessToken, formbarUrl } from '../../socket';
 import { useState } from 'react';
+import Log from '../../debugLogger';
 
 const { Text, Title } = Typography;
 
@@ -30,7 +31,6 @@ const defaultTimers = [
 export default function TimerPage() {
     const isMobile = useMobileDetect();
     const {classData} = useClassData();
-    const [customHours, setCustomHours] = useState(0);
     const [customMinutes, setCustomMinutes] = useState(1);
     const [customSeconds, setCustomSeconds] = useState(0);
 
@@ -97,31 +97,11 @@ export default function TimerPage() {
             }
         })
         .catch((err) => {
-            console.error(err);
+            Log({ message: "Error starting timer:", data: err, level: "error" });
         });
     }
 
-    function stopTimer() {
-        fetch(`${formbarUrl}/api/v1/class/${classData?.id}/timer/clear`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
-            }
-        })
-        .then((res) => {
-            if (!res.ok) {
-                throw new Error("Failed to clear timer");
-            }
-        })
-        .catch((err) => {
-            console.error(err);
-        });
-    }
-
-    const activeTimerDuration = getActiveTimerDuration();
     const customTotalSeconds = getCustomTimerTotalSeconds();
-    const isCustomRunning = !!classData?.timer?.active && activeTimerDuration === customTotalSeconds;
 
     // Create a 5x2 grid using defaultTimers
     const grid = [];

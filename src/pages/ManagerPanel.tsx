@@ -83,7 +83,7 @@ export default function ManagerPanel() {
 		fetch(`${formbarUrl}/api/v1/manager/?${params.toString()}`, {
 			method: "GET",
 			headers: {
-				Authorization: `${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 			signal: abortController.signal,
 		})
@@ -146,7 +146,7 @@ export default function ManagerPanel() {
 		fetch(`${formbarUrl}/api/v1/user/${userId}/verify`, {
 			method: "PATCH",
 			headers: {
-				Authorization: `${accessToken}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		})
 			.then((res) => res.json())
@@ -168,10 +168,17 @@ export default function ManagerPanel() {
 	}
 
     function deleteUserButton(userId: number | string) {
+        const targetUser =
+            users.find((e) => e.id == userId) ??
+            bannedUsers?.find((e) => e.id == userId);
+        const userLabel =
+            targetUser?.displayName ||
+            targetUser?.email ||
+            "This user";
         modal.warning({ 
             centered: true,
             title: "Are you sure you want to delete this user?",
-            content: `${users.find(e => e.id == userId)?.displayName} will be unable to log in and removed from all classes.`,
+            content: `${userLabel} will be unable to log in and removed from all classes.`,
             okCancel: true,
             onOk: () => {
                 fetch(`${formbarUrl}/api/v1/user/${userId}`,
@@ -196,10 +203,15 @@ export default function ManagerPanel() {
     }
 
     function banUserButton(userId: number | string) {
+        const user = users.find((e) => e.id == userId) ??
+            (typeof bannedUsers !== "undefined"
+                ? bannedUsers.find((e: { id: number | string }) => e.id == userId)
+                : undefined);
+         const displayName = user?.displayName ?? "This user";
         modal.warning({ 
             centered: true,
             title: "Are you sure you want to ban this user?",
-            content: `${users.find(e => e.id == userId)?.displayName} will be unable to login or create a new account with this email`,
+            content: `${displayName} will be unable to login or create a new account with this email`,
             okCancel: true,
             onOk: () => {
                 fetch(`${formbarUrl}/api/v1/user/${userId}/ban`,
@@ -223,10 +235,17 @@ export default function ManagerPanel() {
     }
 
     function unbanUserButton(userId: number | string) {
+        const user = users.find((e) => e.id == userId) ??
+            (typeof bannedUsers !== "undefined"
+                ? bannedUsers.find((e: { id: number | string }) => e.id == userId)
+                : undefined);
+
+        const displayName = user?.displayName ?? "This user";
+        
         modal.warning({ 
             centered: true,
             title: "Are you sure you want to unban this user?",
-            content: `${users.find(e => e.id == userId)?.displayName} will now be able to login or create a new account with this email`,
+            content: `${displayName} will now be able to login or create a new account with this email`,
             okCancel: true,
             onOk: () => {
                 fetch(`${formbarUrl}/api/v1/user/${userId}/unban`,
