@@ -14,7 +14,7 @@ export function createPool(body: {
 export function addPoolMember(poolId: number, body: {
     userId: string,
 }) {
-    return http(`/pools/${poolId}/add`, "POST", {}, body);
+    return http(`/pools/${poolId}/add-member`, "POST", {}, body);
 }
 
 export function payoutPool(poolId: number) {
@@ -24,5 +24,5 @@ export function payoutPool(poolId: number) {
 export function removePoolMember(poolId: number, body: {
     userId: string,
 }) {
-    return http(`/pools/${poolId}/remove`, "POST", {}, body);
+    return http(`/pools/${poolId}/remove-member`, "POST", {}, body);
 }

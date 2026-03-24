@@ -461,7 +461,7 @@ const AppContent = () => {
 		}
 
 		function onSetClass(classID: number) {
-			Log({ message: "Class ID set to: " + classID, level: "debug" });
+			Log({ message: "Class ID set to: " + (classID || "{No Class}"), level: "debug" });
 			socket.emit("classUpdate", "");
 		}
 
