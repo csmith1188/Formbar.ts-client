@@ -46,8 +46,8 @@ export function startClassSession(classId: number) {
 
 // --- Class - Polls ---
 
-export function getPolls(classId: number, limit?: number, offset?: number) {
-    return http(`/class/${classId}/polls${limit && offset ? `?limit=${limit}&offset=${offset}` : ''}`);
+export function getPolls(classId: number, limit: number = 20, offset: number = 0) {
+    return http(`/class/${classId}/polls${limit > -1 && offset > -1 ? `?limit=${limit}&offset=${offset}` : ''}`);
 }
 
 export function getCurrentPoll(classId: number) {

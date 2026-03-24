@@ -208,17 +208,19 @@ export default function SettingsMenu() {
                                                     throw new Error(message);
                                                 }
                                                 Log({ message: "Class deleted:", data: response.data });
-                                                notification.success({
+                                                api.success({
                                                     title: "Class deleted",
                                                     description: "The class has been deleted successfully.",
+                                                    placement: 'bottom'
                                                 });
                                             })
                                             .catch((error) => {
                                                 Log({ message: "Failed to delete class:", data: error, level: "error" });
-                                                notification.error({
+                                                api.error({
                                                     title: "Failed to delete class",
                                                     description:
                                                     (error && error.message) || "An unexpected error occurred while deleting the class.",
+                                                    placement: 'bottom'
                                                 });
                                             });
                                         }

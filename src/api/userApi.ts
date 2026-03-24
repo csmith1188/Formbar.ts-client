@@ -31,8 +31,8 @@ export function getUserScopes(id: string) {
 }
 
 // GET /user/{id}/transactions
-export function getUserTransactions(id: string, limit?: number, offset?: number) {
-	return http(`/user/${id}/transactions${limit && offset ? `?limit=${limit}&offset=${offset}` : ''}`, "GET");
+export function getUserTransactions(id: string, limit: number = 20, offset: number = 0) {
+	return http(`/user/${id}/transactions${limit > -1 && offset > -1 ? `?limit=${limit}&offset=${offset}` : ''}`, "GET");
 }
 
 // PATCH /user/{id}/ban
@@ -85,8 +85,8 @@ export function verifyUserPin(id: string, body: { pin: string }) {
 	return http(`/user/${id}/pin/verify`, "POST", {}, body);
 }
 
-export function getUserPools(id: string, limit?: number, offset?: number) {
-    return http(`/user/${id}/pools${limit && offset ? `?limit=${limit}&offset=${offset}` : ''}`, "GET");
+export function getUserPools(id: string, limit: number = 20, offset: number = 0) {
+    return http(`/user/${id}/pools${limit > -1 && offset > -1 ? `?limit=${limit}&offset=${offset}` : ''}`, "GET");
 }
 
 export function verifyUserEmail(code: string) {

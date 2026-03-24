@@ -15,6 +15,7 @@ import {
 	Pagination,
     Modal,
     Switch,
+    notification,
 } from "antd";
 
 const { Title, Text } = Typography;
@@ -26,6 +27,7 @@ import { accessToken } from "../socket";
 import { useSettings, getAppearAnimation, useMobileDetect } from "../main";
 import { banUser, deleteUser, unbanUser, verifyUser } from "../api/userApi";
 import { addIpToList, deleteIpFromList, getIpAccessList, getManagerData, toggleIpList, updateIpFromList } from "../api/managerApi";
+import { deleteRoom } from "../api/roomApi";
 
 type ManagerPanelUser = {
 	id: number | string;
@@ -43,7 +45,7 @@ function isUnverifiedUser(user: ManagerPanelUser): boolean {
 
 export default function ManagerPanel() {
 	const [listCategory, setListCategory] = useState<
-		"Users" | "IP Addresses" | "Banned Users"
+		"Users" | "IP Addresses" | "Classrooms" | "Banned Users"
 	>("Users");
 
     const [ipListData, setIpListData] = useState<{ active: boolean, ips: { id: number, ip: string }[] }>({ active: false, ips: [] });
@@ -51,6 +53,10 @@ export default function ManagerPanel() {
     const [newIpText, setNewIpText] = useState("");
     const [showIpModal, setShowIpModal] = useState(false);
     const [isNewIpValid, setIsNewIpValid] = useState(false);
+
+    const [api, contextHolder] = notification.useNotification();
+
+    const [classrooms, setClassrooms] = useState<any[]>([]);
 
 	const [users, setUsers] = useState<ManagerPanelUser[]>([]);
     const [bannedUsers, setBannedUsers] = useState<ManagerPanelUser[]>([])
@@ -98,10 +104,12 @@ export default function ManagerPanel() {
                 const unbannedUsers = userItems.filter((user: ManagerPanelUser) => user.permissions > 0);
                 const bannedUserItems  = userItems.filter((user: ManagerPanelUser) => user.permissions === 0);
 
+
+                setClassrooms(data?.classrooms || []);
 				setUsers(unbannedUsers);
                 setBannedUsers(bannedUserItems);
 
-				setTotalUsers(unbannedUsers.length);
+				setTotalUsers(data?.pagination?.total || unbannedUsers.length);
 			})
 			.catch((err) => {
 				if (err?.name === "AbortError") {
@@ -435,6 +443,7 @@ export default function ManagerPanel() {
 	return (
         <>
         {contextModal}
+        {contextHolder}
 		<div
 			style={{
 				display: "flex",
@@ -559,6 +568,56 @@ export default function ManagerPanel() {
 						</Flex>
 					)}
 				</Activity>
+                <Activity mode={listCategory === "Classrooms" ? "visible" : "hidden"}>
+                        <Row gutter={[8, 8]} style={{ margin: "10px" }}>
+                            {
+                                classrooms.length > 0 ? (
+                                    classrooms.map((classroom: any) => (
+                                        <Col span={6} key={`classroom-col-${classroom.id}`}>
+                                            <Card title={classroom.name} style={{ textAlign: "center" }}>
+                                                <Text type="secondary" style={{marginRight: 10}}>ID: {classroom.id}</Text>
+                                                <Button color="red" type="primary" variant="solid" onClick={() => {
+                                                    deleteRoom(classroom.id)
+                                                        .then(async (response) => {
+                                                            if (!response.ok) {
+                                                                const message =
+                                                                    (response && (response.detail || response.message)) ||
+                                                                    "Failed to delete class.";
+                                                                throw new Error(message);
+                                                            }
+                                                            Log({ message: "Class deleted:", data: response.data });
+                                                            api.success({
+                                                                title: "Class deleted",
+                                                                description: "The class has been deleted successfully.",
+                                                                placement: 'bottom'
+                                                            });
+                                                            setIsLoading(true);
+                                                            setInitialLoad(false);
+                                                            setRefreshNonce((value) => value + 1);
+                                                        })
+                                                        .catch((error) => {
+                                                            Log({ message: "Failed to delete class:", data: error, level: "error" });
+                                                            api.error({
+                                                                title: "Failed to delete class",
+                                                                description:
+                                                                (error && error.message) || "An unexpected error occurred while deleting the class.",
+                                                                placement: 'bottom'
+                                                            });
+                                                        });
+                                                }}>
+                                                    Delete Class
+                                                </Button>
+                                            </Card>
+                                        </Col>
+                                    ))
+                                ) : (
+                                    <Flex justify="center" style={{ width: "100%" }}>
+                                        <Skeleton active></Skeleton>
+                                    </Flex>
+                                )
+                            }
+                        </Row>
+                </Activity>
 				<Activity mode={listCategory === "IP Addresses" ? "visible" : "hidden"}>
                     <Flex justify="center" align="center" gap={10} wrap style={{ margin: "10px" }}>
                         <Segmented
@@ -566,7 +625,7 @@ export default function ManagerPanel() {
                             onChange={(value) => {
                                 const nextIpList = value.toLowerCase() as "whitelist" | "blacklist";
                                 setSelectedIpList(nextIpList);
-                                updateManagerData(nextIpList);
+                                updateIpListData(nextIpList);
                             }}
                         />
                         <Modal title={`Add IP to ${selectedIpList}`} open={showIpModal} onCancel={() => {
