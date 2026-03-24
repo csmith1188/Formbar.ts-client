@@ -138,7 +138,7 @@ export default function PogPools() {
     const handleRemoveMember = (poolId: number, userId: string) => {
         Log({ message: `Remove user ${userId} from pool ${poolId}` });
         removePoolMember(poolId, { userId })
-            .then(() => {userId
+            .then(() => {
                 Log({ message: `User ${userId} removed from pool ${poolId}` });
                 setNewPoolUserId("");
                 refreshPools();
@@ -253,7 +253,9 @@ export default function PogPools() {
 						const ownerLabel =
 							isOwner
                                 ? "You"
-                                : `${pool.owners[0].displayName}`
+                                : Array.isArray(pool.owners) && pool.owners.length > 0
+									? `${pool.owners[0].displayName}`
+									: "N/A";
 						const memberList = Array.isArray(pool.members)
 							? pool.members
 							: [];
@@ -314,9 +316,9 @@ export default function PogPools() {
                                                         <Flex vertical gap={8}>
                                                             {
                                                                 memberList.map((member) => (
-                                                                    <Flex justify="space-between" align="center" gap={8}>
+                                                                    <Flex key={member.id} justify="space-between" align="center" gap={8}>
                                                                         <Tooltip title={`User ID: ${member.id}`} placement="top" color="blue">
-                                                                            <Input key={member.id} disabled value={member.displayName} />
+                                                                            <Input disabled value={member.displayName} />
                                                                         </Tooltip>
                                                                         <Tooltip title={`Remove ${member.displayName}`} placement="top" color="red">
                                                                             <Button variant="solid" color="red" style={{ aspectRatio:'1'}} onClick={() => handleRemoveMember(pool.id, String(member.id))}>
