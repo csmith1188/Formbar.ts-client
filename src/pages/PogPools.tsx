@@ -1,4 +1,4 @@
-import { Button, Card, Col, Divider, Flex, FloatButton, Input, Modal, Pagination, Popover, Row, Spin, Statistic, Tooltip, Typography } from "antd";
+import { Button, Card, Col, Divider, Flex, FloatButton, Input, Modal, Pagination, Popover, Row, Spin, Statistic, Tooltip, Typography, notification } from "antd";
 const { Text, Title } = Typography;
 import FormbarHeader from "../components/FormbarHeader";
 import Log from "../debugLogger";
@@ -55,6 +55,7 @@ export default function PogPools() {
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [totalPools, setTotalPools] = useState(0);
 	const [modal, contextHolder] = Modal.useModal();
+	const [api, contextHolderNotification] = notification.useNotification();
 
     const [newPoolUserId, setNewPoolUserId] = useState("");
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -108,9 +109,10 @@ export default function PogPools() {
             })
             .catch((err) => {
                 Log({ message: `Error during payout for pool ${poolId}`, data: err, level: "error" });
-                modal.error({
+                api['error']({
                     title: "Error During Payout",
-                    content: `Failed to payout the pool. Please try again.`,
+                    description: `Failed to payout the pool. Please try again.`,
+                    placement: 'bottom'
                 });
             });
 	};
@@ -125,9 +127,10 @@ export default function PogPools() {
             })
             .catch((err) => {
                 Log({ message: `Error adding user ${newPoolUserId} to pool ${poolId}`, data: err, level: "error" });
-                modal.error({
+                api['error']({
                     title: "Error Adding Member",
-                    content: `Failed to add user ${newPoolUserId} to the pool. Please try again.`,
+                    description: `Failed to add user ${newPoolUserId} to the pool. Please try again.`,
+                    placement: 'bottom'
                 });
             });
 	};
@@ -142,9 +145,10 @@ export default function PogPools() {
             })
             .catch((err) => {
                 Log({ message: `Error removing user ${userId} from pool ${poolId}`, data: err, level: "error" });
-                modal.error({
+                api['error']({
                     title: "Error Removing Member",
-                    content: `Failed to remove user ${userId} from the pool. Please try again.`,
+                    description: `Failed to remove user ${userId} from the pool. Please try again.`,
+                    placement: 'bottom'
                 });
             });
     };
@@ -169,9 +173,10 @@ export default function PogPools() {
                     })
                     .catch((err) => {
                         Log({ message: `Error deleting pool ${poolId}`, data: err, level: "error" });
-                        modal.error({
+                        api['error']({
                             title: "Error Deleting Pool",
-                            content: `Failed to delete the pool. Please try again.`,
+                            description: `Failed to delete the pool. Please try again.`,
+                            placement: 'bottom'
                         });
                     });
             },
@@ -180,10 +185,12 @@ export default function PogPools() {
 
 	const handleCreatePool = () => {
 		if (!poolName.trim()) {
-			modal.error({
+			api['error']({
 				title: "Validation Error",
-				content: "Pool name is required.",
+				description: "Pool name is required.",
+				placement: 'bottom'
 			});
+
 			return;
 		}
 
@@ -198,9 +205,10 @@ export default function PogPools() {
 			})
 			.catch((err) => {
 				Log({ message: `Error creating pool`, data: err, level: "error" });
-				modal.error({
+				api['error']({
 					title: "Error Creating Pool",
-					content: `Failed to create the pool. Please try again.`,
+					description: `Failed to create the pool. Please try again.`,
+                    placement: 'bottom'
 				});
 			});
 	};
@@ -208,6 +216,7 @@ export default function PogPools() {
 	return (
 		<>
             {contextHolder}
+            {contextHolderNotification}
 			<FormbarHeader />
 
 			<div
