@@ -35,6 +35,7 @@ export default function StudentMenu() {
 					/>
 				}
 				tooltip={{
+                    mouseEnterDelay: 0.5,
 					title: "Menu",
 					color: "blue",
 					placement: "left",
@@ -58,6 +59,7 @@ export default function StudentMenu() {
 					shape="circle"
 					type="primary"
 					tooltip={{
+                        mouseEnterDelay: 0.5,
 						title: "Help Ticket",
 						color: "#ff6860",
 						placement: "left",
@@ -83,6 +85,7 @@ export default function StudentMenu() {
 					shape="circle"
 					type="primary"
 					tooltip={{
+                        mouseEnterDelay: 0.5,
 						title: "Request a Break",
 						color: "#ff8f40",
 						placement: "left",

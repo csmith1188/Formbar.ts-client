@@ -14,6 +14,7 @@ import {
 	Skeleton,
 	Pagination,
     Modal,
+    Switch,
 } from "antd";
 
 const { Title, Text } = Typography;
@@ -24,7 +25,7 @@ import { Activity, useEffect, useState } from "react";
 import { accessToken } from "../socket";
 import { useSettings, getAppearAnimation, useMobileDetect } from "../main";
 import { banUser, deleteUser, unbanUser, verifyUser } from "../api/userApi";
-import { getManagerData } from "../api/managerApi";
+import { addIpToList, deleteIpFromList, getIpAccessList, getManagerData, toggleIpList, updateIpFromList } from "../api/managerApi";
 
 type ManagerPanelUser = {
 	id: number | string;
@@ -44,19 +45,36 @@ export default function ManagerPanel() {
 	const [listCategory, setListCategory] = useState<
 		"Users" | "IP Addresses" | "Banned Users"
 	>("Users");
+
+    const [ipListData, setIpListData] = useState<{ active: boolean, ips: { id: number, ip: string }[] }>({ active: false, ips: [] });
+    const [selectedIpList, setSelectedIpList] = useState<"whitelist" | "blacklist">("whitelist");
+    const [newIpText, setNewIpText] = useState("");
+    const [showIpModal, setShowIpModal] = useState(false);
+    const [isNewIpValid, setIsNewIpValid] = useState(false);
+
 	const [users, setUsers] = useState<ManagerPanelUser[]>([]);
     const [bannedUsers, setBannedUsers] = useState<ManagerPanelUser[]>([])
-	const { settings } = useSettings();
 	const [initialLoad, setInitialLoad] = useState(true);
 	const [isLoading, setIsLoading] = useState(true);
 	const [sortBy, setSortBy] = useState<"name" | "permission">("name");
+
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 	const [totalUsers, setTotalUsers] = useState(0);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const [refreshNonce, setRefreshNonce] = useState(0);
+
+    const [editingIpId, setEditingIpId] = useState<number | null>(null);
+    const [editingIpValue, setEditingIpValue] = useState("");
+    const [isIpValid, setIsIpValid] = useState(false);
+
+    const ipRegex = /^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\/(3[0-2]|[12]?\d))?$/;
+    const validateIp = (ip: string) => ipRegex.test(ip);
+
     const [modal, contextModal] = Modal.useModal()
+		const { settings } = useSettings();
+
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {
@@ -67,12 +85,8 @@ export default function ManagerPanel() {
 
     const isMobile = useMobileDetect();
 
-	useEffect(() => {
-		if (!accessToken) return;
-
-		const offset = (currentPage - 1) * pageSize;
-
-		const abortController = new AbortController();
+	const updateManagerData = (ipList: "whitelist" | "blacklist" = selectedIpList) => {
+        const offset = (currentPage - 1) * pageSize;
 
 		getManagerData(offset, pageSize, sortBy)
 			.then((response) => {
@@ -102,8 +116,33 @@ export default function ManagerPanel() {
 			.finally(() => {
 				setIsLoading(false);
 			});
+        
+		if (listCategory === "IP Addresses") {
+			updateIpListData(ipList);
+		}
+    }
 
-		return () => abortController.abort();
+    const updateIpListData = (ipList: "whitelist" | "blacklist") => {
+        getIpAccessList(ipList === "whitelist")
+            .then((response) => {
+                const { data } = response;
+                Log({ message: `IP ${ipList} data`, data });
+                setIpListData(data);
+            }
+            )
+            .catch((err) => {
+                Log({
+                    message: `Error fetching IP ${ipList} data`,
+                    data: err,
+                    level: "error",
+                });
+            });
+    }
+
+	useEffect(() => {
+		if (!accessToken) return;
+
+		updateManagerData();
 	}, [
         accessToken,
 		currentPage,
@@ -288,7 +327,7 @@ export default function ManagerPanel() {
 				</Flex>
                 {
                     !isMobile && (
-                        <Select style={{ width: "100%" }} defaultValue={user.permissions}>
+                        <Select style={{ width: "100%" }} defaultValue={user.permissions} disabled={isUnverifiedUser(user) || user.permissions === 0} >
                             <Select.Option value={5}>Manager</Select.Option>
                             <Select.Option value={4}>Teacher</Select.Option>
                             <Select.Option value={3}>Mod</Select.Option>
@@ -417,7 +456,7 @@ export default function ManagerPanel() {
 
 			<Flex justify="center" style={{ marginTop: "20px", marginBottom: "20px" }}>
 				<Segmented
-					options={["Users", "IP Addresses", "Banned Users"]}
+					options={["Users", "Classrooms", "IP Addresses", "Banned Users"]}
 					onChange={(value) => {
 						if (value === "Users") {
 							setIsLoading(true);
@@ -429,50 +468,52 @@ export default function ManagerPanel() {
 				/>
 			</Flex>
 
-			<Flex gap={10} justify="center" align="center" style={{ marginBottom: "20px", height: "40px", padding: "0 5px" }}>
-                {isMobile ? null : (
-    				<Title level={3} style={{ margin: 0 }}>
-    					Sort by:
-    				</Title>
-                )}
-				<Button
-					variant="solid"
-					color={sortBy === "name" ? "primary" : undefined}
-					style={{ padding: "0 20px", height: "100%", ...(isMobile ? { flex: '1 1 auto' } : {}) }}
-					onClick={() => {
-						setCurrentPage(1);
-						setIsLoading(true);
-						setInitialLoad(true);
-						setSortBy("name");
-					}}
-				>
-					Name
-				</Button>
-				<Button
-					variant="solid"
-					color={sortBy === "permission" ? "primary" : undefined}
-					style={{ padding: "0 20px", height: "100%", ...(isMobile ? { flex: '1 1 auto' } : {}) }}
-					onClick={() => {
-						setCurrentPage(1);
-						setIsLoading(true);
-						setInitialLoad(true);
-						setSortBy("permission");
-					}}
-				>
-					Permission
-				</Button>
-				<Input
-					placeholder="Search users..."
-					style={{ width: "40%", ...(isMobile ? { flex: '1 1 auto' } : {}) }}
-					value={searchQuery}
-					onChange={(e) => {
-						setCurrentPage(1);
-						setIsLoading(true);
-						setInitialLoad(true);
-						setSearchQuery(e.target.value);
-					}}
-				/>
-			</Flex>
+            <Activity mode={listCategory === "Users" ? "visible" : "hidden"}>
+                <Flex gap={10} justify="center" align="center" style={{ marginBottom: "20px", height: "40px", padding: "0 5px" }}>
+                    {isMobile ? null : (
+                        <Title level={3} style={{ margin: 0 }}>
+                            Sort by:
+                        </Title>
+                    )}
+                    <Button
+                        variant="solid"
+                        color={sortBy === "name" ? "primary" : undefined}
+                        style={{ padding: "0 20px", height: "100%", ...(isMobile ? { flex: '1 1 auto' } : {}) }}
+                        onClick={() => {
+                            setCurrentPage(1);
+                            setIsLoading(true);
+                            setInitialLoad(true);
+                            setSortBy("name");
+                        }}
+                    >
+                        Name
+                    </Button>
+                    <Button
+                        variant="solid"
+                        color={sortBy === "permission" ? "primary" : undefined}
+                        style={{ padding: "0 20px", height: "100%", ...(isMobile ? { flex: '1 1 auto' } : {}) }}
+                        onClick={() => {
+                            setCurrentPage(1);
+                            setIsLoading(true);
+                            setInitialLoad(true);
+                            setSortBy("permission");
+                        }}
+                    >
+                        Permission
+                    </Button>
+                    <Input
+                        placeholder="Search users..."
+                        style={{ width: "40%", ...(isMobile ? { flex: '1 1 auto' } : {}) }}
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setCurrentPage(1);
+                            setIsLoading(true);
+                            setInitialLoad(true);
+                            setSearchQuery(e.target.value);
+                        }}
+                    />
+                </Flex>
+            </Activity>
 
 			<div style={{ flex: 1, overflowY: "auto", paddingBottom: "80px" }}>
 				<Activity
@@ -519,7 +560,152 @@ export default function ManagerPanel() {
 					)}
 				</Activity>
 				<Activity mode={listCategory === "IP Addresses" ? "visible" : "hidden"}>
-					<div style={{ textAlign: "center" }}>IP Addresses Management Coming Soon!</div>
+                    <Flex justify="center" align="center" gap={10} wrap style={{ margin: "10px" }}>
+                        <Segmented
+                            options={["Whitelist", "Blacklist"]}
+                            onChange={(value) => {
+                                const nextIpList = value.toLowerCase() as "whitelist" | "blacklist";
+                                setSelectedIpList(nextIpList);
+                                updateManagerData(nextIpList);
+                            }}
+                        />
+                        <Modal title={`Add IP to ${selectedIpList}`} open={showIpModal} onCancel={() => {
+                            setNewIpText("");
+                            setIsNewIpValid(false);
+                            setShowIpModal(false);
+                        }} onOk={() => {
+                            if (isNewIpValid && newIpText) {
+                                addIpToList(selectedIpList === "whitelist", newIpText)
+                                    .then(() => {
+                                        setNewIpText("");
+                                        setIsNewIpValid(false);
+                                        updateIpListData(selectedIpList);
+                                        setShowIpModal(false);
+                                    }
+                                    )
+                                    .catch((err) => {
+                                        Log({   message: `Error adding IP to ${selectedIpList}:`, data: err, level: "error" });
+                                    });
+                            }
+                        }} okButtonProps={{ disabled: !isNewIpValid }}>
+                            <Input placeholder="Enter IP address (e.g., 192.168.1.1)" value={newIpText} onChange={(e) => {
+                                setNewIpText(e.target.value);
+                                setIsNewIpValid(validateIp(e.target.value));
+                            }} status={newIpText && !isNewIpValid ? "error" : undefined} />
+                        </Modal>
+                        <Tooltip mouseEnterDelay={0.5} title={`Add IP to ${selectedIpList}`} color="blue">
+                            <Button variant="solid" color="blue" onClick={() => setShowIpModal(true)}>
+                                <IonIcon icon={IonIcons.add} />
+                            </Button>
+                        </Tooltip>
+                        <Tooltip mouseEnterDelay={0.5} title={`Toggle ${selectedIpList.charAt(0).toUpperCase() + selectedIpList.slice(1)} Active`} color={ipListData.active ? "green" : "red"}>
+                            <Switch checked={ipListData.active} onChange={() => {
+                                toggleIpList(selectedIpList === 'whitelist');
+                                updateIpListData(selectedIpList);
+                            }} />
+                        </Tooltip>
+                    </Flex>
+                    <div>
+                        <Row gutter={[8, 8]} style={{ margin: "10px" }}>
+                            {ipListData.ips.length > 0 ? (
+                                ipListData.ips.map(({id, ip}) => (
+                                    <Col span={8} key={`ip-col-${id}`}>
+                                        <Card key={`whitelist-ip-${id}`} style={{ marginBottom: "10px" }}>
+                                            <Flex gap={8} align="center">
+                                                <Input 
+                                                    value={editingIpId === id ? editingIpValue : ip} 
+                                                    disabled={editingIpId !== id}
+                                                    onChange={(e) => {
+                                                        setEditingIpValue(e.target.value);
+                                                        setIsIpValid(validateIp(e.target.value));
+                                                    }}
+                                                    status={editingIpId === id && editingIpValue && !isIpValid ? "error" : undefined}
+                                                />
+
+                                                {editingIpId === id ? (
+                                                    <>
+                                                        <Button 
+                                                            variant="solid" 
+                                                            color="green" 
+                                                            style={{ marginLeft: "auto" }}
+                                                            disabled={!isIpValid}
+                                                            onClick={() => {
+                                                                updateIpFromList(selectedIpList === "whitelist", String(id), editingIpValue)
+                                                                    .then(() => {
+                                                                        setEditingIpId(null);
+                                                                        setEditingIpValue("");
+                                                                        updateIpListData(selectedIpList);
+                                                                    })
+                                                                    .catch((err) => {
+                                                                        Log({
+                                                                            message: `Error updating IP in ${selectedIpList}:`,
+                                                                            data: err,
+                                                                            level: "error",
+                                                                        });
+                                                                    });
+                                                            }}
+                                                        >
+                                                            <IonIcon icon={IonIcons.checkmark} />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="solid" 
+                                                            color="default" 
+                                                            style={{ marginLeft: "auto" }}
+                                                            onClick={() => {
+                                                                setEditingIpId(null);
+                                                                setEditingIpValue("");
+                                                                setIsIpValid(false);
+                                                            }}
+                                                        >
+                                                            <IonIcon icon={IonIcons.close} />
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Button 
+                                                            variant="solid" 
+                                                            color="blue" 
+                                                            style={{ marginLeft: "auto" }}
+                                                            onClick={() => {
+                                                                setEditingIpId(id);
+                                                                setEditingIpValue(ip);
+                                                                setIsIpValid(validateIp(ip));
+                                                            }}
+                                                        >
+                                                            <IonIcon icon={IonIcons.pencil} />
+                                                        </Button>
+
+                                                        <Button 
+                                                            variant="solid" 
+                                                            color="red" 
+                                                            style={{ marginLeft: "auto" }} 
+                                                            onClick={() => deleteIpFromList(selectedIpList === "whitelist", id).then(() => updateIpListData(selectedIpList)).catch((err) => {
+                                                                Log({
+                                                                    message: `Error deleting IP from ${selectedIpList}:`,
+                                                                    data: err,
+                                                                    level: "error",
+                                                                });
+                                                                Modal.error({
+                                                                    title: "Failed to delete IP",
+                                                                    content: "An error occurred while deleting the IP address. Please try again.",
+                                                                });
+                                                            })}
+                                                        >
+                                                            <IonIcon icon={IonIcons.trash} />
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </Flex>
+                                        </Card>
+                                    </Col>
+                                ))
+                            ) : (
+                                <Flex justify="center" style={{ width: "100%" }}>
+                                    No IPs found
+                                </Flex>
+                            )}
+                        </Row>
+                    </div>
 				</Activity>
 				<Activity mode={listCategory === "Banned Users" ? "visible" : "hidden"}>
 					<Row gutter={[8, 8]} style={{ margin: "10px" }}>
