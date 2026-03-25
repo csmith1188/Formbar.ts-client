@@ -21,6 +21,13 @@ type MenuItem = Required<MenuProps>['items'][number] & {
 
 const items: MenuItem[] = [
     {
+        key: "0",
+        icon: <IonIcon icon={IonIcons.settingsOutline} />,
+        deselectedicon: <IonIcon icon={IonIcons.settingsOutline} />,
+        selectedicon: <IonIcon icon={IonIcons.settings} />,
+        label: "General",
+    },
+    {
         key: "1",
         icon: <IonIcon icon={IonIcons.colorPaletteOutline} />,
         deselectedicon: <IonIcon icon={IonIcons.colorPaletteOutline} />,
@@ -90,6 +97,13 @@ export default function SettingsModal() {
                 onClick={(e) => openMenu(e.key)}
             />
             <Flex style={{padding: 20, width:'100%', height: '100%'}}>
+                {
+                    currentMenu === "0" && (
+                        <Flex vertical gap={15}>
+                            <Text>General settings will go here. You can change your name, email, and other account details.</Text>
+                        </Flex>
+                    )
+                }
                 {currentMenu === "1" && (
                     <Flex vertical gap={15}>
                         <Flex gap={10} align="center">
