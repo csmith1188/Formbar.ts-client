@@ -1,12 +1,13 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Alert, Button, Card, Divider, Flex, Typography } from "antd";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { darkMode, lightMode } from "@/themes/ThemeConfig";
 import { authorizeOAuthApp } from "@api/oauthApi";
-import { SCOPES } from "@/types";
+import { AppScopes } from "@/types";
 import { useSettings, useUserData } from "@/main";
+import { getAppById } from "@/api/appsApi";
 
 const { Title, Text } = Typography;
 
@@ -24,8 +25,6 @@ interface OAuthInfo {
 
 interface OAuthAppInfo {
 	name: string;
-	description: string;
-	iconUrl: string;
 
 	permissions: OAuthPermission[];
 	info: {
@@ -36,8 +35,6 @@ interface OAuthAppInfo {
 type OAuthRequest = {
 	clientId: string;
 	clientName: string;
-	clientDescription: string;
-	clientIconUrl: string;
 	redirectUrl: string;
 	responseType: string;
 	scope: string;
@@ -46,24 +43,50 @@ type OAuthRequest = {
 	errors: string[];
 };
 
-function getScopeMetadata(scopeKey: string): { label: string; description: string } | null {
-	for (const section of Object.values(SCOPES) as Array<Record<string, any>>) {
-		for (const category of Object.values(section) as Array<any>) {
-			if (!category?.actions) continue;
+const emptyOAuthRequest: OAuthRequest = {
+    clientId: "",
+    clientName: "Unknown Application",
+    redirectUrl: "",
+    responseType: "code",
+    scope: "",
+    state: "",
+    permissions: [],
+    errors: [],
+};
 
-			for (const action of Object.values(category.actions) as Array<any>) {
-				if (action?.key === scopeKey) {
-					return {
-						label: action.label,
-						description: action.description,
-					};
-				}
-			}
+function getScopeMetadata(scopeKey: string): OAuthPermission | null {
+	// Find the scope in the AppScopes object
+	for (const scope of Object.values(AppScopes)) {
+		if (scope.key === scopeKey.toLowerCase()) {
+			return {
+				key: scope.key,
+				label: scope.label,
+				description: scope.description,
+				granted: true,
+			};
 		}
+		console.log("Checked scope:", scope.key, "against", scopeKey);
 	}
 
 	return null;
 }
+
+function createPlayfulScope() {
+	const scopes = [
+		"Read the thoughts of squirrels",
+		"Become a Formbob",
+		"Enable Jukebar",
+		"Summon Hayden",
+		"Access the secret Formbar ranch recipe",
+	]
+	return {
+		key: "playful.scope",
+		label: scopes[Math.floor(Math.random() * scopes.length)],
+		description: "",
+		granted: false,
+	}
+}
+
 
 function prettifyScopeLabel(scopeKey: string) {
 	return scopeKey
@@ -78,56 +101,67 @@ export default function AuthorizeApp() {
 	const navigate = useNavigate();
 	const [isAuthorizing, setIsAuthorizing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [oauthRequest, setOauthRequest] = useState<OAuthRequest>(emptyOAuthRequest);
 	const theme = settings.appearance.theme === "dark" ? darkMode : lightMode;
 
-	const oauthRequest = useMemo<OAuthRequest>(() => {
-		const params = new URLSearchParams(location.search);
-		const clientId = params.get("client_id")?.trim() || "";
-		const redirectUrl = params.get("redirect_uri")?.trim() || "";
-		const scope = params.get("scope")?.trim() || "";
-		const state = params.get("state")?.trim() || "";
-		const responseType = params.get("response_type")?.trim() || "code";
-		const clientName = params.get("client_name")?.trim() || "External application";
-		const clientDescription = params.get("client_description")?.trim() || "wants to access your account.";
-		const clientIconUrl = params.get("client_icon_url")?.trim() || "";
+	useEffect(() => {
+        let cancelled = false;
 
-		const requestedScopes = scope.split(/\s+/).filter(Boolean);
-		const permissions = requestedScopes.map((scopeKey) => {
-			const metadata = getScopeMetadata(scopeKey);
-			return {
-				key: scopeKey,
-				label: metadata?.label || prettifyScopeLabel(scopeKey),
-				description: metadata?.description,
-				granted: true,
-			};
-		});
+        (async () => {
+            const params = new URLSearchParams(location.search);
+            const clientId = params.get("client_id")?.trim() || "";
+            const redirectUrl = params.get("redirect_uri")?.trim() || "";
+            const scope = params.get("scope")?.trim() || "";
+            const state = params.get("state")?.trim() || "";
+            const responseType = params.get("response_type")?.trim() || "code";
 
-		const errors = [] as string[];
-		if (!clientId) errors.push("Missing client_id.");
-		if (!redirectUrl) errors.push("Missing redirect_uri.");
-		if (!scope) errors.push("Missing scope.");
-		if (!state) errors.push("Missing state.");
-		if (responseType !== "code") errors.push("Only response_type=code is supported.");
+            const requestedScopes = scope.split(/\s+/).filter(Boolean);
+            const permissions = requestedScopes.map((scopeKey) => {
+                const metadata = getScopeMetadata(scopeKey);
+                return {
+                    key: metadata?.key || scopeKey,
+                    label: metadata?.label || prettifyScopeLabel(scopeKey),
+                    description: metadata?.description,
+                    granted: metadata?.granted || false,
+                };
+            });
 
-		return {
-			clientId,
-			clientName,
-			clientDescription,
-			clientIconUrl,
-			redirectUrl,
-			responseType,
-			scope,
-			state,
-			permissions,
-			errors,
-		};
-	}, [location.search]);
+            const errors = [] as string[];
+            if (!clientId) errors.push("Missing client_id.");
+            if (!redirectUrl) errors.push("Missing redirect_uri.");
+            if (!scope) errors.push("Missing scope.");
+            if (!state) errors.push("Missing state.");
+            if (responseType !== "code") errors.push("Only response_type=code is supported.");
+
+            let clientName = "Unknown Application";
+            if (clientId) {
+                const appInfoFromServer = (await getAppById(parseInt(clientId, 10))).data;
+				console.log("App info from server:", appInfoFromServer);
+                clientName = appInfoFromServer?.name || clientName;
+            }
+
+            if (!cancelled) {
+                setOauthRequest({
+                    clientId,
+                    clientName,
+                    redirectUrl,
+                    responseType,
+                    scope,
+                    state,
+                    permissions,
+                    errors,
+                });
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [location.search]);
 
 	const appInfo: OAuthAppInfo = {
 		name: oauthRequest.clientName,
-		description: oauthRequest.clientDescription,
-		iconUrl: oauthRequest.clientIconUrl,
-		permissions: oauthRequest.permissions,
+		permissions: [...oauthRequest.permissions, createPlayfulScope()],
 		info: {
 			redirectUrl: oauthRequest.redirectUrl,
 		},
@@ -211,7 +245,7 @@ export default function AuthorizeApp() {
 						<Alert
 							type="error"
 							showIcon
-							message="Invalid OAuth request"
+							title="Invalid OAuth request"
 							description={oauthRequest.errors.join(" ")}
 							style={{ marginBottom: 20 }}
 						/>
@@ -220,7 +254,7 @@ export default function AuthorizeApp() {
 						<Alert
 							type="error"
 							showIcon
-							message="Authorization failed"
+							title="Authorization failed"
 							description={errorMessage}
 							style={{ marginBottom: 20 }}
 						/>
@@ -246,9 +280,7 @@ export default function AuthorizeApp() {
 											width: "60px",
 											height: "60px",
 											borderRadius: "50%",
-											backgroundImage: appInfo.iconUrl
-												? `url(${appInfo.iconUrl})`
-												: "linear-gradient(135deg, rgba(101, 190, 57, 0.95), rgba(25, 118, 210, 0.95))",
+											backgroundImage: "linear-gradient(135deg, rgba(101, 190, 57, 0.95), rgba(25, 118, 210, 0.95))",
 											backgroundSize: "cover",
 											backgroundPosition: "center",
 											opacity: 0.5,
@@ -261,7 +293,7 @@ export default function AuthorizeApp() {
 											color: "white",
 										}}
 									>
-										{!appInfo.iconUrl ? appInfo.name.slice(0, 1).toUpperCase() : null}
+										{appInfo.name.slice(0, 1).toUpperCase()}
 									</div>
 								</Flex>
 								<Text style={{ margin: 0 }}>An external application</Text>
@@ -269,7 +301,7 @@ export default function AuthorizeApp() {
 									{appInfo.name}
 								</Title>
 								<Text type="secondary" style={{ fontSize: 16 }}>
-									{appInfo.description}
+									wants to access your Formbar account.
 								</Text>
 								<Text type="secondary" style={{ fontSize: "12px" }}>
 									Signed in as {userData?.displayName || "your account"} <Divider vertical /> <Link to="/login">Not you?</Link>

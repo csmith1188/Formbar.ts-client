@@ -307,3 +307,18 @@ type ExtractScopeKey<T> = T extends { key: infer K extends string }
 		: never;
 
 export type ScopeKey = ExtractScopeKey<typeof SCOPES>;
+
+export const AppScopes = {
+	READ_POLL_RESPONSES: { key: "read_poll_responses", label: "Read Poll Responses", description: "Allow the app to read your poll responses" },
+	READ_DIGIPOG_TRANSACTIONS: { key: "read_digipog_transactions", label: "Read Digipog Transactions", description: "Allow the app to read your digipog transactions" },
+	SEND_NOTIFICATIONS: { key: "send_notifications", label: "Send Notifications", description: "Allow the app to send you notifications" },
+	SEND_MY_DIGIPOGS: { key: "send_my_digipogs", label: "Send My Digipogs", description: "Allow the app to send digipogs on your behalf" },
+}
+
+type ExtractAppScopeKey<T> = T extends { key: infer K extends string }
+	? K
+	: T extends object
+		? { [P in keyof T]: ExtractAppScopeKey<T[P]> }[keyof T]
+		: never;
+
+export type AppScopeKey = ExtractAppScopeKey<typeof AppScopes>;
