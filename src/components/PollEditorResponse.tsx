@@ -1,5 +1,4 @@
-import { Flex, Tooltip, Input, InputNumber, Button, ColorPicker } from "antd";
-
+import { Flex, Tooltip, Input, InputNumber, Button, ColorPicker, Checkbox } from "antd";
 import { getAppearAnimation, useSettings } from "@/main";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
@@ -29,7 +28,7 @@ export default function PollEditorResponse({
                 
             }} onChange={(e) => setAnswer({...answer, color: "#" + e.toHex()})}/>
 
-            {/* <Tooltip title="Mark as Correct Answer" mouseEnterDelay={0.5}>
+            <Tooltip title="Mark as Correct Answer" mouseEnterDelay={0.5}>
                 <Checkbox className="correctAnswer" styles={{
                     root: {
                         height: '100%',
@@ -40,7 +39,7 @@ export default function PollEditorResponse({
                         aspectRatio: 1
                     }
                 }} checked={answer.isCorrect} onChange={(e) => setAnswer({ ...answer, isCorrect: e.target.checked })} />
-            </Tooltip> */}
+            </Tooltip>
 
             <Input placeholder="Answer Text" style={{
                 height: '100%'

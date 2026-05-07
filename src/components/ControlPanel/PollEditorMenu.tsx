@@ -1,9 +1,9 @@
-import { Button, Card, Flex, Input, Switch, Tooltip, Typography, notification } from "antd";
+import { Button, Card, Flex, Input, Switch, Tooltip, Typography, notification, InputNumber } from "antd";
 const { Title, Text } = Typography;
 import { useClassData, useMobileDetect } from "@/main";
-import PollEditorResponse from "@components/PollEditorResponse";
 import { useState } from "react";
 import { IonIcon } from "@ionic/react";
+import PollEditorResponse from "@components/PollEditorResponse";
 import * as IonIcons from "ionicons/icons";
 
 type PollAnswer = {
@@ -18,11 +18,14 @@ type PollProperties = {
     answers: PollAnswer[];
     weight: number;
     blind: boolean;
+    blindUntilEnded: boolean;
     allowVoteChanges: boolean;
     excludedRespondents: any[];
     indeterminate: any[];
     allowTextResponses: boolean;
     allowMultipleResponses: boolean;
+    autoEndTimer: number | null;
+    autoEndThreshold: number | null;
 };
 
 import { socket } from "@utils/socket";
@@ -102,11 +105,14 @@ export default function PollsEditorMenu() {
         ],
         weight: 1,
         blind: false,
+        blindUntilEnded: false,
         allowVoteChanges: true,
         excludedRespondents: [],
         indeterminate: [],
         allowTextResponses: false,
         allowMultipleResponses: false,
+        autoEndTimer: null,
+        autoEndThreshold: null,
     });
 
     function startCustomPoll() {
@@ -129,6 +135,21 @@ export default function PollsEditorMenu() {
         // socket && socket.emit("startPoll", pollProperties);
     }
 
+    const settingRowStyle = {
+        minHeight: 36,
+    } as const;
+
+    const autoEndSectionStyle = {
+        padding: 12,
+        border: "1px solid rgba(5, 5, 5, 0.08)",
+        borderRadius: 8,
+        background: "rgba(5, 5, 5, 0.02)",
+    } as const;
+
+    const autoEndInputStyle = {
+        width: 118,
+    } as const;
+
     return (
         <>{contextHolder}
         <Flex vertical align="center" justify="start" style={{ height: "100%", flex: 1, padding: 20, paddingBottom: 0 }}>
@@ -137,7 +158,7 @@ export default function PollsEditorMenu() {
             <Flex gap={20} vertical={isMobile} style={isMobile ? {width: '100%'} : {}}>
                 <Card title="Poll Properties">
 
-                    <Flex vertical gap={15} style={{height: isMobile ? 'min-content' : 400}}>
+                    <Flex vertical gap={15} style={{height: isMobile ? 'min-content' : '550px'}}>
                         <Input placeholder="Poll Prompt" style={{ marginBottom: isMobile ? undefined : '20px' }}
                             value={pollProperties.prompt} onChange={(e) => setPollProperties({ ...pollProperties, prompt: e.target.value })}
                         />
@@ -147,25 +168,53 @@ export default function PollsEditorMenu() {
                             ) : (
                                 <>
 
-                                <Flex align="center" justify="space-between">
+                                <Flex align="center" justify="space-between" style={settingRowStyle}>
                                     Allow Vote Changes
                                     <Switch defaultChecked={pollProperties.allowVoteChanges} onChange={(e) => setPollProperties({...pollProperties, allowVoteChanges: e})} />
                                 </Flex>
 
-                                <Flex align="center" justify="space-between">
+                                <Flex align="center" justify="space-between" style={settingRowStyle}>
                                     Allow Text Responses
                                     <Switch defaultChecked={pollProperties.allowTextResponses} onChange={(e) => setPollProperties({...pollProperties, allowTextResponses: e})} />
                                 </Flex>
 
-                                <Flex align="center" justify="space-between">
+                                <Flex align="center" justify="space-between" style={settingRowStyle}>
                                     Blind Poll
                                     <Switch defaultChecked={pollProperties.blind} onChange={(e) => setPollProperties({...pollProperties, blind: e})} />
                                 </Flex>
 
-                                <Flex align="center" justify="space-between">
+                                <Flex align="center" justify="space-between" style={settingRowStyle}>
+                                    Blind Until Ended
+                                    <Switch defaultChecked={pollProperties.blindUntilEnded} onChange={(e) => setPollProperties({...pollProperties, blindUntilEnded: e})} />
+                                </Flex>
+
+                                <Flex align="center" justify="space-between" style={settingRowStyle}>
                                     Multiple Answer Poll
                                     <Switch defaultChecked={pollProperties.allowMultipleResponses} onChange={(e) => setPollProperties({...pollProperties, allowMultipleResponses: e})} />
                                 </Flex>
+                                    <Flex align="center" justify="space-between" style={settingRowStyle}>
+                                        <Text>Auto End Timer</Text>
+                                        <InputNumber
+                                            min={0}
+                                            max={100000}
+                                            value={pollProperties.autoEndTimer ?? 0}
+                                            onChange={(value) => setPollProperties({...pollProperties, autoEndTimer: Number(value ?? 0)})}
+                                            style={autoEndInputStyle}
+                                            suffix="s"
+                                        />
+                                    </Flex>
+
+                                    <Flex align="center" justify="space-between" style={settingRowStyle}>
+                                        <Text>Auto End Threshold</Text>
+                                        <InputNumber
+                                            min={0}
+                                            max={100}
+                                            value={pollProperties.autoEndThreshold ?? 0}
+                                            onChange={(value) => setPollProperties({...pollProperties, autoEndThreshold: Number(value ?? 0)})}
+                                            style={autoEndInputStyle}
+                                            suffix="%"
+                                        />
+                                    </Flex>
                                 </>
                             )
                         }

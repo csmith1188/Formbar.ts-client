@@ -228,6 +228,7 @@ export const SCOPES = {
 				END: { key: "class.poll.end", label: "End", description: "End active polls" },
 				DELETE: { key: "class.poll.delete", label: "Delete", description: "Delete polls" },
 				SHARE: { key: "class.poll.share", label: "Share", description: "Share polls with others" },
+				READ_CORRECT_ANSWERS: { key: "class.poll.read_correct_answers", label: "Read Correct Answers", description: "View correct poll answers" },
 			},
 		},
 		ROLES: {
