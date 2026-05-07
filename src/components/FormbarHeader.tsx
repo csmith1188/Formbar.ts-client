@@ -127,55 +127,29 @@ export default function FormbarHeader() {
                 </>
 			)}
 			<Flex align="center" justify="center" gap={10}>
-                { isDev && !isMobileView && userData && (<>
-                    <Tooltip
+
+				{userData &&
+				userData.activeClass && (
+					<Tooltip
                         mouseEnterDelay={0.5}
-                        placement="bottomRight"
-                        title="Testing"
-                        arrow={{ pointAtCenter: true }}
-                        color="geekblue"
-                    >
-                        <Button
-                            type="primary"
-                            variant="solid"
-                            color="geekblue"
-                            size="large"
-                            style={styles.headerButton}
-                            onClick={() => navigate("/testing")}
-                        >
-                            <IonIcon icon={IonIcons.bug} size="large" />
-                        </Button>
-                    </Tooltip>
-                    </>
-                )}
-				{ !isMobileView && isDev && userData && canOpenDebug && (<>
-                    <Tooltip
-                        mouseEnterDelay={0.5}
-                        placement="bottomRight"
-                        title="Debug"
-                        arrow={{ pointAtCenter: true }}
-                        color="volcano"
-                    >
-                        <Button
-                            type="primary"
-                            variant="solid"
-                            color="volcano"
-                            size="large"
-                            style={styles.headerButton}
-                            onClick={() => navigate("/debug")}
-                        >
-                            <IonIcon icon={IonIcons.construct} size="large" />
-                        </Button>
-                    </Tooltip>
-                    <div
-					style={{
-						borderRight: `2px solid ${isDark ? "#fff3" : "#0003"}`,
-						borderRadius: "999px",
-						height: "30px",
-					}}
-                    />
-                    </>
-                )}
+						placement="bottomRight"
+						title={"Links"}
+						arrow={{ pointAtCenter: true }}
+						color="geekblue"
+					>
+						<Button
+							type="primary"
+							variant="solid"
+							color="geekblue"
+							size="large"
+							style={styles.headerButton}
+							onClick={() => navigate(`/links`)}
+						>
+							<IonIcon icon={IonIcons.link} size="large" />
+						</Button>
+					</Tooltip>
+				)
+			}
 
 				{userData &&
 				userData.activeClass &&
