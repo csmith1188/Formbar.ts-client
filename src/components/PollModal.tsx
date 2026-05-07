@@ -1,4 +1,4 @@
-import { Button, Flex, Input, Modal, Switch, Typography, ColorPicker } from "antd";
+import { Button, Flex, Input, InputNumber, Modal, Switch, Typography, ColorPicker, Divider } from "antd";
 const { Text } = Typography;
 import { textColorForBackground } from "@utils/GlobalFunctions";
 import { IonIcon } from "@ionic/react";
@@ -24,9 +24,19 @@ export interface PollModalProps {
 	onAllowTextResponsesChange?: (checked: boolean) => void;
 	blind: boolean;
 	onBlindChange?: (checked: boolean) => void;
+	blindUntilEnded: boolean;
+	onBlindUntilEndedChange?: (checked: boolean) => void;
+	autoEndTimer?: number | null;
+	onAutoEndTimerChange?: (value: number | null) => void;
+	autoEndThreshold?: number | null;
+	onAutoEndThresholdChange?: (value: number | null) => void;
 	allowMultipleResponses: boolean;
 	onAllowMultipleResponsesChange?: (checked: boolean) => void;
 	footerButton?: {
+		label: string;
+		onClick: () => void;
+	};
+	secondaryFooterButton?: {
 		label: string;
 		onClick: () => void;
 	};
@@ -46,9 +56,16 @@ export default function PollModal({
 	onAllowTextResponsesChange,
 	blind,
 	onBlindChange,
+	blindUntilEnded,
+	onBlindUntilEndedChange,
+	autoEndTimer,
+	onAutoEndTimerChange,
+	autoEndThreshold,
+	onAutoEndThresholdChange,
 	allowMultipleResponses,
 	onAllowMultipleResponsesChange,
 	footerButton,
+	secondaryFooterButton,
 	readOnly = false,
 }: PollModalProps) {
 	const handleAnswerChange = (index: number, field: keyof Answer, value: any) => {
@@ -92,7 +109,12 @@ export default function PollModal({
 			destroyOnHidden
 			footer={
 				footerButton ? (
-					<div style={{ textAlign: "center", width: "100%" }}>
+					<div style={{ display: "flex", justifyContent: "center", gap: 8, width: "100%" }}>
+						{secondaryFooterButton && (
+							<Button onClick={secondaryFooterButton.onClick} color="gold" type="default" variant="solid">
+								{secondaryFooterButton.label}
+							</Button>
+						)}
 						<Button type="primary" onClick={footerButton.onClick} disabled={answers.length === 0 || answers.some(a => a.answer.trim() === "") || prompt.trim() === ""}>
 							{footerButton.label}
 						</Button>
@@ -186,6 +208,17 @@ export default function PollModal({
 				</Flex>
 
 				<Flex align="center" justify="space-between">
+					Multiple Answer Poll
+					<Switch
+						disabled={readOnly}
+						checked={allowMultipleResponses}
+						onChange={(checked) => onAllowMultipleResponsesChange?.(checked)}
+					/>
+				</Flex>
+
+				<Divider titlePlacement="center" style={{fontSize: 16}}>Blind Options</Divider>
+
+				<Flex align="center" justify="space-between">
 					Blind Poll
 					<Switch
 						disabled={readOnly}
@@ -195,11 +228,37 @@ export default function PollModal({
 				</Flex>
 
 				<Flex align="center" justify="space-between">
-					Multiple Answer Poll
+					Blind Until Ended
 					<Switch
 						disabled={readOnly}
-						checked={allowMultipleResponses}
-						onChange={(checked) => onAllowMultipleResponsesChange?.(checked)}
+						checked={blindUntilEnded}
+						onChange={(checked) => onBlindUntilEndedChange?.(checked)}
+					/>
+				</Flex>
+
+				<Divider titlePlacement="center" style={{fontSize: 16}}>Timing</Divider>
+
+				<Flex align="center" justify="space-between">
+					Auto End Timer
+					<InputNumber
+						disabled={readOnly}
+						min={0}
+						max={100000}
+						value={autoEndTimer ?? 0}
+						onChange={(value) => onAutoEndTimerChange?.(typeof value === "number" ? value : null)}
+						suffix="s"
+					/>
+				</Flex>
+
+				<Flex align="center" justify="space-between">
+					Auto End Threshold
+					<InputNumber
+						disabled={readOnly}
+						min={0}
+						max={100}
+						value={autoEndThreshold ?? 0}
+						onChange={(value) => onAutoEndThresholdChange?.(typeof value === "number" ? value : null)}
+						suffix="%"
 					/>
 				</Flex>
 			</Flex>

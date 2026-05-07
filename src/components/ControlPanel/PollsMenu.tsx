@@ -21,6 +21,9 @@ const defaultPolls = [
 		indeterminate: [],
 		allowTextResponses: false,
 		allowMultipleResponses: false,
+		blindUntilEnded: false,
+		autoEndTimer: null,
+		autoEndThreshold: null,
 	},
 	{
 		id: 2,
@@ -37,6 +40,9 @@ const defaultPolls = [
 		indeterminate: [],
 		allowTextResponses: false,
 		allowMultipleResponses: false,
+		blindUntilEnded: false,
+		autoEndTimer: null,
+		autoEndThreshold: null,
 	},
 	{
 		id: 3,
@@ -49,6 +55,9 @@ const defaultPolls = [
 		indeterminate: [],
 		allowTextResponses: false,
 		allowMultipleResponses: false,
+		blindUntilEnded: false,
+		autoEndTimer: null,
+		autoEndThreshold: null,
 	},
 	{
 		id: 4,
@@ -66,6 +75,9 @@ const defaultPolls = [
 		indeterminate: [],
 		allowTextResponses: false,
 		allowMultipleResponses: false,
+		blindUntilEnded: false,
+		autoEndTimer: null,
+		autoEndThreshold: null,
         divider: true,
 	},
 	{
@@ -81,6 +93,9 @@ const defaultPolls = [
 		indeterminate: [],
 		allowTextResponses: true,
 		allowMultipleResponses: false,
+		blindUntilEnded: false,
+		autoEndTimer: null,
+		autoEndThreshold: null,
 	},
 ];
 
@@ -94,9 +109,21 @@ import { currentUserHasScope } from "@utils/scopeUtils";
 export default function PollsMenu({
 	openModalId,
 	setOpenModalId,
+	onLoadPollIntoEditor,
 }: {
 	openModalId: number | null;
 	setOpenModalId: React.Dispatch<React.SetStateAction<number | null>>;
+	onLoadPollIntoEditor: (poll: {
+		prompt: string;
+		answers: { answer: string; weight: number; color: string; isCorrect?: boolean }[];
+		allowVoteChanges: boolean;
+		allowTextResponses: boolean;
+		blind: boolean;
+		blindUntilEnded: boolean;
+		autoEndTimer: number | null;
+		autoEndThreshold: number | null;
+		allowMultipleResponses: boolean;
+	}) => void;
 }) {
 	const { userData } = useUserData();
 	const { classData } = useClassData();
@@ -106,7 +133,10 @@ export default function PollsMenu({
     const [allowVoteChanges, setAllowVoteChanges] = useState<boolean>(false);
     const [allowTextResponses, setAllowTextResponses] = useState<boolean>(false);
     const [blind, setBlind] = useState<boolean>(false);
+	const [blindUntilEnded, setBlindUntilEnded] = useState<boolean>(false);
     const [allowMultipleResponses, setAllowMultipleResponses] = useState<boolean>(false);
+	const [autoEndTimer, setAutoEndTimer] = useState<number | null>(null);
+	const [autoEndThreshold, setAutoEndThreshold] = useState<number | null>(null);
     const [pollPrompt, setPollPrompt] = useState<string>("");
     const [pollAnswers, setPollAnswers] = useState<{answer: string, weight: number, color: string}[]>([]);
 
@@ -123,6 +153,7 @@ export default function PollsMenu({
 	const [api, contextHolder] = notification.useNotification();
 
 	const canSeePolls = currentUserHasScope(userData, "class.poll.read");
+	const canCreatePolls = currentUserHasScope(userData, "class.poll.create");
 
 	const showErrorNotification = (message: string) => {
 		api["error"]({
@@ -132,12 +163,44 @@ export default function PollsMenu({
 		});
 	};
 
+	function seedPollEditor(poll: {
+		prompt: string;
+		answers: { answer: string; weight: number; color: string; isCorrect?: boolean }[];
+		allowVoteChanges: boolean;
+		allowTextResponses: boolean;
+		blind: boolean;
+		blindUntilEnded: boolean;
+		autoEndTimer: number | null;
+		autoEndThreshold: number | null;
+		allowMultipleResponses: boolean;
+	}) {
+		onLoadPollIntoEditor({
+			prompt: poll.prompt,
+			answers: poll.answers.map((answer) => ({
+				answer: answer.answer,
+				weight: answer.weight ?? 1,
+				color: answer.color,
+				isCorrect: Boolean(answer.isCorrect),
+			})),
+			allowVoteChanges: poll.allowVoteChanges,
+			allowTextResponses: poll.allowTextResponses,
+			blind: poll.blind,
+			blindUntilEnded: poll.blindUntilEnded,
+			autoEndTimer: poll.autoEndTimer,
+			autoEndThreshold: poll.autoEndThreshold,
+			allowMultipleResponses: poll.allowMultipleResponses,
+		});
+	}
+
 	function startPoll(id: number) {
 
         const poll = { ...defaultPolls.filter((e) => e.id == id)[0] };
         poll.allowVoteChanges = allowVoteChanges;
         poll.allowTextResponses = allowTextResponses;
         poll.blind = blind;
+		poll.blindUntilEnded = blindUntilEnded;
+		poll.autoEndTimer = autoEndTimer;
+		poll.autoEndThreshold = autoEndThreshold;
         poll.allowMultipleResponses = allowMultipleResponses;
         poll.prompt = pollPrompt;
         poll.answers = pollAnswers;
@@ -199,6 +262,9 @@ export default function PollsMenu({
                                         setAllowVoteChanges(poll.allowVoteChanges);
                                         setAllowTextResponses(poll.allowTextResponses);
                                         setBlind(poll.blind);
+										setBlindUntilEnded(Boolean((poll as any).blindUntilEnded ?? false));
+										setAutoEndTimer((poll as any).autoEndTimer ?? null);
+										setAutoEndThreshold((poll as any).autoEndThreshold ?? null);
                                         setAllowMultipleResponses(poll.allowMultipleResponses);
                                         setPollPrompt(poll.prompt);
                                         setPollAnswers(poll.answers.map(a => ({...a})));
@@ -219,12 +285,35 @@ export default function PollsMenu({
                                     onAllowTextResponsesChange={setAllowTextResponses}
                                     blind={blind}
                                     onBlindChange={setBlind}
+									blindUntilEnded={blindUntilEnded}
+									onBlindUntilEndedChange={setBlindUntilEnded}
+									autoEndTimer={autoEndTimer}
+									onAutoEndTimerChange={setAutoEndTimer}
+									autoEndThreshold={autoEndThreshold}
+									onAutoEndThresholdChange={setAutoEndThreshold}
                                     allowMultipleResponses={allowMultipleResponses}
                                     onAllowMultipleResponsesChange={setAllowMultipleResponses}
                                     footerButton={{
                                         label: "Start Poll",
                                         onClick: () => startPoll(poll.id),
                                     }}
+                                    secondaryFooterButton={canCreatePolls ? {
+                                        label: "Load into Editor",
+                                        onClick: () => {
+                                            seedPollEditor({
+                                                prompt: pollPrompt,
+                                                answers: pollAnswers,
+                                                allowVoteChanges,
+                                                allowTextResponses,
+                                                blind,
+												blindUntilEnded,
+												autoEndTimer,
+												autoEndThreshold,
+                                                allowMultipleResponses,
+                                            });
+                                            setOpenModalId(null);
+                                        },
+                                    } : undefined}
                                 />
                             </div>
                             {poll.divider && <Divider style={{marginTop: '15px', marginBottom: '5px'}}/>}
@@ -276,6 +365,12 @@ export default function PollsMenu({
 											onAllowTextResponsesChange={setAllowTextResponses}
 											blind={blind}
 											onBlindChange={setBlind}
+											blindUntilEnded={blindUntilEnded}
+											onBlindUntilEndedChange={setBlindUntilEnded}
+											autoEndTimer={autoEndTimer}
+											onAutoEndTimerChange={setAutoEndTimer}
+											autoEndThreshold={autoEndThreshold}
+											onAutoEndThresholdChange={setAutoEndThreshold}
 											allowMultipleResponses={allowMultipleResponses}
 											onAllowMultipleResponsesChange={setAllowMultipleResponses}
 											footerButton={{
@@ -294,6 +389,23 @@ export default function PollsMenu({
 													setOpenPreviousPollId(null);
 												},
 											}}
+											secondaryFooterButton={canCreatePolls ? {
+												label: "Load into Editor",
+												onClick: () => {
+													seedPollEditor({
+														prompt: previousPollPrompt,
+														answers: previousPollAnswers,
+														allowVoteChanges,
+														allowTextResponses,
+														blind,
+														blindUntilEnded,
+														autoEndTimer,
+														autoEndThreshold,
+														allowMultipleResponses,
+													});
+													setOpenPreviousPollId(null);
+												},
+											} : undefined}
 										/>
 									</div>
 								</Col>

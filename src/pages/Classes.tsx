@@ -58,6 +58,7 @@ export default function ClassesPage() {
 
 	// Handle joining class from URL
 	useEffect(() => {
+		if(!userData) return;
 		if (location.href.includes("joinClass")) {
 			const urlParams = new URLSearchParams(window.location.search);
 			const classCode = urlParams.get("code");
@@ -66,7 +67,7 @@ export default function ClassesPage() {
 				joinClassByCode(classCode);
 			}
 		}
-	}, []);
+	}, [userData]);
 
     function getClasses() {
         if (!userData) return;

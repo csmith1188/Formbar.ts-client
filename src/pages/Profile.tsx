@@ -322,7 +322,7 @@ export default function Profile() {
 						justifyContent: 'end',
 					}}>
 						<Title
-							style={{marginLeft: '20px', fontStyle: 'italic', opacity: 0.5, color: settings.appearance.theme == 'dark' ? 'black' : 'white'}}
+							style={{marginLeft: '20px', fontStyle: 'italic', opacity: 0.5, color: settings.appearance.theme == 'dark' ? 'black' : 'white', zIndex: 2}}
 						>Pog Meter</Title>
 						<div className="pogMeterWave"
 							style={{height:'50px'}}

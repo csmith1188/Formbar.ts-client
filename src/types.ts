@@ -67,6 +67,9 @@ export type ClassData = {
         totalResponses: number;
         startTime: number;
         weight: number;
+		blindUntilEnded: boolean;
+		autoEndTimer: number | null;
+		autoEndThreshold: number | null;
 	};
 	permissions: {
 		links: number;
@@ -169,6 +172,9 @@ export type Poll = {
     status: boolean;
     totalResponders: number;
     totalResponses: number;
+	blindUntilEnded: boolean;
+	autoEndTimer: number | null;
+	autoEndThreshold: number | null;
 };
 
 export const SCOPES = {

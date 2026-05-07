@@ -46,6 +46,15 @@ import { type ClassData, type ScopeKey } from "@/types";
 import { currentUserHasScope, userHasAllScopes, userHasAnyScope } from "@utils/scopeUtils";
 import { getMe } from "@api/userApi";
 
+type EditorSeedPoll = {
+	prompt: string;
+	answers: { color: string; answer: string; isCorrect: boolean; weight: number }[];
+	allowVoteChanges: boolean;
+	allowTextResponses: boolean;
+	blind: boolean;
+	allowMultipleResponses: boolean;
+};
+
 interface MenuItem {
 	key: string;
 	icon: React.ReactNode;
@@ -170,6 +179,7 @@ export default function ControlPanel() {
 	const timerAlarmPlayedRef = useRef(false);
 	const isMobileDevice = isMobile();
 	const [currentMenu, setCurrentMenu] = useState("1");
+	const [pollEditorSeed, setPollEditorSeed] = useState<EditorSeedPoll | null>(null);
 
     const [showPollDetails, setShowPollDetails] = useState(false);
 
@@ -322,6 +332,11 @@ export default function ControlPanel() {
 	function openMenu(key: string) {
 		if (key === currentMenu) return;
 		setCurrentMenu(key);
+	}
+
+	function loadPollIntoEditor(seed: EditorSeedPoll) {
+		setPollEditorSeed(seed);
+		setCurrentMenu("7");
 	}
 
     useEffect(() => {
@@ -575,6 +590,9 @@ export default function ControlPanel() {
                         allowVoteChanges={classData?.poll?.allowVoteChanges || false}
                         allowTextResponses={classData?.poll?.allowTextResponses || false}
                         blind={classData?.poll?.blind || false}
+						blindUntilEnded={classData?.poll?.blindUntilEnded || false}
+						autoEndTimer={classData?.poll?.autoEndTimer ?? null}
+						autoEndThreshold={classData?.poll?.autoEndThreshold ?? null}
                         allowMultipleResponses={classData?.poll?.allowMultipleResponses || false}
                         readOnly
                     />
@@ -706,6 +724,7 @@ export default function ControlPanel() {
 						<PollsMenu
 							openModalId={openModalId}
 							setOpenModalId={setOpenModalId}
+							onLoadPollIntoEditor={loadPollIntoEditor}
 						/>
 					</Activity>
 					<Activity mode={currentMenu == "3" ? "visible" : "hidden"}>
@@ -721,7 +740,7 @@ export default function ControlPanel() {
 						<SettingsMenu />
 					</Activity>
 					<Activity mode={currentMenu == "7" ? "visible" : "hidden"}>
-						<PollEditorMenu />
+						<PollEditorMenu initialPoll={pollEditorSeed} />
 					</Activity>
 				</div>
 			</Flex>
