@@ -68,7 +68,10 @@ export function createPoll(classId: number, body: {
     indeterminate: any[],
     allowTextResponses: boolean,
     allowMultipleResponses: boolean,    
-    allowVoteChanges: boolean
+    allowVoteChanges: boolean,
+    blindUntilEnded: boolean,
+    autoEndTimer: number | null,
+    autoEndThreshold: number | null,
 }) {
     return http(`/class/${classId}/polls/create`, "POST", {}, body);
 }

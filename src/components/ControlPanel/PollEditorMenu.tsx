@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { IonIcon } from "@ionic/react";
 import PollEditorResponse from "@components/PollEditorResponse";
 import * as IonIcons from "ionicons/icons";
+import { millisecondsToSeconds, secondsToMilliseconds } from "@utils/GlobalFunctions";
 
 type PollAnswer = {
     color: string;
@@ -108,6 +109,9 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
 		});
 	};
 
+    const [useAutoEndTimer, setUseAutoEndTimer] = useState(false);
+    const [useAutoEndThreshold, setUseAutoEndThreshold] = useState(false);
+
     const [pollProperties, setPollProperties] = useState<PollProperties>({
         prompt: "Custom Poll",
         answers: [
@@ -117,14 +121,14 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
         ],
         weight: 1,
         blind: false,
-        blindUntilEnded: false,
+        blindUntilEnded: true,
         allowVoteChanges: true,
         excludedRespondents: [],
         indeterminate: [],
         allowTextResponses: false,
         allowMultipleResponses: false,
-        autoEndTimer: null,
-        autoEndThreshold: null,
+        autoEndTimer: 60,
+        autoEndThreshold: 80,
     });
 
     useEffect(() => {
@@ -143,10 +147,12 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
             allowTextResponses: initialPoll.allowTextResponses,
             blind: initialPoll.blind,
             blindUntilEnded: initialPoll.blindUntilEnded,
-            autoEndTimer: initialPoll.autoEndTimer,
+            autoEndTimer: millisecondsToSeconds(initialPoll.autoEndTimer),
             autoEndThreshold: initialPoll.autoEndThreshold,
             allowMultipleResponses: initialPoll.allowMultipleResponses,
         }));
+        setUseAutoEndTimer(initialPoll.autoEndTimer != null);
+        setUseAutoEndThreshold(initialPoll.autoEndThreshold != null);
     }, [initialPoll]);
 
     function startCustomPoll() {
@@ -158,7 +164,12 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
 		}
 
         //? Use fetch WHEN IT ACTUALLY WORKS.
-        createPoll(classData.id, pollProperties)
+        createPoll(classData.id, {
+            ...pollProperties,
+            blindUntilEnded: pollProperties.blind ? pollProperties.blindUntilEnded : false,
+            autoEndTimer: useAutoEndTimer ? secondsToMilliseconds(pollProperties.autoEndTimer) : null,
+            autoEndThreshold: useAutoEndThreshold ? pollProperties.autoEndThreshold : null,
+        })
             .then(() => {
                 socket?.emit("classUpdate", ""); // Refresh class data to show new poll
             })
@@ -224,13 +235,15 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
 										<Flex vertical gap={12}>
                                             <Flex align="center" justify="space-between" style={settingRowStyle}>
                                                 Blind Poll
-                                                <Switch defaultChecked={pollProperties.blind} onChange={(e) => setPollProperties({...pollProperties, blind: e})} />
+                                                <Switch checked={pollProperties.blind} onChange={(e) => setPollProperties({...pollProperties, blind: e})} />
                                             </Flex>
 
-                                            <Flex align="center" justify="space-between" style={settingRowStyle}>
-                                                Blind Until Ended
-                                                <Switch defaultChecked={pollProperties.blindUntilEnded} onChange={(e) => setPollProperties({...pollProperties, blindUntilEnded: e})} />
-                                            </Flex>
+                                            <Tooltip title={!pollProperties.blind ? "Enable Blind Poll to use this option" : undefined} mouseEnterDelay={0.3}>
+                                                <Flex align="center" justify="space-between" style={{ ...settingRowStyle, opacity: pollProperties.blind ? 1 : 0.4, transition: "opacity 0.2s" }}>
+                                                    Blind Until Ended
+                                                    <Switch checked={pollProperties.blindUntilEnded} disabled={!pollProperties.blind} onChange={(e) => setPollProperties({...pollProperties, blindUntilEnded: e})} />
+                                                </Flex>
+                                            </Tooltip>
 										</Flex>
 									),
 								},
@@ -239,28 +252,36 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
                                     label: "Timing",
                                     children: (
                                         <Flex vertical gap={12}>
-                                            <Flex align="center" justify="space-between" style={settingRowStyle}>
+                                            <Flex align="center" justify="space-between" gap={12} style={settingRowStyle}>
                                                 <Text>Auto End Timer</Text>
-                                                <InputNumber
-                                                    min={0}
-                                                    max={100000}
-                                                    value={pollProperties.autoEndTimer ?? 0}
-                                                    onChange={(value) => setPollProperties({...pollProperties, autoEndTimer: Number(value ?? 0)})}
-                                                    style={autoEndInputStyle}
-                                                    suffix="s"
-                                                />
+                                                <Flex align="center" gap={8}>
+                                                    <Switch checked={useAutoEndTimer} onChange={setUseAutoEndTimer} />
+                                                    <InputNumber
+                                                        min={1}
+                                                        max={100000}
+                                                        value={pollProperties.autoEndTimer ?? 60}
+                                                        onChange={(value) => setPollProperties({...pollProperties, autoEndTimer: typeof value === "number" ? value : null})}
+                                                        style={autoEndInputStyle}
+                                                        suffix="s"
+                                                        disabled={!useAutoEndTimer}
+                                                    />
+                                                </Flex>
                                             </Flex>
 
-                                            <Flex align="center" justify="space-between" style={settingRowStyle}>
+                                            <Flex align="center" justify="space-between" gap={12} style={settingRowStyle}>
                                                 <Text>Auto End Threshold</Text>
-                                                <InputNumber
-                                                    min={0}
-                                                    max={100}
-                                                    value={pollProperties.autoEndThreshold ?? 0}
-                                                    onChange={(value) => setPollProperties({...pollProperties, autoEndThreshold: Number(value ?? 0)})}
-                                                    style={autoEndInputStyle}
-                                                    suffix="%"
-                                                />
+                                                <Flex align="center" gap={8}>
+                                                    <Switch checked={useAutoEndThreshold} onChange={setUseAutoEndThreshold} />
+                                                    <InputNumber
+                                                        min={1}
+                                                        max={100}
+                                                        value={pollProperties.autoEndThreshold ?? 80}
+                                                        onChange={(value) => setPollProperties({...pollProperties, autoEndThreshold: typeof value === "number" ? value : null})}
+                                                        style={autoEndInputStyle}
+                                                        suffix="%"
+                                                        disabled={!useAutoEndThreshold}
+                                                    />
+                                                </Flex>
                                             </Flex>
                                         </Flex>
                                     ),

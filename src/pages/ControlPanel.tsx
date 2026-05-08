@@ -52,6 +52,9 @@ type EditorSeedPoll = {
 	allowVoteChanges: boolean;
 	allowTextResponses: boolean;
 	blind: boolean;
+	blindUntilEnded: boolean;
+	autoEndTimer: number | null;
+	autoEndThreshold: number | null;
 	allowMultipleResponses: boolean;
 };
 

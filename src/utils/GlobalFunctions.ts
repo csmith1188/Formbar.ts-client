@@ -27,6 +27,14 @@ export function formatTime(seconds: number): string {
     return `${secs}`;
 }
 
+export function millisecondsToSeconds(value: number | null) {
+	return typeof value === "number" && Number.isFinite(value) ? Math.max(1, Math.round(value / 1000)) : null;
+}
+
+export function secondsToMilliseconds(value: number | null) {
+	return typeof value === "number" && Number.isFinite(value) && value > 0 ? value * 1000 : null;
+}
+
 export function textColorForBackground(bgColor: string) {
 	if (bgColor?.length === 7) {
 		let r = parseInt(bgColor.slice(1, 3), 16);
