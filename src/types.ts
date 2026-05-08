@@ -162,7 +162,7 @@ export type Student = {
 };
 
 export type Poll = {
-	id?: string;
+	id?: number;
 	prompt: string;
 	responses: any[];
 	blind: boolean;

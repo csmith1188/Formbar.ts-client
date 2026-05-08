@@ -4,7 +4,24 @@ import { socket } from "@utils/socket";
 import { useClassData, useMobileDetect, useUserData } from "@/main";
 import PollModal from "@components/PollModal";
 
-const defaultPolls = [
+type DefaultPoll = {
+	id: number;
+	prompt: string;
+	answers: { answer: string; weight: number; color: string }[];
+	weight?: number;
+	blind: boolean;
+	allowVoteChanges: boolean;
+	excludedRespondents: any[];
+	indeterminate: any[];
+	allowTextResponses: boolean;
+	allowMultipleResponses: boolean;
+	blindUntilEnded: boolean;
+	autoEndTimer: number | null;
+	autoEndThreshold: number | null;
+	divider?: boolean;
+};
+
+const defaultPolls: DefaultPoll[] = [
 	{
 		id: 1,
 		prompt: "Thumbs?",

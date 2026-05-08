@@ -167,6 +167,14 @@ export function updateClassLink(classId: number, body: {
     return http(`/class/${classId}/links`, "PUT", {}, body);
 }
 
+export function kickClassStudent(classId: number, studentId: number) {
+    return http(`/class/${classId}/students/${studentId}/kick`, "POST");
+}
+
+export function banClassStudent(classId: number, studentId: number) {
+    return http(`/class/${classId}/students/${studentId}/ban`, "POST");
+}
+
 export function kickAllStudents(classId: number) {
     return http(`/class/${classId}/students/kick-all`, "POST");
 }

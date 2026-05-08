@@ -5,10 +5,9 @@ import { type Student } from "@/types";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useClassData, useUserData } from "@/main";
-import { socket } from "@utils/socket";
 
 import { awardDigipogs as awardDigipogAPICall }  from "@api/digipogApi";
-import { approveStudentBreak, deleteHelpRequest, denyStudentBreak, endStudentBreak } from "@api/classApi";
+import { approveStudentBreak, banClassStudent, deleteHelpRequest, denyStudentBreak, endStudentBreak, kickClassStudent } from "@api/classApi";
 import { addRoleToStudent, removeRoleFromStudent } from "@api/rolesApi";
 import { currentUserHasScope } from "@utils/scopeUtils";
 
@@ -585,7 +584,8 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
                                         okText: "Ban",
                                         centered: true,
                                         onOk: () => {
-                                            socket.emit("classBanUser", studentData.email);
+											if(!canBan) return;
+											banClassStudent(classData?.id!, studentData.id);
                                         }
                                     });
                                 }}
@@ -600,6 +600,7 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 								disabled={!canKick}
 								onClick={() => {
 									if(!canKick) return;
+									kickClassStudent(classData?.id!, studentData.id);
 								}}
 							>
 								Kick User
