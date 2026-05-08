@@ -9,24 +9,42 @@ import {
 	Collapse,
 	Modal,
 	Tooltip,
+    Card,
+    Empty,
     notification,
 } from "antd";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 const { Title, Text } = Typography;
-import { useClassData, useMobileDetect, useTheme, useUserData } from "@/main";
+import { getAppearAnimation, useClassData, useMobileDetect, useTheme, useUserData, useSettings } from "@/main";
 import { useEffect, useState } from "react";
 import Log from "@utils/debugLogger";
-import { createClassLink, deleteClass, deleteClassLink, getAllClassLinks, kickAllStudents, regenerateClassCode, updateSettings } from "@api/classApi";
+import { createClassLink, deleteClass, deleteClassLink, getAllClassLinks, getBannedClassStudents, kickAllStudents, regenerateClassCode, updateSettings } from "@api/classApi";
 import { currentUserHasScope } from "@/utils/scopeUtils";
+import StudentObject from "../StudentObject";
+import type { Student } from "@/types";
+
+type BannedClassStudent = {
+	id?: number;
+	displayName?: string;
+	email?: string;
+	username?: string;
+	reason?: string;
+	bannedAt?: string;
+	createdAt?: string;
+	[key: string]: unknown;
+};
 
 export default function SettingsMenu() {
+	const { settings } = useSettings();
 	const frontendUrl = import.meta.env.VITE_FORMBAR_CLIENT_URL || "http://localhost:5173";
 	const { userData } = useUserData();
 	const { classData } = useClassData();
     const isMobile = useMobileDetect();
 
 	// const canManageSettings = currentUserHasScope(userData, 'class.session.settings');
+	const canManageUsers = currentUserHasScope(userData, "class.students.ban") || currentUserHasScope(userData, "class.students.kick");
+	const canReadUsers = currentUserHasScope(userData, "class.students.read");
 	const canManageLinks = currentUserHasScope(userData, 'class.links.manage');
 	const canDeleteClass = currentUserHasScope(userData, 'class.system.can_delete_class');
 	const canKickStudents = currentUserHasScope(userData, 'class.students.kick');
@@ -35,12 +53,23 @@ export default function SettingsMenu() {
 
 	const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
+	const [openModalId, setOpenModalId] = useState<number | null>(null);
+	const [searchQuery, setSearchQuery] = useState("");
+
     const [newLinkInput, setNewLinkInput] = useState<{ name: string; url: string }>({ name: "", url: "" });
 
     const [newTagInput, setNewTagInput] = useState<string>("");
+	const [bannedStudents, setBannedStudents] = useState<BannedClassStudent[]>([]);
+	const [bannedSearchQuery, setBannedSearchQuery] = useState("");
+	const [isBannedLoading, setIsBannedLoading] = useState(false);
 
 	const [api, contextHolder] = notification.useNotification();
     const [modal, contextHolderModal] = Modal.useModal();
+
+	const students =
+			classData && classData.students
+				? (Object.values(classData.students) as Student[])
+				: [];
 
 	const showErrorNotification = (message: string) => {
 		api["error"]({
@@ -68,6 +97,38 @@ export default function SettingsMenu() {
 		}
 		
 	}, [classData]);
+
+	useEffect(() => {
+		if (!classData || !canManageUsers) {
+			setBannedStudents([]);
+			return;
+		}
+
+		setIsBannedLoading(true);
+		getBannedClassStudents(classData.id)
+			.then((response: any) => {
+				const bannedList = Array.isArray(response?.data)
+					? response.data
+					: Array.isArray(response)
+						? response
+						: response?.items || response?.students || [];
+				setBannedStudents(bannedList);
+			})
+			.catch((err) => {
+				Log({ message: "Error fetching banned students:", data: err, level: "error" });
+			})
+			.finally(() => {
+				setIsBannedLoading(false);
+			});
+	}, [classData, canManageUsers]);
+
+	const filteredBannedStudents = bannedStudents.filter((student) => {
+		if (!bannedSearchQuery.trim()) return true;
+		const query = bannedSearchQuery.trim().toLowerCase();
+		return [student.displayName, student.email, student.username, student.reason]
+			.filter(Boolean)
+			.some((value) => String(value).toLowerCase().includes(query));
+	});
 
     function tryAddLink() {
 		if (!canManageLinks) {
@@ -390,6 +451,75 @@ export default function SettingsMenu() {
 								]}
 							/>
 
+					</>
+					)}
+
+					{canManageUsers && (
+						<>
+							<Divider />
+
+							<Title level={3}>Banned Users</Title>
+							<Flex vertical gap={16}>
+								<Flex gap={12} wrap>
+									<Card size="small" style={{ minWidth: 180 }}>
+										<Flex vertical>
+											<Text type="secondary">Total banned</Text>
+											<Title level={2} style={{ margin: 0 }}>
+												{bannedStudents.length}
+											</Title>
+										</Flex>
+									</Card>
+									<Card size="small" style={{ minWidth: 220 }}>
+										<Flex vertical>
+											<Text type="secondary">Visible in filter</Text>
+											<Title level={2} style={{ margin: 0 }}>
+												{filteredBannedStudents.length}
+											</Title>
+										</Flex>
+									</Card>
+								</Flex>
+
+								<Input
+									placeholder="Search banned users"
+									value={bannedSearchQuery}
+									onChange={(e) => setBannedSearchQuery(e.target.value)}
+									style={{ maxWidth: 420 }}
+								/>
+								
+							<div
+								style={{
+									display: isMobile ? "flex" : "grid",
+									flexDirection: isMobile ? "column" : "unset",
+									gridTemplateColumns: isMobile ? "unset" : "repeat(auto-fill, minmax(200px, 1fr))",
+									gap: "16px",
+									width: "100%",
+									overflowY: isMobile ? 'scroll' : 'unset',
+									padding: isMobile ? "20px 15px" : "0",
+									paddingBottom: isMobile ? 0 : "20px",
+								}}
+							>
+							{ canReadUsers && students
+								.filter((student) =>
+									student.displayName
+										.toLowerCase()
+										.includes(searchQuery.toLowerCase()),
+								)
+								.filter((student) =>
+									bannedStudents.some((banned) => banned.id === student.id),
+								)
+								.map((student: any, index: number) =>
+									student.id !== userData?.id ? (
+										<StudentObject
+											style={getAppearAnimation(settings.accessibility.disableAnimations, index)}
+											key={student.id}
+											student={student}
+											openModalId={openModalId}
+											setOpenModalId={setOpenModalId}
+										/>
+									) : null,
+								)}
+							</div>
+							</Flex>
 					</>
 					)}
 

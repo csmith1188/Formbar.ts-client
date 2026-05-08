@@ -515,10 +515,10 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 								showSearch
 								style={{ width: "100%", maxWidth: "420px" }}
 								placeholder="Add or remove roles"
+								suffix={null}
 								value={studentRoleIds}
 								loading={isUpdatingRoles}
 								disabled={isUpdatingRoles || availableRoles.length === 0}
-								optionFilterProp="label"
 								onChange={handleStudentRolesChange}
 								options={roleOptions}
 								tagRender={(props) => {
