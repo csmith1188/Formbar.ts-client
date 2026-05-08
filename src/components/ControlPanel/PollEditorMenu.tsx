@@ -194,7 +194,7 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
             <Title level={isMobile ? 3 : 2}>Poll Editor</Title>
             
             <Flex gap={20} vertical={isMobile} style={isMobile ? {width: '100%'} : {}}>
-                <Card title="Poll Properties">
+                <Card title="Poll Properties" style={{ width: isMobile ? "100%" : "475px" }}>
                     <Flex vertical gap={15} style={{height: isMobile ? 'min-content' : '550px'}}>
                         <Input
                             placeholder="Poll Prompt"
@@ -204,6 +204,7 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
                         />
 
                         <Collapse
+                            style={{ width: "100%" }}
                             defaultActiveKey={["behavior"]}
 							accordion
                             items={[{

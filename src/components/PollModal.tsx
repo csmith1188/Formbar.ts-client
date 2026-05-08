@@ -1,4 +1,4 @@
-import { Button, Flex, Input, InputNumber, Modal, Switch, Typography, ColorPicker, Divider } from "antd";
+import { Button, Flex, Input, Modal, Switch, Typography, ColorPicker } from "antd";
 const { Text } = Typography;
 import { textColorForBackground } from "@utils/GlobalFunctions";
 import { IonIcon } from "@ionic/react";
@@ -54,14 +54,6 @@ export default function PollModal({
 	onAllowVoteChangesChange,
 	allowTextResponses,
 	onAllowTextResponsesChange,
-	blind,
-	onBlindChange,
-	blindUntilEnded,
-	onBlindUntilEndedChange,
-	autoEndTimer,
-	onAutoEndTimerChange,
-	autoEndThreshold,
-	onAutoEndThresholdChange,
 	allowMultipleResponses,
 	onAllowMultipleResponsesChange,
 	footerButton,
@@ -213,52 +205,6 @@ export default function PollModal({
 						disabled={readOnly}
 						checked={allowMultipleResponses}
 						onChange={(checked) => onAllowMultipleResponsesChange?.(checked)}
-					/>
-				</Flex>
-
-				<Divider titlePlacement="center" style={{fontSize: 16}}>Blind Options</Divider>
-
-				<Flex align="center" justify="space-between">
-					Blind Poll
-					<Switch
-						disabled={readOnly}
-						checked={blind}
-						onChange={(checked) => onBlindChange?.(checked)}
-					/>
-				</Flex>
-
-				<Flex align="center" justify="space-between">
-					Blind Until Ended
-					<Switch
-						disabled={readOnly}
-						checked={blindUntilEnded}
-						onChange={(checked) => onBlindUntilEndedChange?.(checked)}
-					/>
-				</Flex>
-
-				<Divider titlePlacement="center" style={{fontSize: 16}}>Timing</Divider>
-
-				<Flex align="center" justify="space-between">
-					Auto End Timer
-					<InputNumber
-						disabled={readOnly}
-						min={0}
-						max={100000}
-						value={autoEndTimer ?? 0}
-						onChange={(value) => onAutoEndTimerChange?.(typeof value === "number" ? value : null)}
-						suffix="s"
-					/>
-				</Flex>
-
-				<Flex align="center" justify="space-between">
-					Auto End Threshold
-					<InputNumber
-						disabled={readOnly}
-						min={0}
-						max={100}
-						value={autoEndThreshold ?? 0}
-						onChange={(value) => onAutoEndThresholdChange?.(typeof value === "number" ? value : null)}
-						suffix="%"
 					/>
 				</Flex>
 			</Flex>
