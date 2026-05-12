@@ -1,5 +1,5 @@
 import { type Transaction } from "@/types";
-import { Flex, Typography, Statistic } from "antd";
+import { Flex, Typography, Statistic, Card } from "antd";
 const { Text } = Typography;
 
 import { IonIcon } from "@ionic/react";
@@ -16,65 +16,68 @@ export default function TransactionItem({
 	const direction = determineTransactionType(transaction);
 
 	return (
-		<Flex
-			gap={10}
+		<Card
 			style={{
 				width: "100%",
-				backgroundColor: "#1b1b1b3b",
-				padding: "10px 20px",
 				borderRadius: 10,
 			}}
-			justify="space-between"
-			align="center"
+			styles={{
+				body: {
+					padding: 0,
+				},
+			}}
 		>
-			<Flex vertical gap={5}>
-				<Text
-					style={{
-						display: "flex",
-						justifyContent: "start",
-						alignItems: "center",
-						gap: "10px",
-					}}
-				>
-					{direction.from}{" "}
-					<IonIcon icon={IonIcons.arrowForward} />{" "}
-					{direction.to}
-				</Text>
-
-				<Text>{transaction.reason}</Text>
-				<Text type="secondary" style={{ fontSize: "16px" }}>
-					{formatDate(transaction.date)}
-				</Text>
-			</Flex>
-			<Statistic
-				title="Amount"
-				value={transaction.amount}
-				styles={{
-					title: {
-						fontSize: "16px",
-						color: "#888888",
-						textAlign: "right",
-					},
-					content: {
-						fontSize: "24px",
-						fontWeight: "bolder",
-						color: isOutgoing ? "#e93241ff" : "#9be65aff",
-					},
-				}}
-				prefix={
+			<Flex justify="space-between" align="center" gap={20} style={{ padding: "10px 20px" }} wrap>
+				<Flex vertical gap={5}>
 					<Text
 						style={{
+							display: "flex",
+							justifyContent: "start",
+							alignItems: "center",
+							gap: "10px",
+						}}
+					>
+						{direction.from}{" "}
+						<IonIcon icon={IonIcons.arrowForward} />{" "}
+						{direction.to}
+					</Text>
+
+					<Text>{transaction.reason}</Text>
+					<Text type="secondary" style={{ fontSize: "16px" }}>
+						{formatDate(transaction.date)}
+					</Text>
+				</Flex>
+				<Statistic
+					title="Amount"
+					value={transaction.amount}
+					styles={{
+						title: {
+							fontSize: "16px",
+							color: "#888888",
+							textAlign: "right",
+						},
+						content: {
 							fontSize: "24px",
 							fontWeight: "bolder",
 							color: isOutgoing ? "#e93241ff" : "#9be65aff",
-						}}
-					>
-						{isOutgoing ? "-" : "+"}
-					</Text>
-				}
-				suffix=""
-			/>
-		</Flex>
+						},
+					}}
+					prefix={
+						<Text
+							style={{
+								fontSize: "24px",
+								fontWeight: "bolder",
+								color: isOutgoing ? "#e93241ff" : "#9be65aff",
+							}}
+						>
+							{isOutgoing ? "-" : "+"}
+						</Text>
+					}
+					suffix=""
+				/>
+
+			</Flex>
+		</Card>
 	);
 }
 

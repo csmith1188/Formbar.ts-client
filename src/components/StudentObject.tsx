@@ -58,7 +58,7 @@ export default function StudentObject({
 		}
 
 		clickTimeoutRef.current = window.setTimeout(() => {
-			onToggleVote(Number(student.id), !isVoteExcluded);
+			setOpenModalId(student.id);
 			clickTimeoutRef.current = null;
 		}, 300);
 	}
@@ -69,7 +69,7 @@ export default function StudentObject({
 			clickTimeoutRef.current = null;
 		}
 
-		setOpenModalId(student.id);
+		onToggleVote(Number(student.id), !isVoteExcluded);
 	}
 
 	return (
@@ -136,7 +136,7 @@ export default function StudentObject({
 					footer={null}
 				>
 					<Flex justify="center">
-						<StudentAccordion studentData={student} />
+						<StudentAccordion studentData={student} isOpen={openModalId === student.id} />
 					</Flex>
 				</Modal>
 			</div>

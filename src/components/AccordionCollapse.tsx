@@ -1,5 +1,5 @@
 import { Button, Flex, InputNumber, Modal, Select, Tag, Tooltip, notification } from "antd";
-import { Activity, useState, useEffect } from "react";
+import { Activity, useState, useEffect, useRef } from "react";
 import { textColorForBackground } from "@utils/GlobalFunctions";
 import { type Student } from "@/types";
 import { IonIcon } from "@ionic/react";
@@ -22,12 +22,31 @@ type AccordionCategory = {
 
 export default function AccordionCollapse({
 	categories,
+	isOpen = false,
 }: {
 	categories: AccordionCategory[];
+	isOpen?: boolean;
 }) {
     
 	const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 	const [expanded, setExpanded] = useState<boolean>(false);
+	const wasOpenRef = useRef(false);
+
+	const firstEnabledIndex = categories.findIndex((category) => category.enabled);
+
+	useEffect(() => {
+		if (isOpen && (!wasOpenRef.current || currentIndex === null)) {
+			setCurrentIndex(firstEnabledIndex === -1 ? null : firstEnabledIndex);
+			setExpanded(firstEnabledIndex !== -1);
+		}
+
+		if (!isOpen && wasOpenRef.current) {
+			setExpanded(false);
+			setCurrentIndex(null);
+		}
+
+		wasOpenRef.current = isOpen;
+	}, [isOpen, firstEnabledIndex, currentIndex]);
 
 	// Auto-switch when current category becomes disabled
 	useEffect(() => {
@@ -256,7 +275,7 @@ export default function AccordionCollapse({
 	);
 }
 
-export function StudentAccordion({ studentData }: { studentData: Student }) {
+export function StudentAccordion({ studentData, isOpen = false }: { studentData: Student; isOpen?: boolean }) {
 	const { classData } = useClassData();
 	const { userData } = useUserData();
 
@@ -365,6 +384,7 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 	return (
         <>{contextHolder}
 		<AccordionCollapse
+			isOpen={isOpen}
 			categories={[
 				{
 					name: "Help",
@@ -512,15 +532,25 @@ export function StudentAccordion({ studentData }: { studentData: Student }) {
 						>
 							<Select
 								mode="multiple"
-								showSearch
 								style={{ width: "100%", maxWidth: "420px" }}
+								styles={{
+									suffix: {
+										pointerEvents: "none",
+									}
+								}}
 								placeholder="Add or remove roles"
 								suffix={null}
+
 								value={studentRoleIds}
 								loading={isUpdatingRoles}
 								disabled={isUpdatingRoles || availableRoles.length === 0}
 								onChange={handleStudentRolesChange}
 								options={roleOptions}
+								showSearch={
+									{
+										optionFilterProp: "label",
+									}
+								}
 								tagRender={(props) => {
 									const role = availableRoles.find(
 										(availableRole) => availableRole.id === Number(props.value),
