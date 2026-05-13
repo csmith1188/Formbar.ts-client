@@ -4,6 +4,11 @@ function unique(items: string[]) {
 	return Array.from(new Set(items));
 }
 
+function normalizeScopes(scopes: string | string[] | undefined): string[] {
+	if (!scopes) return [];
+	return Array.isArray(scopes) ? scopes : [scopes];
+}
+
 function getStudentClassScopes(student: Student | null | undefined, classData: ClassData | null | undefined): string[] {
 	if (!student || !classData) return [];
 
@@ -30,6 +35,19 @@ export function getStudentClassScopeCount(student: Student | null | undefined, c
 	}
 
 	return 0;
+}
+
+export function getStudentScopeCount(student: Student | null | undefined, classData: ClassData | null | undefined): number {
+	if (!student) return 0;
+
+	const scopes = [
+		...(student.roles?.global || []).flatMap((role) => normalizeScopes(role.scopes)),
+		...(student.roles?.class || []).flatMap((role) => normalizeScopes(role.scopes)),
+		...(student.scopes?.global || []),
+		...getStudentClassScopes(student, classData),
+	];
+
+	return unique(scopes).length;
 }
 
 export function currentUserHasScope(userData: CurrentUserData | null | undefined, scopeKey: ScopeKey): boolean {
