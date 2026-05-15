@@ -23,6 +23,22 @@ npm install
 - Input your client address as `VITE_FORMBAR_CLIENT_URL`
   - Ex. `https://127.0.0.1:5173` or `https://formbar.com`
 
+## Project Structure
+- `src/main.tsx` is the client entry point.
+- `src/pages/` contains route-level screens and top-level app pages.
+- `src/components/` holds reusable UI pieces, including control panel modules under `src/components/ControlPanel/`.
+- `src/api/` contains API wrappers grouped by backend domain.
+- `src/utils/` contains shared helpers, socket setup, and logging utilities.
+- `src/themes/` contains theme configuration.
+- `public/` contains static assets and logos.
+
+## Common Workflows
+- Start local development with `npm run dev`.
+- Run the app on the network for device testing with `npx vite --host`.
+- Check formatting and code quality with `npm run lint`.
+- Create a production build with `npm run build`.
+- Use `./updater.sh` when you want the interactive fetch, build, and sync workflow.
+
 ### Testing
 ```bash
 # Development - Local Testing
