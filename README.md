@@ -20,6 +20,8 @@ npm install
 - Copy or rename the `.env-template` file to `.env`
 - Input your Formbar API URL as `VITE_FORMBAR_API_URL`
   - *<sub>[Need the server for your API?](https://github.com/csmith1188/Formbar.js)</sub>*
+- Input your client address as `VITE_FORMBAR_CLIENT_URL`
+  - Ex. `https://127.0.0.1:5173` or `https://formbar.com`
 
 ### Testing
 ```bash
