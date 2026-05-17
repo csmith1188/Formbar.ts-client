@@ -483,7 +483,8 @@ const AppContent = () => {
 			Log({ message: "Connected to server.", level: "info" });
 
 			fetchUserData().then(() => {
-				if (window.location.pathname === "/login") {
+				const returnURL = new URLSearchParams(window.location.search).get("returnURL");
+				if (window.location.pathname === "/login" && !returnURL) {
 					navigate("/");
 				}
 			});

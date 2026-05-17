@@ -316,10 +316,17 @@ type ExtractScopeKey<T> = T extends { key: infer K extends string }
 export type ScopeKey = ExtractScopeKey<typeof SCOPES>;
 
 export const AppScopes = {
-	READ_POLL_RESPONSES: { key: "read_poll_responses", label: "Read Poll Responses", description: "Allow the app to read your poll responses" },
-	READ_DIGIPOG_TRANSACTIONS: { key: "read_digipog_transactions", label: "Read Digipog Transactions", description: "Allow the app to read your digipog transactions" },
-	SEND_NOTIFICATIONS: { key: "send_notifications", label: "Send Notifications", description: "Allow the app to send you notifications" },
-	SEND_MY_DIGIPOGS: { key: "send_my_digipogs", label: "Send My Digipogs", description: "Allow the app to send digipogs on your behalf" },
+	PROFILE_READ: { key: "app.profile.read", label: "Read Profile", description: "Read public basic information (display name, account ID)" },
+	EMAIL_READ: { key: "app.email.read", label: "Read Email Address", description: "Access the user's email address" },
+	DIGIPOGS_READ: { key: "app.digipogs.read", label: "Read Digipogs", description: "View the user's Digipog balance and transaction history" },
+	DIGIPOGS_TRANSFER: { key: "app.digipogs.transfer", label: "Transfer Digipogs", description: "Send Digipogs to other users on this user's behalf" },
+	CLASSES_READ: { key: "app.classes.read", label: "Read Classes", description: "View the classes the user is enrolled in or managing" },
+	CLASSES_SESSION_READ: { key: "app.classes.session.read", label: "Read Class Sessions", description: "View active session status, timers, and current class activities" },
+	POLLS_READ: { key: "app.polls.read", label: "Read Polls", description: "Read past poll responses for the user" },
+	POLLS_VOTE: { key: "app.polls.vote", label: "Vote on Polls", description: "Submit poll answers on behalf of the user" },
+	INVENTORY_GIVE_ITEM: { key: "app.inventory.give_item", label: "Give Inventory Items", description: "Add app-created items to inventories" },
+	NOTIFICATIONS_SEND: { key: "app.notifications.send", label: "Send Notifications", description: "Allow the third-party app to send notifications to the user inside Formbar" },
+	NOTIFICATIONS_READ: { key: "app.notifications.read", label: "Read Notifications", description: "Read the user's Formbar notifications" },
 }
 
 type ExtractAppScopeKey<T> = T extends { key: infer K extends string }

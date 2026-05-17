@@ -4,10 +4,9 @@ import { Alert, Button, Card, Divider, Flex, Typography } from "antd";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { darkMode, lightMode } from "@/themes/ThemeConfig";
-import { authorizeOAuthApp } from "@api/oauthApi";
+import { authorizeOAuthApp, getOAuthAuthorizationMetadata } from "@api/oauthApi";
 import { AppScopes } from "@/types";
 import { useSettings, useUserData } from "@/main";
-import { getAppById } from "@/api/appsApi";
 
 const { Title, Text } = Typography;
 
@@ -78,6 +77,7 @@ function createPlayfulScope() {
 		"Enable Jukebar",
 		"Summon Hayden",
 		"Access the secret Formbar ranch recipe",
+		"Send Brody to Venezuela"
 	]
 	return {
 		key: "playful.scope",
@@ -92,6 +92,19 @@ function prettifyScopeLabel(scopeKey: string) {
 	return scopeKey
 		.replace(/[._-]+/g, " ")
 		.replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function getReadableErrorMessage(err: unknown, fallback: string) {
+	if (!(err instanceof Error)) {
+		return fallback;
+	}
+
+	try {
+		const parsed = JSON.parse(err.message);
+		return parsed?.error?.message || parsed?.message || fallback;
+	} catch {
+		return err.message || fallback;
+	}
 }
 
 export default function AuthorizeApp() {
@@ -115,7 +128,35 @@ export default function AuthorizeApp() {
             const state = params.get("state")?.trim() || "";
             const responseType = params.get("response_type")?.trim() || "code";
 
-            const requestedScopes = scope.split(/\s+/).filter(Boolean);
+            const errors = [] as string[];
+            if (!clientId) errors.push("Missing client_id.");
+            if (!redirectUrl) errors.push("Missing redirect_uri.");
+            if (!scope) errors.push("Missing scope.");
+            if (!state) errors.push("Missing state.");
+            if (responseType !== "code") errors.push("Only response_type=code is supported.");
+
+            let clientName = "Unknown Application";
+            let requestedScopes = scope.split(/\s+/).filter(Boolean);
+            if (errors.length === 0) {
+                try {
+                    const appInfoFromServer = await getOAuthAuthorizationMetadata({
+                        clientId,
+                        redirectUri: redirectUrl,
+                        scope,
+                        state,
+                        responseType,
+                    });
+                    clientName = appInfoFromServer?.name || clientName;
+                    requestedScopes = appInfoFromServer?.requestedScopes || requestedScopes;
+                } catch (err) {
+                    const message = getReadableErrorMessage(err, "Unable to load OAuth application metadata.");
+                    errors.push(message);
+                    if (/not authenticated|unauthorized/i.test(message)) {
+                        navigate(`/login?returnURL=${encodeURIComponent(`${location.pathname}${location.search}`)}`);
+                    }
+                }
+            }
+
             const permissions = requestedScopes.map((scopeKey) => {
                 const metadata = getScopeMetadata(scopeKey);
                 return {
@@ -125,20 +166,6 @@ export default function AuthorizeApp() {
                     granted: metadata?.granted || false,
                 };
             });
-
-            const errors = [] as string[];
-            if (!clientId) errors.push("Missing client_id.");
-            if (!redirectUrl) errors.push("Missing redirect_uri.");
-            if (!scope) errors.push("Missing scope.");
-            if (!state) errors.push("Missing state.");
-            if (responseType !== "code") errors.push("Only response_type=code is supported.");
-
-            let clientName = "Unknown Application";
-            if (clientId) {
-                const appInfoFromServer = (await getAppById(parseInt(clientId, 10))).data;
-				console.log("App info from server:", appInfoFromServer);
-                clientName = appInfoFromServer?.name || clientName;
-            }
 
             if (!cancelled) {
                 setOauthRequest({
@@ -157,7 +184,7 @@ export default function AuthorizeApp() {
         return () => {
             cancelled = true;
         };
-    }, [location.search]);
+    }, [location.pathname, location.search, navigate]);
 
 	const appInfo: OAuthAppInfo = {
 		name: oauthRequest.clientName,
@@ -205,7 +232,7 @@ export default function AuthorizeApp() {
 
 			window.location.assign(redirectUrl);
 		} catch (err) {
-			const message = err instanceof Error ? err.message : "Unable to authorize the application.";
+			const message = getReadableErrorMessage(err, "Unable to authorize the application.");
 			setErrorMessage(message);
 			if (/not authenticated|unauthorized/i.test(message)) {
 				navigate(`/login?returnURL=${encodeURIComponent(`${location.pathname}${location.search}`)}`);
