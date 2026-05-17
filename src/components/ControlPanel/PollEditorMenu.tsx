@@ -31,7 +31,8 @@ type PollProperties = {
 };
 
 import { socket } from "@utils/socket";
-import { createPoll, savePollTemplateToClass, savePollTemplateToUser } from "@api/classApi";
+import { createPoll, savePollTemplateToClass } from "@api/classApi";
+import { savePollTemplateToUser } from "@api/userApi";
 
 type EditorSeedPoll = {
     prompt: string;
@@ -157,7 +158,7 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
             const saveResponse =
                 saveMode === "class"
                     ? await savePollTemplateToClass(classData.id, payload)
-                    : await savePollTemplateToUser(classData.id, payload);
+                    : await savePollTemplateToUser(userData.id.toString(), { ...payload, classId: classData.id });
 
             api.success({
                 title: "Success",

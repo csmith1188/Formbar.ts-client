@@ -103,3 +103,11 @@ export function getUserPools(id: string, limit: number = 20, offset: number = 0)
 export function verifyUserEmail(code: string) {
     return http(`/user/verify/email?code=${code}`, "POST", {Accept: "application/json"}, { code });
 }
+
+export function getUserPollTemplates(userId: string) {
+    return http(`/user/${userId}/polls/templates`);
+}
+
+export function savePollTemplateToUser(userId: string, body: any) {
+    return http(`/user/${userId}/polls/templates`, "POST", {}, body);
+}
