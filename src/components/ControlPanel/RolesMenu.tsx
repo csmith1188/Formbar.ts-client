@@ -146,6 +146,14 @@ export default function RolesMenu() {
 		if (!classData) return;
 
 		const savePromises: Promise<any>[] = [];
+		const idRemaps = new Map<number, number>();
+
+		const trackRoleIdRemap = (requestedRoleId: number, response: { data?: { id?: number } }) => {
+			const savedRoleId = response?.data?.id;
+			if (savedRoleId != null && savedRoleId !== requestedRoleId) {
+				idRemaps.set(requestedRoleId, savedRoleId);
+			}
+		};
 
 		// Find deleted roles (in originalRoles but not in roles)
 		const deletedRoles = originalRoles.filter(
@@ -170,6 +178,9 @@ export default function RolesMenu() {
 					scopes: role.scopes,
 					color: role.color,
 					orderIndex: index,
+				}).then((response) => {
+					trackRoleIdRemap(role.id, response);
+					return response;
 				})
 			);
 		});
@@ -190,6 +201,9 @@ export default function RolesMenu() {
 						scopes: role.scopes,
 						color: role.color,
 						orderIndex: index,
+					}).then((response) => {
+						trackRoleIdRemap(role.id, response);
+						return response;
 					})
 				);
 			}
@@ -197,6 +211,24 @@ export default function RolesMenu() {
 
 		Promise.all(savePromises)
 			.then(() => {
+				if (idRemaps.size > 0) {
+					const remappedSelection =
+						selectedRoleId != null && idRemaps.has(selectedRoleId)
+							? idRemaps.get(selectedRoleId)!
+							: selectedRoleId;
+
+					setRoles((prevRoles) =>
+						prevRoles.map((role) => {
+							const remappedId = idRemaps.get(role.id);
+							return remappedId ? { ...role, id: remappedId } : role;
+						})
+					);
+
+					if (remappedSelection != null) {
+						setSelectedRoleId(remappedSelection);
+					}
+				}
+
 				fetchRoles();
 			})
 			.catch((err) => {
