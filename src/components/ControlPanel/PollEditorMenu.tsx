@@ -1,7 +1,8 @@
-import { Button, Card, Collapse, Flex, Input, Switch, Tooltip, Typography, notification, InputNumber } from "antd";
+import { Button, Card, Collapse, Flex, Input, Switch, Tooltip, Typography, notification, InputNumber, Modal } from "antd";
 const { Title, Text } = Typography;
-import { useClassData, useMobileDetect } from "@/main";
+import { useClassData, useMobileDetect, useUserData } from "@/main";
 import { useEffect, useState } from "react";
+import { currentUserHasScope } from "@utils/scopeUtils";
 import { IonIcon } from "@ionic/react";
 import PollEditorResponse from "@components/PollEditorResponse";
 import * as IonIcons from "ionicons/icons";
@@ -30,7 +31,7 @@ type PollProperties = {
 };
 
 import { socket } from "@utils/socket";
-import { createPoll } from "@api/classApi";
+import { createPoll, savePollTemplateToClass, savePollTemplateToUser } from "@api/classApi";
 
 type EditorSeedPoll = {
     prompt: string;
@@ -43,6 +44,8 @@ type EditorSeedPoll = {
     autoEndThreshold: number | null;
     allowMultipleResponses: boolean;
 };
+
+type PollSaveMode = "my" | "class";
 
 function randomColor() {
     const letters = '0123456789ABCDEF';
@@ -98,8 +101,17 @@ function generateColors(amount: number) {
 export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorSeedPoll | null }) {
     const isMobile = useMobileDetect();
     const { classData } = useClassData();
+    const { userData } = useUserData();
 
 	const [api, contextHolder] = notification.useNotification();
+
+    const [saveModalOpen, setSaveModalOpen] = useState(false);
+    const [pollSaveName, setPollSaveName] = useState("");
+    const [saveMode, setSaveMode] = useState<PollSaveMode | null>(null);
+    const [isSavingPoll, setIsSavingPoll] = useState(false);
+
+    const canCreatePolls = currentUserHasScope(userData, "class.poll.create");
+    const showSaveButtons = canCreatePolls;
 
 	const showErrorNotification = (message: string) => {
 		api["error"]({
@@ -108,6 +120,57 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
 			placement: "bottom",
 		});
 	};
+
+    function openSaveModal(mode: PollSaveMode) {
+        setSaveMode(mode);
+        setPollSaveName(pollProperties.prompt);
+        setSaveModalOpen(true);
+    }
+
+    async function confirmSavePoll() {
+        const trimmedName = pollSaveName.trim();
+        if (!trimmedName) {
+            showErrorNotification("Please enter a poll name.");
+            return;
+        }
+
+        if (!classData?.id) {
+            showErrorNotification("No active class to save this poll.");
+            return;
+        }
+
+        setIsSavingPoll(true);
+
+        try {
+            const payload = {
+                name: trimmedName,
+                prompt: pollProperties.prompt,
+                answers: pollProperties.answers,
+                allowTextResponses: pollProperties.allowTextResponses,
+                blind: pollProperties.blind,
+                allowVoteChanges: pollProperties.allowVoteChanges,
+                allowMultipleResponses: pollProperties.allowMultipleResponses,
+                weight: pollProperties.weight,
+                public: false,
+            };
+
+            const saveResponse =
+                saveMode === "class"
+                    ? await savePollTemplateToClass(classData.id, payload)
+                    : await savePollTemplateToUser(classData.id, payload);
+
+            api.success({
+                title: "Success",
+                description: saveResponse?.data?.message ?? "Poll saved successfully!",
+                placement: "bottom",
+            });
+            setSaveModalOpen(false);
+        } catch (err) {
+            showErrorNotification(err instanceof Error ? err.message : "Failed to save poll.");
+        } finally {
+            setIsSavingPoll(false);
+        }
+    }
 
     const [useAutoEndTimer, setUseAutoEndTimer] = useState(false);
     const [useAutoEndThreshold, setUseAutoEndThreshold] = useState(false);
@@ -343,32 +406,48 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
 								</Tooltip>
 							</Flex>
 
-							<Flex align="center" justify="space-between" gap={10} style={{cursor:'not-allowed', opacity: 0.5}}>
-								<Tooltip title={isMobile && "Save in My Polls"} mouseEnterDelay={0.5}>
-									<Button variant="solid" color="green" style={isMobile ? {width: '100%'} : {}}>
-										{
-											isMobile ? (
-												<Flex align="center" justify="center" gap={5}>
-													<IonIcon icon={IonIcons.save} />
-													My Polls
-												</Flex>
-											) : "Save in My Polls"
-										}
-									</Button>
-								</Tooltip>
-								<Tooltip title={isMobile && "Save as Class Poll"} mouseEnterDelay={0.5}>
-									<Button variant="solid" color="green" style={isMobile ? {width: '100%'} : {}}>
-										{
-											isMobile ? (
-												<Flex align="center" justify="center" gap={5}>
-													<IonIcon icon={IonIcons.save} />
-													Class
-												</Flex>
-											) : "Save as Class Poll"
-										}
-									</Button>
-								</Tooltip>
-							</Flex>
+							{showSaveButtons && (
+								<Flex align="center" justify="space-between" gap={10}>
+									{canCreatePolls && (
+										<Tooltip title={isMobile && "Save in My Polls"} mouseEnterDelay={0.5}>
+											<Button
+												variant="solid"
+												color="green"
+												style={isMobile ? { width: "100%" } : {}}
+												onClick={() => openSaveModal("my")}
+											>
+												{
+													isMobile ? (
+														<Flex align="center" justify="center" gap={5}>
+															<IonIcon icon={IonIcons.save} />
+															My Polls
+														</Flex>
+													) : "Save in My Polls"
+												}
+											</Button>
+										</Tooltip>
+									)}
+									{canCreatePolls && (
+										<Tooltip title={isMobile && "Save as Class Poll"} mouseEnterDelay={0.5}>
+											<Button
+												variant="solid"
+												color="green"
+												style={isMobile ? { width: "100%" } : {}}
+												onClick={() => openSaveModal("class")}
+											>
+												{
+													isMobile ? (
+														<Flex align="center" justify="center" gap={5}>
+															<IonIcon icon={IonIcons.save} />
+															Class
+														</Flex>
+													) : "Save as Class Poll"
+												}
+											</Button>
+										</Tooltip>
+									)}
+								</Flex>
+							)}
 
 							<Button
 								type="primary"
@@ -419,6 +498,26 @@ export default function PollsEditorMenu({ initialPoll }: { initialPoll?: EditorS
                 </Card>
             </Flex>
         </Flex>
+            <Modal
+                title={saveMode === "class" ? "Save as Class Poll" : "Save in My Polls"}
+                open={saveModalOpen}
+                onOk={confirmSavePoll}
+                onCancel={() => setSaveModalOpen(false)}
+                okText="Save"
+                confirmLoading={isSavingPoll}
+                destroyOnHidden
+            >
+                <Flex vertical gap={8}>
+                    <Text type="secondary">Enter a name for this saved poll.</Text>
+                    <Input
+                        placeholder="Poll name"
+                        value={pollSaveName}
+                        onChange={(event) => setPollSaveName(event.target.value)}
+                        onPressEnter={confirmSavePoll}
+                        maxLength={200}
+                    />
+                </Flex>
+            </Modal>
         </>
     );
 }
