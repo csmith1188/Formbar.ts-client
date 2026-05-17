@@ -329,3 +329,21 @@ type ExtractAppScopeKey<T> = T extends { key: infer K extends string }
 		: never;
 
 export type AppScopeKey = ExtractAppScopeKey<typeof AppScopes>;
+
+export type SavedPollTemplateBody = {
+    name: string,
+    prompt: string,
+    answers: any[],
+    allowTextResponses: boolean,
+    blind: boolean,
+    allowVoteChanges: boolean,
+    allowMultipleResponses: boolean,
+    weight: number,
+    public?: boolean | number,
+};
+
+export type SavedPollTemplate = SavedPollTemplateBody & {
+    id: number,
+    owner: number | null,
+    public: boolean,
+};
