@@ -11,6 +11,9 @@ import {
 	Tooltip,
 	Card,
 	Select,
+	AutoComplete,
+	Row,
+	Col,
 } from "antd";
 const { Title, Text } = Typography;
 import {
@@ -34,20 +37,16 @@ import {
 	updateSettings,
 } from "@api/classApi";
 import { currentUserHasScope } from "@/utils/scopeUtils";
-import StudentObject from "@components/StudentObject";
 import type { Student } from "@/types";
 import { useGlobalMessage } from "@/components/providers/GlobalMessageProvider";
 import { messageTemplates } from "@utils/messageTemplates";
+import CustomPagination from "@components/CustomPagination";
+import StudentObject from "../StudentObject";
 
 type BannedClassStudent = {
-	id?: number;
-	displayName?: string;
-	email?: string;
-	username?: string;
-	reason?: string;
-	bannedAt?: string;
-	createdAt?: string;
-	[key: string]: unknown;
+	id: number,
+	email: string,
+	displayName: string
 };
 
 export default function SettingsMenu() {
@@ -98,7 +97,19 @@ export default function SettingsMenu() {
 		[],
 	);
 	const [bannedSearchQuery, setBannedSearchQuery] = useState("");
+
+	const [bannedCurrentPage, setBannedCurrentPage] = useState(1);
+	const [bannedPageSize, setBannedPageSize] = useState(10);
+	const [totalBannedUsers, setTotalBannedUsers] = useState(0);
 	const [isBannedLoading, setIsBannedLoading] = useState(false);
+
+	const [linkType, setLinkType] = useState<string>("https://")
+
+	const defaultLinkTypes = [
+		"https://",
+		"http://",
+		"ws://"
+	];
 
 	const [modal, contextHolderModal] = Modal.useModal();
 
@@ -158,6 +169,8 @@ export default function SettingsMenu() {
 			});
 	}
 
+	
+
 	useEffect(() => {
 		if (!classData || !canManageUsers) {
 			setBannedStudents([]);
@@ -167,12 +180,10 @@ export default function SettingsMenu() {
 		setIsBannedLoading(true);
 		getBannedClassStudents(classData.id)
 			.then((response: any) => {
-				const bannedList = Array.isArray(response?.data)
-					? response.data
-					: Array.isArray(response)
-						? response
-						: response?.items || response?.students || [];
+				const bannedList = response?.data.banned;
+						
 				setBannedStudents(bannedList);
+				setTotalBannedUsers(bannedList.length)
 			})
 			.catch((err) => {
 				Log({
@@ -185,19 +196,6 @@ export default function SettingsMenu() {
 				setIsBannedLoading(false);
 			});
 	}, [classData, canManageUsers]);
-
-	const filteredBannedStudents = bannedStudents.filter((student) => {
-		if (!bannedSearchQuery.trim()) return true;
-		const query = bannedSearchQuery.trim().toLowerCase();
-		return [
-			student.displayName,
-			student.email,
-			student.username,
-			student.reason,
-		]
-			.filter(Boolean)
-			.some((value) => String(value).toLowerCase().includes(query));
-	});
 
 	function tryAddLink() {
 		if (!canManageLinks) {
@@ -216,7 +214,7 @@ export default function SettingsMenu() {
 
 		let fixedLink = {
 			name: newLinkInput.name,
-			url: "https://" + newLinkInput.url.replace(/^https?:\/\//, ""),
+			url: linkType + newLinkInput.url.replace(/^https?:\/\//, ""),
 		};
 
 		createClassLink(classData!.id, fixedLink)
@@ -282,142 +280,179 @@ export default function SettingsMenu() {
 		<>
 			{contextHolderModal}
 			<Flex
-				gap={50}
-				style={{
-					height: "100%",
-					minHeight: 0,
-					width: "100%",
-					overflowY: "auto",
-					padding: 20,
-					paddingBottom: 8,
-				}}
+				vertical
+				style={{ width: "100%", minWidth: 0, padding: 20 }}
 			>
-				<Flex
-					vertical
-					style={{ width: "100%", minWidth: 0, paddingRight: 20 }}
-				>
-					<Title style={{ marginBottom: "0" }}>Settings</Title>
-					<Divider />
+				<Title style={{ marginBottom: "0" }}>Settings</Title>
+				<Divider />
 
-					<Title level={3} style={{ marginTop: 0, marginBottom: 10 }}>
-						General
-					</Title>
-					{classData?.key && (
+				<Card title={(
+					<>
+						<Title level={3} style={{ margin: 0 }}>
+							General{isMobile ? "" : " Settings"}
+						</Title>
+					</>
+				)}
+					extra={(
 						<Text
 							type="secondary"
 							style={{ marginBottom: 10, fontSize: 16 }}
 						>
-							Class Code:{" "}
+							{!isMobile && `Class Code:`}
 							<Text code style={{ fontSize: 16 }}>
 								{classData?.key}
 							</Text>
 						</Text>
 					)}
+				>
 					<Flex gap={30} align="center">
-						<Flex vertical gap={20}>
+						<Flex vertical gap={20} style={{height:"100%", width: '100%'}}>
 							<Flex
 								gap={10}
-								style={{ width: isMobile ? "100%" : "600px" }}
 								justify="center"
-								align="center"
-								vertical={isMobile}
+								align="start"
+								vertical
 							>
-								<Input
-									placeholder="Class Name"
-									defaultValue={classData?.className}
-								/>
-								{canRenameClass && (
-									<Button
-										type="primary"
-										onClick={() => {
-											if (!canRenameClass || !classData)
-												return;
+								<Text type="secondary" style={{fontSize: 14}}>
+									Class Name
+								</Text>
+								<Space.Compact block style={{width: '100%'}}>
+									<Input
+										placeholder="Class Name"
+										defaultValue={classData?.className}
+									/>
+									{canRenameClass && !isMobile && (
+										<Button
+											type="primary"
+											style={{height: 'auto'}}
+											onClick={() => {
+												if (!canRenameClass || !classData)
+													return;
 
-											updateSettings(classData.id, {
-												name: classData.className,
-											})
-												.then((response) => {
-													if (
-														response?.success ===
-															false ||
-														response?.error
-													) {
-														globalMessageAPI.error(
-															messageTemplates.class_name_update_failed,
-														);
-														return;
-													}
-													globalMessageAPI.success(
-														messageTemplates.class_name_updated_success,
-													);
+												updateSettings(classData.id, {
+													name: classData.className,
 												})
-												.catch((error) =>
-													Log({
-														message:
-															"Error updating class name",
-														data: error,
-														level: "error",
-													}),
-												);
-										}}
-									>
-										Change Class Name
-									</Button>
-								)}
+													.then((response) => {
+														if (
+															response?.success ===
+																false ||
+															response?.error
+														) {
+															globalMessageAPI.error(
+																messageTemplates.class_name_update_failed,
+															);
+															return;
+														}
+														globalMessageAPI.success(
+															messageTemplates.class_name_updated_success,
+														);
+													})
+													.catch((error) =>
+														Log({
+															message:
+																"Error updating class name",
+															data: error,
+															level: "error",
+														}),
+													);
+											}}
+										>
+											Change Class Name
+										</Button>
+									)}
+								</Space.Compact>
+
+								{
+									isMobile && (
+										<Button
+											type="primary"
+											style={{height: 'auto', width: '100%'}}
+											onClick={() => {
+												if (!canRenameClass || !classData)
+													return;
+
+												updateSettings(classData.id, {
+													name: classData.className,
+												})
+													.then((response) => {
+														if (
+															response?.success ===
+																false ||
+															response?.error
+														) {
+															globalMessageAPI.error(
+																messageTemplates.class_name_update_failed,
+															);
+															return;
+														}
+														globalMessageAPI.success(
+															messageTemplates.class_name_updated_success,
+														);
+													})
+													.catch((error) =>
+														Log({
+															message:
+																"Error updating class name",
+															data: error,
+															level: "error",
+														}),
+													);
+											}}
+										>
+											Change Class Name
+										</Button>
+									)
+								}
+								
 							</Flex>
 							<Flex
 								gap={10}
-								align="center"
-								style={{ width: isMobile ? "100%" : "600px" }}
-								vertical={isMobile}
+								align="start"
+								vertical
 							>
-								<Text style={{ minWidth: isMobile ? undefined : 120 }}>
+								<Text type="secondary" style={{fontSize: 14}}>
 									Default Role
 								</Text>
 								<Select
-									value={defaultRoleId}
+									style={{ width: "100%", }}
+									styles={{
+										suffix: {
+											pointerEvents: "none",
+										},
+									}}
 									placeholder="Select a default role"
-									style={{ width: "100%" }}
+									suffix={null}
+
+									value={defaultRoleId}
 									onChange={updateDefaultRole}
 									options={[
-										{ label: "None", value: null },
+										{ label: "None", color: 'white', value: null },
 										...(classData?.roles ?? []).map((role) => ({
 											label: role.name,
+											color: role.color,
 											value: role.id,
 										})),
 									]}
+									showSearch={{
+										optionFilterProp: "label",
+									}}
+									optionRender={(option) => (
+										<Flex align="center" gap={8}>
+											<span
+												style={{
+													color: option.data.color,
+													fontWeight: 500,
+												}}
+											>
+												{option.data.label}
+											</span>
+										</Flex>
+									)}
 								/>
 							</Flex>
 
-							{isMobile && (
-								<Flex align="center" justify="center">
-									<Tooltip
-										title="Tap to enlarge"
-										mouseEnterDelay={0.5}
-									>
-										<QRCode
-											value={
-												frontendUrl +
-												"/joinClass?code=" +
-												classData?.key
-											}
-											bordered={false}
-											size={70}
-											style={{ cursor: "pointer" }}
-											iconSize={20}
-											type="svg"
-											icon="/img/FormbarLogo-Circle.png"
-											onClick={() => {
-												setIsQRModalOpen(true);
-											}}
-										/>
-									</Tooltip>
-								</Flex>
-							)}
-
 							<Flex
 								gap={10}
-								style={{ width: isMobile ? "100%" : "600px" }}
 								justify="center"
 								align="center"
 								vertical={isMobile}
@@ -426,6 +461,7 @@ export default function SettingsMenu() {
 									<Button
 										variant="solid"
 										color="danger"
+										style={{width:'100%'}}
 										onClick={() => {
 											if (!canKickStudents || !classData)
 												return;
@@ -463,6 +499,7 @@ export default function SettingsMenu() {
 									<Button
 										variant="solid"
 										color="danger"
+										style={{width:'100%'}}
 										onClick={() => {
 											if (
 												!canRegenerateCode ||
@@ -499,11 +536,11 @@ export default function SettingsMenu() {
 										Regenerate Code
 									</Button>
 								)}
-
 								{canDeleteClass && (
 									<Button
 										variant="solid"
 										color="danger"
+										style={{width:'100%'}}
 										onClick={() => {
 											if (!canDeleteClass || !classData)
 												return;
@@ -567,45 +604,43 @@ export default function SettingsMenu() {
 						</Flex>
 
 						{!isMobile && (
-							<Flex
-								vertical
-								gap={10}
-								align="center"
-								justify="center"
-								style={{
-									borderLeft: `2px solid ${isDark ? "#fff2" : "#0002"}`,
-									paddingLeft: 20,
-								}}
-							>
-								<Tooltip
-									title="Click to enlarge"
-									mouseEnterDelay={0.5}
+							<Card style={{paddingInline: 80}}>
+								<Flex
+									vertical
+									gap={10}
+									align="center"
+									justify="center"
 								>
-									<QRCode
-										value={
-											frontendUrl +
-											"/joinClass?code=" +
-											classData?.key
-										}
-										bordered={false}
-										size={150}
-										style={{ cursor: "pointer" }}
-										type="svg"
-										icon="/img/FormbarLogo-Circle.png"
-										onClick={() => {
-											setIsQRModalOpen(true);
-										}}
-									/>
-								</Tooltip>
+									<Tooltip
+										title="Click to enlarge"
+										mouseEnterDelay={0.5}
+									>
+										<QRCode
+											value={
+												frontendUrl +
+												"/joinClass?code=" +
+												classData?.key
+											}
+											bordered={true}
+											size={150}
+											style={{ cursor: "pointer" }}
+											type="svg"
+											icon="/img/FormbarLogo-Circle.png"
+											onClick={() => {
+												setIsQRModalOpen(true);
+											}}
+										/>
+									</Tooltip>
 
-								<Text
-									strong
-									type="secondary"
-									style={{ fontSize: 16 }}
-								>
-									Scan to join class
-								</Text>
-							</Flex>
+									<Text
+										strong
+										type="secondary"
+										style={{ fontSize: 16 }}
+									>
+										Scan to join class
+									</Text>
+								</Flex>
+							</Card>
 						)}
 						<Modal
 							open={isQRModalOpen}
@@ -634,10 +669,11 @@ export default function SettingsMenu() {
 						</Modal>
 					</Flex>
 
-					{canManageLinks && (
-						<>
-							<Divider />
+				</Card>
 
+				{canManageLinks && !isMobile && (
+					<>
+						<Card style={{marginTop: 20}}>
 							<Title level={3}>Links</Title>
 
 							<Flex
@@ -652,10 +688,6 @@ export default function SettingsMenu() {
 									style={{
 										width: "200px",
 										marginRight: 10,
-										...(isMobile && {
-											marginRight: 0,
-											width: "100%",
-										}),
 									}}
 									value={newLinkInput.name}
 									onChange={(e) =>
@@ -668,13 +700,17 @@ export default function SettingsMenu() {
 								<Space.Compact
 									style={{
 										width: "100%",
-										...(isMobile && {
-											marginRight: 0,
-											width: "100%",
-										}),
 									}}
 								>
-									<Space.Addon>https://</Space.Addon>
+									<AutoComplete
+										options={defaultLinkTypes.map((linkType) => ({
+											label: `${linkType}`,
+											value: linkType,
+										}))}
+										value={linkType}
+										onChange={setLinkType}
+										placeholder="https://"
+									/>
 									<Input
 										placeholder="example.com"
 										value={newLinkInput.url}
@@ -685,21 +721,17 @@ export default function SettingsMenu() {
 											})
 										}
 									/>
+									<Button
+										type="primary"
+										style={{
+											height: 'auto',
+											width: "100px",
+										}}
+										onClick={() => tryAddLink()}
+									>
+										Add Link
+									</Button>
 								</Space.Compact>
-								<Button
-									type="primary"
-									style={{
-										marginLeft: 10,
-										width: "100px",
-										...(isMobile && {
-											marginLeft: 0,
-											width: "100%",
-										}),
-									}}
-									onClick={() => tryAddLink()}
-								>
-									Add Link
-								</Button>
 							</Flex>
 
 							<Collapse
@@ -768,123 +800,85 @@ export default function SettingsMenu() {
 									},
 								]}
 							/>
-						</>
-					)}
+						</Card>
+					</>
+				)}
 
-					{canManageUsers && !isBannedLoading && (
-						<>
-							<Divider />
-
+				{canManageUsers && (
+					<>
+						<Card style={{marginTop: 20}}>
 							<Title level={3}>Banned Users</Title>
-							<Flex vertical gap={16}>
-								<Flex gap={12} wrap>
-									<Card
-										size="small"
-										style={{ minWidth: 180 }}
-									>
-										<Flex vertical>
-											<Text type="secondary">
-												Total banned
-											</Text>
-											<Title
-												level={2}
-												style={{ margin: 0 }}
-											>
-												{bannedStudents.length}
-											</Title>
-										</Flex>
-									</Card>
-									<Card
-										size="small"
-										style={{ minWidth: 220 }}
-									>
-										<Flex vertical>
-											<Text type="secondary">
-												Visible in filter
-											</Text>
-											<Title
-												level={2}
-												style={{ margin: 0 }}
-											>
-												{filteredBannedStudents.length}
-											</Title>
-										</Flex>
-									</Card>
-								</Flex>
+							<Flex vertical align="center" style={{width: '100%'}}>
+								{
+									!isMobile ? <Row gutter={[8, 8]} style={{ marginBottom: "10px", width: '100%', justifyContent: 'center' }}>
+										{
+											bannedStudents.map((student, index) => (
+												<Col
+													span={4}
+													key={`student-${student.id}`}
+												>
+													<StudentObject
+														style={getAppearAnimation(
+															settings
+																.accessibility
+																.disableAnimations,
+															index,
+														)}
+														key={student.id}
+														student={classData?.students[student.id]!}
+														openModalId={
+															openModalId
+														}
+														setOpenModalId={
+															setOpenModalId
+														}
+													/>
+												</Col>
+											))
+										}
+									</Row> :
+									<Flex vertical style={{width: "100%", marginBottom: 10}}>
+										{
+											bannedStudents.map((student, index) => (
+												<StudentObject
+													style={{...getAppearAnimation(
+														settings
+															.accessibility
+															.disableAnimations,
+														index,
+													), width: '100%'}}
+													key={student.id}
+													student={classData?.students[student.id]!}
+													openModalId={
+														openModalId
+													}
+													setOpenModalId={
+														setOpenModalId
+													}
+												/>
+											))
+										}
+									</Flex>
 
-								<Input
-									placeholder="Search banned users"
-									value={bannedSearchQuery}
-									onChange={(e) =>
-										setBannedSearchQuery(e.target.value)
-									}
-									style={{ maxWidth: 420 }}
-								/>
-
-								<div
+								}
+								
+								<CustomPagination 
 									style={{
-										display: isMobile ? "flex" : "grid",
-										flexDirection: isMobile
-											? "column"
-											: "unset",
-										gridTemplateColumns: isMobile
-											? "unset"
-											: "repeat(auto-fill, minmax(200px, 1fr))",
-										gap: "16px",
-										width: "100%",
-										overflowY: isMobile
-											? "scroll"
-											: "unset",
-										padding: isMobile ? "20px 15px" : "0",
-										paddingBottom: isMobile ? 0 : "20px",
+										maxWidth: '100%'
 									}}
-								>
-									{canReadUsers &&
-										students
-											.filter((student) =>
-												student.displayName
-													.toLowerCase()
-													.includes(
-														bannedSearchQuery.toLowerCase(),
-													),
-											)
-											.filter((student) =>
-												bannedStudents.some(
-													(banned) =>
-														banned.id ===
-														student.id,
-												),
-											)
-											.map(
-												(
-													student: any,
-													index: number,
-												) =>
-													student.id !==
-													userData?.id ? (
-														<StudentObject
-															style={getAppearAnimation(
-																settings
-																	.accessibility
-																	.disableAnimations,
-																index,
-															)}
-															key={student.id}
-															student={student}
-															openModalId={
-																openModalId
-															}
-															setOpenModalId={
-																setOpenModalId
-															}
-														/>
-													) : null,
-											)}
-								</div>
+									currentPage={bannedCurrentPage}
+									pageSize={bannedPageSize}
+									total={totalBannedUsers}
+
+									onChange={(page, size) => {
+										setBannedCurrentPage(page);
+										setBannedPageSize(size);
+									}}
+								/>
 							</Flex>
-						</>
-					)}
-				</Flex>
+						</Card>
+					</>
+				)}
 			</Flex>
 		</>
 	);

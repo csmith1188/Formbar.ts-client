@@ -64,12 +64,6 @@ export default function StudentManagementGrid({
 		color: role.color,
 	}));
 
-	const canAwardDigipogs = currentUserHasScope(
-		userData,
-		"class.digipogs.award",
-	);
-	const [awardDigipogs, setAwardDigipogs] = useState<number>(0);
-
 	const canKick = currentUserHasScope(userData, "class.students.kick");
 	const canBan = currentUserHasScope(userData, "class.students.ban");
 
@@ -81,31 +75,6 @@ export default function StudentManagementGrid({
 
 		children: any;
 	};
-
-	function awardDigipogsAPI(studentId: number, amount: number) {
-		awardDigipogAPICall({
-			studentId,
-			amount,
-		})
-			.then((data) => {
-				if (data.success === false || data.error) {
-					globalMessageAPI.error(
-						messageTemplates.user_digipogs_award_failed,
-					);
-					return;
-				}
-				globalMessageAPI.success(
-					messageTemplates.user_digipogs_awarded_success(amount),
-				);
-			})
-			.catch((error) =>
-				Log({
-					message: "Error awarding digipogs",
-					data: error,
-					level: "error",
-				}),
-			);
-	}
 
 	useEffect(() => {
 		setStudentRoleIds(
@@ -806,7 +775,7 @@ export default function StudentManagementGrid({
 	return (
 		<>
 			{contextHolderModal}
-			<Row gutter={[12, 12]} align="stretch">
+			<Row gutter={[12, 12]} align="stretch" style={{justifyContent: 'center'}}>
 				{categories.map((category) => createGridItem(category))}
 			</Row>
 		</>

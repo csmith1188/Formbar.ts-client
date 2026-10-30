@@ -213,6 +213,8 @@ export default function Dashboard({
 
 	const filteredStudents = canSeeUsers
 		? students.filter((student) => {
+				if(student.roles.class.some((e) => e.name == 'Banned')) return false;
+				
 				// Filters stack: student must match ALL enabled filters
 				if (matchAllFilters) {
 					if (filterState.answeredPoll && !student.pollRes?.buttonRes)
@@ -558,24 +560,24 @@ export default function Dashboard({
 								)
 								.map((student: any, index: number) =>
 									student.id !== userData?.id ? (
-																		<StudentObject
-																			key={student.id}
-																			style={getStudentAnimationStyle(
-																				student.id,
-																				index,
-																			)}
-																			student={student}
-																			isVoteExcluded={
-																				excludedRespondents.includes(
-																				Number(student.id),
-																			) && !student.isOffline
-																			}
-																			onToggleVote={
-																				handleExcludeRespondent
-																			}
-																			openModalId={openModalId}
-																			setOpenModalId={setOpenModalId}
-																		/>
+										<StudentObject
+											key={student.id}
+											style={getStudentAnimationStyle(
+												student.id,
+												index,
+											)}
+											student={student}
+											isVoteExcluded={
+												excludedRespondents.includes(
+												Number(student.id),
+											) && !student.isOffline
+											}
+											onToggleVote={
+												handleExcludeRespondent
+											}
+											openModalId={openModalId}
+											setOpenModalId={setOpenModalId}
+										/>
 									) : null,
 								)}
 					</div>
