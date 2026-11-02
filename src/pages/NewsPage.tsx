@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { useUserData } from "@/main";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import NotificationObject from "@/components/NotificationTypes";
 
 export default function NewsPage() {
 	const isMobileView = useMobileDetect();
@@ -38,6 +39,7 @@ export default function NewsPage() {
 				<Title level={5} style={{ margin: 0 }}>
 					Latest Update: Dec 17th, 2025
 				</Title>
+
 				<Card
 					title={
 						<Title level={4} style={{ margin: 0 }}>

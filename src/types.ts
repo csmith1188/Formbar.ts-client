@@ -597,3 +597,30 @@ export type InventoryItem = {
 	quantity: number;
 	stack_size: number;
 };
+
+export type NotificationData = {
+	notifications: Array<{
+		id: number;
+		user_id: number;
+		type: "exchange_received"
+		| "exchange_completed"
+		| "exchange_failed"
+		| "exchange_canceled"
+		| "exchange_rejected"
+		| "trade_received"
+		| "trade_completed"
+		| "trade_failed"
+		| "trade_rejected"
+		| "trade_canceled"
+		| (string & {}),
+		data: any,
+		is_read: number,
+		created_at: string
+	}>,
+	pagination: {
+		hasMore: boolean
+		limit: number
+		offset: number
+		total: number
+	}
+}

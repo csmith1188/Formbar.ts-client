@@ -38,11 +38,12 @@ import {
 import "@assets/css/index.css";
 
 import pages from "@/pages";
-import type { ClassData, CurrentUserData } from "@/types";
+import type { ClassData, CurrentUserData, NotificationData } from "@/types";
 import Log from "@utils/debugLogger";
 import { getMe, getUser, requestUserVerificationEmail } from "@api/userApi";
 import { getPublicKey, getServerConfig } from "@api/systemApi";
 import type { ColorVisionMode } from "@utils/accessibilityColors";
+import { getNotifications } from "./api/notificationApi";
 
 export const isDev: boolean = !import.meta.env.PROD;
 
@@ -50,6 +51,11 @@ type ThemeContextType = {
 	isDark: boolean;
 	isHighContrast: boolean;
 	toggleTheme: () => void;
+};
+
+type NotiDataContextType = {
+	notiData: NotificationData | null;
+	setNotiData: (data: NotificationData | null) => void;
 };
 
 type UserDataContextType = {
@@ -151,6 +157,9 @@ export const useTheme = () => {
 	return context;
 };
 
+const NotiDataContext = createContext<NotiDataContextType | undefined>(
+	undefined,
+);
 const UserDataContext = createContext<UserDataContextType | undefined>(
 	undefined,
 );
@@ -160,6 +169,13 @@ const ClassDataContext = createContext<ClassDataContextType | undefined>(
 const SettingsContext = createContext<SettingsContextType | undefined>(
 	undefined,
 );
+
+export const useNotiData = () => {
+	const context = useContext(NotiDataContext);
+	if (!context)
+		throw new Error("useNotiData must be used within NotiDataProvider");
+	return context;
+};
 
 export const useUserData = () => {
 	const context = useContext(UserDataContext);
@@ -300,6 +316,16 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
 	);
 };
 
+const NotiDataProvider = ({ children }: { children: ReactNode }) => {
+	const [notiData, setNotiData] = useState<NotificationData | null>(null);
+
+	return (
+		<NotiDataContext.Provider value={{ notiData, setNotiData }}>
+			{children}
+		</NotiDataContext.Provider>
+	);
+};
+
 const UserDataProvider = ({ children }: { children: ReactNode }) => {
 	const [userData, setUserData] = useState<CurrentUserData | null>(null);
 
@@ -392,6 +418,7 @@ const AppContent = () => {
 	const [verificationRequestLoading, setVerificationRequestLoading] =
 		useState(false);
 	const { userData, setUserData } = useUserData();
+	const { notiData, setNotiData } = useNotiData();
 	const publicRoutes = [
 		"/login",
 		"/oauth",
@@ -434,8 +461,11 @@ const AppContent = () => {
 		if (!accessToken) return;
 		try {
 			const userResponse = await getMe();
+			const userNotifications = await getNotifications({ limit: 20, offset: 0 });
 
 			const { data } = userResponse;
+			const notiData: NotificationData = userNotifications?.data;
+			
 			const isGuestUser = Boolean(data?.isGuest);
 
 			const serverConfig = config || (await fetchConfig());
@@ -451,6 +481,8 @@ const AppContent = () => {
 			if (isGuestUser) {
 				return;
 			}
+
+			setNotiData(notiData);
 
 			const userDetailResponse = await getUser(data.id);
 
@@ -772,9 +804,11 @@ function App() {
 					<ThemeProvider>
 						<GlobalMessageProvider>
 							<UserDataProvider>
-								<ClassDataProvider>
-									<AppContent />
-								</ClassDataProvider>
+								<NotiDataProvider>
+									<ClassDataProvider>
+										<AppContent />
+									</ClassDataProvider>
+								</NotiDataProvider>
 							</UserDataProvider>
 						</GlobalMessageProvider>
 					</ThemeProvider>
