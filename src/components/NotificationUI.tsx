@@ -9,6 +9,7 @@ export default function NotificationUI() {
 		<Flex vertical style={{
 			width: 300,
 			height: 400,
+			paddingRight: 8,
 			overflowY: 'scroll'
 		}} gap={8}>
 			{

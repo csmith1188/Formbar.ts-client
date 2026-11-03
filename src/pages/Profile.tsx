@@ -17,7 +17,7 @@ import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useUserData, useSettings, useMobileDetect, useTheme, useNotiData } from "@/main";
+import { useUserData, useSettings, useMobileDetect, useTheme } from "@/main";
 import CountUp from "react-countup";
 import {
 	getMe,
@@ -31,12 +31,11 @@ import { transferDigipogs } from "@/api/digipogApi";
 import { currentUserHasScope } from "@/utils/scopeUtils";
 import { useGlobalMessage } from "@/components/providers/GlobalMessageProvider";
 import { messageTemplates } from "@utils/messageTemplates";
-import NotificationObject from "@/components/NotificationTypes";
 
 export default function Profile() {
 	const { settings } = useSettings();
 	const { isHighContrast } = useTheme();
-	const { notiData } = useNotiData();
+	// const { notiData } = useNotiData();
 	const { userData } = useUserData();
 	const globalMessageAPI = useGlobalMessage();
 	const navigate = useNavigate();
@@ -1087,29 +1086,6 @@ export default function Profile() {
 						</Modal>
 					</Flex>
 				</Card>
-
-				{
-					isOwnProfile && notiData && (
-						<Card title="Notifications" styles={{body: {padding: 0, paddingBlock: 8}}}>
-							<Flex 
-								style={{
-									paddingInline: 8,
-									height: 400,
-									width: 500,
-									overflowY: 'scroll'
-								}}
-								vertical
-								gap={8}
-							>
-								{
-									notiData?.notifications.map((e) => {
-										return <NotificationObject key={e.id} notification={e} />;
-									})
-								}
-							</Flex>
-						</Card>
-					)
-				}
 			</Flex>
 		</>
 	);

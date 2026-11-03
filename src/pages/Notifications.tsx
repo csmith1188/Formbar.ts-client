@@ -1,15 +1,79 @@
 import FormbarHeader from "@/components/FormbarHeader";
 import CustomPagination from "@/components/CustomPagination";
-import NotificationObject from "@/components/NotificationTypes";
-import { getNotifications } from "@/api/notificationApi";
+import NotificationObject, {
+	NotificationDetails,
+} from "@/components/NotificationTypes";
+import {
+	getNotifications,
+	markNotificationAsRead,
+} from "@/api/notificationApi";
 import { useMobileDetect, useUserData } from "@/main";
 import Log from "@/utils/debugLogger";
-import { Col, Flex, Row, Spin, Typography } from "antd";
+import { Card, Empty, Flex, Spin, Typography } from "antd";
+const { Title, Text } = Typography;
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { NotificationData } from "@/types";
 
 const DEFAULT_PAGE_SIZE = 20;
+
+type Notification = NotificationData["notifications"][number];
+
+function getDateGroup(notification: Notification) {
+	const date = new Date(notification.created_at);
+	const today = new Date();
+	const startOfToday = new Date(
+		today.getFullYear(),
+		today.getMonth(),
+		today.getDate(),
+	);
+	const startOfNotificationDay = new Date(
+		date.getFullYear(),
+		date.getMonth(),
+		date.getDate(),
+	);
+	const daysAgo = Math.round(
+		(startOfToday.getTime() - startOfNotificationDay.getTime()) /
+			(1000 * 60 * 60 * 24),
+	);
+
+	if (daysAgo === 0) return "Today";
+	if (daysAgo === 1) return "Yesterday";
+	if (daysAgo > 1 && daysAgo < 7) {
+		return date.toLocaleDateString("en-US", { weekday: "long" });
+	}
+
+	return date.toLocaleDateString("en-US", {
+		month: "long",
+		day: "numeric",
+		year:
+			date.getFullYear() === today.getFullYear() ? undefined : "numeric",
+	});
+}
+
+function groupNotifications(notifications: Notification[]) {
+	const groups = new Map<string, Notification[]>();
+
+	for (const notification of notifications) {
+		const label = getDateGroup(notification);
+		const group = groups.get(label) ?? [];
+		group.push(notification);
+		groups.set(label, group);
+	}
+
+	return [...groups.entries()];
+}
+
+function markNotificationRead(
+	notifications: Notification[],
+	notificationId: number,
+) {
+	return notifications.map((notification) =>
+		notification.id === notificationId
+			? { ...notification, is_read: 1 }
+			: notification,
+	);
+}
 
 export default function NotificationsPage() {
 	const { userData } = useUserData();
@@ -23,6 +87,39 @@ export default function NotificationsPage() {
 	const [totalNotifications, setTotalNotifications] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [selectedNotification, setSelectedNotification] =
+		useState<Notification | null>(null);
+
+	const handleNotificationSelect = async (notification: Notification) => {
+		setSelectedNotification(notification);
+
+		try {
+			const response = await markNotificationAsRead(String(notification.id));
+			if (response.error) {
+				Log({
+					message: "Error marking notification as read",
+					data: response.error,
+					level: "error",
+				});
+				return;
+			}
+
+			setNotifications((current) =>
+				markNotificationRead(current, notification.id),
+			);
+			setSelectedNotification((current) =>
+				current?.id === notification.id
+					? { ...current, is_read: 1 }
+					: current,
+			);
+		} catch (err) {
+			Log({
+				message: "Error marking notification as read",
+				data: err,
+				level: "error",
+			});
+		}
+	};
 
 	useEffect(() => {
 		if (!userData) {
@@ -44,6 +141,7 @@ export default function NotificationsPage() {
 							? response.error
 							: response.error.message || "Unable to load notifications.";
 					setNotifications([]);
+					setSelectedNotification(null);
 					setTotalNotifications(0);
 					setError(message);
 					return;
@@ -59,6 +157,14 @@ export default function NotificationsPage() {
 						: notificationRows.length;
 
 				setNotifications(notificationRows);
+				setSelectedNotification((current) => {
+					const currentNotification = current
+						? notificationRows.find(
+								(notification) => notification.id === current.id,
+							)
+						: undefined;
+					return currentNotification ?? notificationRows[0] ?? null;
+				});
 				setTotalNotifications(total);
 				setError(null);
 			})
@@ -71,6 +177,7 @@ export default function NotificationsPage() {
 					level: "error",
 				});
 				setNotifications([]);
+				setSelectedNotification(null);
 				setTotalNotifications(0);
 				setError("Unable to load notifications.");
 			})
@@ -88,60 +195,169 @@ export default function NotificationsPage() {
 			<FormbarHeader />
 			<Flex
 				vertical
-				align="center"
 				gap={16}
 				style={{
-					height: "calc(100% - 64px)",
-					padding: isMobile ? "20px 12px 0" : "20px 20% 0",
+					height: "calc(100vh - 60px)",
+					minHeight: 0,
+					padding: isMobile ? "16px 12px 8px" : "20px 24px 8px",
 				}}
 			>
-				<Typography.Title style={{ margin: 0 }}>
-					Notifications
-				</Typography.Title>
-
-				<Row
-					gutter={[16, 16]}
+				<Flex
+					vertical={isMobile}
+					gap={16}
 					style={{
-						width: "100%",
-						maxWidth: 1000,
 						flex: 1,
-						overflowY: "auto",
-						alignContent: "start",
-						padding: "4px 4px 16px",
+						minHeight: 0,
+						width: "100%",
+						flexDirection: isMobile ? "column" : "row",
 					}}
 				>
-					{isLoading ? (
-						<Col span={24}>
-							<Flex justify="center" style={{ padding: 32 }}>
-								<Spin />
+					<Flex
+						vertical
+						gap={20}
+						style={{
+							flex: "1 1 0",
+							minWidth: 0,
+							minHeight: 0,
+						}}
+					>
+						<div>
+							<Title level={2} style={{ margin: 0 }}>
+								Notifications
+							</Title>
+							<Text type="secondary">
+								Stay up to date with your exchanges and trades.
+							</Text>
+						</div>
+						<Card
+							style={{
+								flex: 1,
+								minHeight: 0,
+								overflow: "hidden",
+							}}
+							styles={{ body: { height: "100%", padding: isMobile ? 12 : 20 } }}
+						>
+							<div
+								style={{
+									height: "100%",
+									overflowY: "auto",
+									padding: "0 4px 4px",
+								}}
+							>
+								{isLoading ? (
+									<Flex
+										justify="center"
+										align="center"
+										style={{ height: "100%" }}
+									>
+										<Spin size="large" />
+									</Flex>
+								) : error ? (
+									<Flex
+										justify="center"
+										align="center"
+										style={{ height: "100%" }}
+									>
+										<Text type="danger">{error}</Text>
+									</Flex>
+								) : notifications.length > 0 ? (
+									<Flex vertical gap={24}>
+										{groupNotifications(notifications).map(
+											([label, groupedNotifications]) => (
+												<section key={label}>
+													<Flex
+														align="center"
+														gap={10}
+														style={{ marginBottom: 10 }}
+													>
+														<Title
+															level={5}
+															style={{ margin: 0, whiteSpace: "nowrap" }}
+														>
+															{label}
+														</Title>
+														<div
+															style={{
+																height: 1,
+																flex: 1,
+																background: "var(--ant-color-border)",
+															}}
+														/>
+														<Text type="secondary">
+															{groupedNotifications.length}
+														</Text>
+													</Flex>
+													<Flex vertical gap={12} style={{paddingRight: 10}}>
+														{groupedNotifications.map((notification) => (
+															<NotificationObject
+																key={notification.id}
+																notification={notification}
+																hideInteractables
+																showUnread
+																selected={
+																	selectedNotification?.id === notification.id
+																}
+																onSelect={handleNotificationSelect}
+															/>
+														))}
+													</Flex>
+												</section>
+											),
+										)}
+									</Flex>
+								) : (
+									<Flex
+										justify="center"
+										align="center"
+										style={{ height: "100%" }}
+									>
+										<Empty
+											description="You’re all caught up"
+											image={Empty.PRESENTED_IMAGE_SIMPLE}
+										/>
+									</Flex>
+								)}
+							</div>
+						</Card>
+					</Flex>
+
+					<Card
+						style={{
+							flex: "1 1 0",
+							minWidth: 0,
+							minHeight: 0,
+							overflow: "auto",
+						}}
+						title="Notification details"
+						styles={{
+							body: {
+								height: "calc(-64px + 100%)",
+								padding: isMobile ? 12 : 20,
+							},
+						}}
+					>
+						{selectedNotification ? (
+							<NotificationDetails
+								notification={selectedNotification}
+							/>
+						) : (
+							<Flex
+								vertical
+								justify="center"
+								align="center"
+								gap={8}
+								style={{ height: "100%", textAlign: "center" }}
+							>
+								<Title level={4} style={{ margin: 0 }}>
+									Select a notification
+								</Title>
+								<Text type="secondary">
+									Choose a notification to view its details and actions.
+								</Text>
 							</Flex>
-						</Col>
-					) : error ? (
-						<Col span={24}>
-							<Typography.Text
-								type="danger"
-								style={{ display: "block", textAlign: "center" }}
-							>
-								{error}
-							</Typography.Text>
-						</Col>
-					) : notifications.length > 0 ? (
-						notifications.map((notification) => (
-							<Col key={notification.id} xs={24} md={12}>
-								<NotificationObject notification={notification} />
-							</Col>
-						))
-					) : (
-						<Col span={24}>
-							<Typography.Text
-								type="secondary"
-								style={{ display: "block", textAlign: "center" }}
-							>
-								You have no notifications.
-							</Typography.Text>
-						</Col>
-					)}
-				</Row>
+						)}
+					</Card>
+				</Flex>
 
 				{!isLoading && !error && totalNotifications > 0 && (
 					<CustomPagination
@@ -152,7 +368,7 @@ export default function NotificationsPage() {
 							setCurrentPage(page);
 							setPageSize(size);
 						}}
-						style={{ marginBottom: 8 }}
+						style={{ margin: 0 }}
 					/>
 				)}
 			</Flex>

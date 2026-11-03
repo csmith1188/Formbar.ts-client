@@ -6,7 +6,6 @@ import { Link } from "react-router";
 import { useUserData } from "@/main";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import NotificationObject from "@/components/NotificationTypes";
 
 export default function NewsPage() {
 	const isMobileView = useMobileDetect();

@@ -1,13 +1,31 @@
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
-import { Card, Tooltip, Typography } from "antd";
-const { Text } = Typography;
-import type { ReactNode } from "react";
+import {
+	Badge,
+	Button,
+	Card,
+	Descriptions,
+	Divider,
+	Flex,
+	Tag,
+	Tooltip,
+	Typography,
+} from "antd";
+const { Title, Text } = Typography;
+const { Ribbon } = Badge;
+import type { KeyboardEvent, ReactNode } from "react";
 import type { NotificationData } from "@/types";
+import { markNotificationAsRead } from "@/api/notificationApi";
+import Log from "@/utils/debugLogger";
 
 type NotificationObjectProps = {
-	notification: NotificationData["notifications"][number]
-}
+	notification: NotificationData["notifications"][number];
+	includeAdditionalData?: boolean;
+	hideInteractables?: boolean;
+	showUnread?: boolean;
+	onSelect?: (notification: NotificationData["notifications"][number]) => void;
+	selected?: boolean;
+};
 
 const NotificationTitles: Record<string, string> = {
 	"exchange_received": "Exchange Received",
@@ -20,52 +38,198 @@ const NotificationTitles: Record<string, string> = {
     "trade_failed": "Trade Failed",
     "trade_rejected": "Trade Rejected",
     "trade_canceled": "Trade Cancelled",
+};
+
+type Notification = NotificationData["notifications"][number];
+
+function getNotificationTitle(notification: Notification) {
+	return NotificationTitles[notification.type] || notification.type;
 }
+
+// function getNotificationData(notification: Notification) {
+// 	if (typeof notification.data !== "string") return notification.data;
+
+// 	try {
+// 		return JSON.parse(notification.data);
+// 	} catch {
+// 		return notification.data;
+// 	}
+// }
 
 export default function NotificationObject({
-	notification
+	notification,
+	includeAdditionalData = false,
+	hideInteractables = false,
+	showUnread = false,
+	onSelect,
+	selected = false,
 }: NotificationObjectProps) {
-	const { actions, children } = getNotificationObjectType({ notification });
+	const { actions, children } = getNotificationObjectType({ notification, includeAdditionalData });
 
+	const createdAt = new Date(notification.created_at);
+	const dateString = createdAt.toLocaleString("en-US", {
+		month: "long",
+		day: "numeric",
+		year: "numeric",
+		hour: "numeric",
+		minute: "numeric",
+	});
+
+	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+		if (!onSelect || (event.key !== "Enter" && event.key !== " ")) return;
+
+		event.preventDefault();
+		onSelect(notification);
+	};
+
+	const showUnreadRibbon = showUnread && notification.is_read == 0;
 
 	return (
-        <Card title={NotificationTitles[notification.type] || notification.type} className="notiCard" styles={{
-			header: {
-				fontSize: 14,
-				minHeight: 0,
-				padding: 10
-			},
-			body: {
-				fontSize: 12,
-				padding: 10
-			},
-			actions: {
-				padding: 4
-			}
-		}}
-		
-		actions={[...(actions || []), 
-			<Tooltip placement="bottom" mouseEnterDelay={0.25} title="Mark as Read" style={{width: '100%'}}>
-				<IonIcon icon={IonIcons.mailOpen}/>
-			</Tooltip>,
-		]}
-
-		>
-			{ children }
-		</Card>
-	)
+		<Ribbon styles={{root: {width: '100%'}, "indicator": { opacity: showUnreadRibbon ? 1 : 0 }}} text={showUnreadRibbon && "Unread"}>
+			<Card
+				title={getNotificationTitle(notification)}
+				className="notiCard"
+				onClick={() => onSelect?.(notification)}
+				onKeyDown={handleKeyDown}
+				tabIndex={onSelect ? 0 : undefined}
+				style={{
+					borderColor: selected ? "var(--ant-color-primary)" : undefined,
+					boxShadow: selected
+						? "0 0 0 2px var(--ant-color-primary-bg)"
+						: undefined,
+					cursor: onSelect ? "pointer" : undefined,
+				}}
+				styles={{
+					header: {
+						fontSize: 14,
+						minHeight: 0,
+						padding: 10,
+					},
+					body: {
+						fontSize: 12,
+						padding: 10,
+					},
+					extra: {
+						padding: 0,
+						display: "flex",
+					},
+				}}
+				extra={
+					includeAdditionalData && (
+						<Tooltip title={dateString} placement="bottom">
+							<IonIcon icon={IonIcons.timeOutline} />
+						</Tooltip>
+					)
+				}
+			>
+				{children}
+				{
+					!hideInteractables && (
+						<Flex
+							gap={4}
+							wrap="wrap"
+							style={{
+								marginTop: 16,
+								paddingTop: 10,
+								borderTop: "1px solid var(--ant-color-border-secondary)",
+							}}
+							onClick={(event) => event.stopPropagation()}
+						>
+							{actions}
+							<NotificationActionButton
+								showLabel={includeAdditionalData}
+								label="Mark as read"
+								icon={IonIcons.mailOpen}
+								onClick={async () => {
+									const response = await markNotificationAsRead(String(notification.id));
+									if (response.error) {
+										Log({
+											message: "Error marking notification as read",
+											data: response.error,
+											level: "error",
+										});
+										return;
+									}
+								}}
+							/>
+						</Flex>
+					)
+				}
+			</Card>
+		</Ribbon>
+	);
 }
 
-function getNotificationObjectType({notification}: NotificationObjectProps): {
-	actions: ReactNode[] | null,
-	children: ReactNode | null,
+export function NotificationDetails({
+	notification,
+}: {
+	notification: Notification;
+}) {
+	const { actions, children } = getNotificationObjectType({
+		notification,
+		includeAdditionalData: true,
+	});
+	const createdAt = new Date(notification.created_at);
+	const formattedDate = createdAt.toLocaleString("en-US", {
+		dateStyle: "long",
+		timeStyle: "short",
+	});
+
+	return (
+		<Flex vertical style={{height: '100%'}}>
+			<Flex vertical gap={8}>
+				<Flex justify="space-between" gap={10} align="center">
+					<Title level={3} style={{ margin: 0 }}>
+						{getNotificationTitle(notification)}
+					</Title>
+					<Flex align="center" gap={8} wrap="wrap">
+						<Tag color={notification.is_read ? "default" : "blue"}>
+							{notification.is_read ? "Read" : "Unread"}
+						</Tag>
+					</Flex>
+				</Flex>
+			</Flex>
+
+			<Divider />
+
+			<Descriptions column={1} size="small">
+				<Descriptions.Item label="Notification ID">
+					{notification.id}
+				</Descriptions.Item>
+				<Descriptions.Item label="Date">
+					{formattedDate}
+				</Descriptions.Item>
+			</Descriptions>
+
+			<Divider />
+
+			<div>{children}</div>
+
+			<Flex
+				gap={4}
+				wrap="wrap"
+				style={{
+					marginTop: "auto",
+					paddingTop: 16,
+					borderTop: "1px solid var(--ant-color-border-secondary)",
+				}}
+			>
+				{actions}
+			</Flex>
+		</Flex>
+	);
+}
+
+function getNotificationObjectType({notification, includeAdditionalData = false}: NotificationObjectProps): {
+	actions: ReactNode[],
+	children: ReactNode,
 } {
 	switch (notification.type) {
 		case "exchange_received":
-			return ExchangeRecieved({ notification });
+			return ExchangeRecieved({ notification, includeAdditionalData });
 		default:
 			return {
-				actions: null,
+				actions: [],
 				children: (
 					<Text style={{ fontSize: 14 }}>
 						You have a new notification.
@@ -75,23 +239,60 @@ function getNotificationObjectType({notification}: NotificationObjectProps): {
 	}
 }
 
-function ExchangeRecieved({notification}: NotificationObjectProps) {
-	const actions: ReactNode[] = [
-		<Tooltip placement="bottom" mouseEnterDelay={0.25} title="Accept" style={{width: '100%'}}>
-			<IonIcon icon={IonIcons.checkmarkCircle}/>
-		</Tooltip>,
-		<Tooltip placement="bottom" mouseEnterDelay={0.25} title="Reject" style={{width: '100%'}}>
-			<IonIcon icon={IonIcons.closeCircle}/>
-		</Tooltip>,
-		<Tooltip placement="bottom" mouseEnterDelay={0.25} title="View Exchange" style={{width: '100%'}}>
-			<IonIcon icon={IonIcons.eye}/>
+function NotificationActionButton({
+	label,
+	icon,
+	showLabel,
+	onClick = () => {}
+}: {
+	label: string;
+	icon: string;
+	showLabel: boolean;
+	onClick?: any,
+}) {
+	return (
+		<Tooltip title={label} placement="bottom">
+			<Button
+				type="text"
+				size="small"
+				icon={<IonIcon icon={icon} />}
+				style={{fontSize: 16}}
+				aria-label={label}
+				onClick={onClick}
+			>
+				{showLabel && (label)}
+			</Button>
 		</Tooltip>
-	]
+	);
+}
+
+function ExchangeRecieved({notification, includeAdditionalData = false}: NotificationObjectProps) {
+	const actions: ReactNode[] = [
+		<NotificationActionButton
+			key="accept"
+			label="Accept"
+			icon={IonIcons.checkmarkCircle}
+			showLabel={includeAdditionalData}
+		/>,
+		<NotificationActionButton
+			key="reject"
+			label="Reject"
+			icon={IonIcons.closeCircle}
+			showLabel={includeAdditionalData}
+		/>,
+		<NotificationActionButton
+			key="view-exchange"
+			label="View exchange"
+			icon={IonIcons.eye}
+			showLabel={includeAdditionalData}
+		/>,
+	];
 
 	const children: ReactNode = (
 		<>
 			<Text style={{fontSize: 14}}>
-				You received an exchange from user {JSON.parse(notification.data).fromUserId}.
+				You received an exchange from user{" "}
+				{JSON.parse(notification.data).fromUserId}.
 			</Text>
 		</>
 	)
