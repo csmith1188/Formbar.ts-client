@@ -178,16 +178,9 @@ export function NotificationDetails({
 	return (
 		<Flex vertical style={{height: '100%'}}>
 			<Flex vertical gap={8}>
-				<Flex justify="space-between" gap={10} align="center">
-					<Title level={3} style={{ margin: 0 }}>
-						{getNotificationTitle(notification)}
-					</Title>
-					<Flex align="center" gap={8} wrap="wrap">
-						<Tag color={notification.is_read ? "default" : "blue"}>
-							{notification.is_read ? "Read" : "Unread"}
-						</Tag>
-					</Flex>
-				</Flex>
+				<Title level={3} style={{ margin: 0 }}>
+					{getNotificationTitle(notification)}
+				</Title>
 			</Flex>
 
 			<Divider />
