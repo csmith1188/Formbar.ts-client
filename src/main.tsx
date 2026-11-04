@@ -56,6 +56,7 @@ type ThemeContextType = {
 type NotiDataContextType = {
 	notiData: NotificationData | null;
 	setNotiData: (data: NotificationData | null) => void;
+	refreshNotifications: () => Promise<void>;
 };
 
 type UserDataContextType = {
@@ -318,9 +319,30 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
 const NotiDataProvider = ({ children }: { children: ReactNode }) => {
 	const [notiData, setNotiData] = useState<NotificationData | null>(null);
+	const refreshNotifications = async () => {
+		if (!accessToken) return;
+
+		const response = await getNotifications({ limit: 20, offset: 0 });
+		if (response.error || !response.data) return;
+
+		const nextData = response.data as NotificationData;
+		setNotiData((current) =>
+			JSON.stringify(current) === JSON.stringify(nextData) ? current : nextData,
+		);
+	};
+
+	useEffect(() => {
+		const intervalId = window.setInterval(() => {
+			void refreshNotifications();
+		}, 5000);
+
+		return () => window.clearInterval(intervalId);
+	}, []);
 
 	return (
-		<NotiDataContext.Provider value={{ notiData, setNotiData }}>
+		<NotiDataContext.Provider
+			value={{ notiData, setNotiData, refreshNotifications }}
+		>
 			{children}
 		</NotiDataContext.Provider>
 	);

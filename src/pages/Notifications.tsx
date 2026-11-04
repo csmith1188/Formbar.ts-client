@@ -4,12 +4,16 @@ import NotificationObject, {
 	NotificationDetails,
 } from "@/components/NotificationTypes";
 import {
+	deleteAllNotifications,
+	deleteNotificationById,
 	getNotifications,
 	markNotificationAsRead,
 } from "@/api/notificationApi";
-import { useMobileDetect, useUserData } from "@/main";
+import { useMobileDetect, useNotiData, useUserData } from "@/main";
 import Log from "@/utils/debugLogger";
-import { Card, Empty, Flex, Spin, Typography } from "antd";
+import { Button, Card, Empty, Flex, Popconfirm, Spin, Typography } from "antd";
+import { IonIcon } from "@ionic/react";
+import * as IonIcons from "ionicons/icons";
 const { Title, Text } = Typography;
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -77,6 +81,7 @@ function markNotificationRead(
 
 export default function NotificationsPage() {
 	const { userData } = useUserData();
+	const { refreshNotifications } = useNotiData();
 	const isMobile = useMobileDetect();
 	const navigate = useNavigate();
 	const [notifications, setNotifications] = useState<
@@ -89,6 +94,11 @@ export default function NotificationsPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [selectedNotification, setSelectedNotification] =
 		useState<Notification | null>(null);
+	const [deletingNotificationId, setDeletingNotificationId] = useState<number | null>(
+		null,
+	);
+	const [isDeletingAll, setIsDeletingAll] = useState(false);
+	const [refreshKey, setRefreshKey] = useState(0);
 
 	const handleNotificationSelect = async (notification: Notification) => {
 		setSelectedNotification(notification);
@@ -107,6 +117,7 @@ export default function NotificationsPage() {
 			setNotifications((current) =>
 				markNotificationRead(current, notification.id),
 			);
+			await refreshNotifications();
 			setSelectedNotification((current) =>
 				current?.id === notification.id
 					? { ...current, is_read: 1 }
@@ -118,6 +129,70 @@ export default function NotificationsPage() {
 				data: err,
 				level: "error",
 			});
+		}
+	};
+
+	const handleDeleteNotification = async (notification: Notification) => {
+		setDeletingNotificationId(notification.id);
+
+		try {
+			const response = await deleteNotificationById(String(notification.id));
+			if (response.error) {
+				Log({
+					message: "Error deleting notification",
+					data: response.error,
+					level: "error",
+				});
+				return;
+			}
+
+			setNotifications((current) => {
+				return current.filter((item) => item.id !== notification.id);
+			});
+			setSelectedNotification((selected) =>
+				selected?.id === notification.id ? null : selected,
+			);
+			setTotalNotifications((current) => Math.max(0, current - 1));
+			await refreshNotifications();
+			setRefreshKey((current) => current + 1);
+		} catch (err) {
+			Log({
+				message: "Error deleting notification",
+				data: err,
+				level: "error",
+			});
+		} finally {
+			setDeletingNotificationId(null);
+		}
+	};
+
+	const handleDeleteAllNotifications = async () => {
+		setIsDeletingAll(true);
+
+		try {
+			const response = await deleteAllNotifications();
+			if (response.error) {
+				Log({
+					message: "Error deleting all notifications",
+					data: response.error,
+					level: "error",
+				});
+				return;
+			}
+
+			setNotifications([]);
+			setSelectedNotification(null);
+			setTotalNotifications(0);
+			await refreshNotifications();
+			setRefreshKey((current) => current + 1);
+		} catch (err) {
+			Log({
+				message: "Error deleting all notifications",
+				data: err,
+				level: "error",
+			});
+		} finally {
+			setIsDeletingAll(false);
 		}
 	};
 
@@ -188,7 +263,7 @@ export default function NotificationsPage() {
 		return () => {
 			isActive = false;
 		};
-	}, [currentPage, navigate, pageSize, userData]);
+	}, [currentPage, navigate, pageSize, refreshKey, userData]);
 
 	return (
 		<>
@@ -199,7 +274,7 @@ export default function NotificationsPage() {
 				style={{
 					height: "calc(100vh - 60px)",
 					minHeight: 0,
-					padding: isMobile ? "16px 12px 8px" : "20px 24px 8px",
+					padding: 20,
 				}}
 			>
 				<Flex
@@ -222,9 +297,30 @@ export default function NotificationsPage() {
 						}}
 					>
 						<div>
-							<Title level={2} style={{ margin: 0 }}>
-								Notifications
-							</Title>
+							<Flex justify="space-between" align="center" gap={12}>
+								<Title level={2} style={{ margin: 0 }}>
+									Notifications
+								</Title>
+								{totalNotifications > 0 && (
+									<Popconfirm
+										title="Delete all notifications?"
+										description="This action cannot be undone."
+										okText="Delete all"
+										okButtonProps={{ danger: true }}
+										onConfirm={handleDeleteAllNotifications}
+									>
+										<Button
+											danger
+											type="text"
+											icon={<IonIcon icon={IonIcons.trashOutline} />}
+											loading={isDeletingAll}
+											disabled={isDeletingAll || deletingNotificationId !== null}
+										>
+											Delete all
+										</Button>
+									</Popconfirm>
+								)}
+							</Flex>
 							<Text type="secondary">
 								Stay up to date with your exchanges and trades.
 							</Text>
@@ -339,6 +435,12 @@ export default function NotificationsPage() {
 						{selectedNotification ? (
 							<NotificationDetails
 								notification={selectedNotification}
+								onDelete={
+									deletingNotificationId === selectedNotification.id
+										? undefined
+										: () =>
+											handleDeleteNotification(selectedNotification)
+								}
 							/>
 						) : (
 							<Flex

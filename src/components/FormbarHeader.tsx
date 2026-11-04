@@ -308,7 +308,7 @@ export default function FormbarHeader() {
 							placement="bottomRight"
 							content={<NotificationUI/>}
 						>
-							<Badge count={notiData?.pagination.total} size="small" offset={[-3, 3]} overflowCount={9}>
+							<Badge count={notiData?.notifications.filter((e) => e.is_read == 0).length} size="small" offset={[-3, 3]} overflowCount={9}>
 								<Button
 									type="primary"
 									variant="solid"
