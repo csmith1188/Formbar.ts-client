@@ -28,6 +28,8 @@ import {
 } from "@/api/exchangeApi";
 import Log from "@/utils/debugLogger";
 import { useNotiData } from "@/main";
+import { useUserData } from "@/main";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 const { Ribbon } = Badge;
@@ -48,6 +50,7 @@ type NotificationProps = {
 	onAccept?: () => void;
 	onReject?: () => void;
 	exchangeActionLoading?: boolean;
+	onView?: () => void;
 };
 
 type NotificationRenderResult = {
@@ -170,6 +173,8 @@ export default function NotificationObject({
 	onSelect,
 	selected = false,
 }: NotificationProps) {
+	const navigate = useNavigate();
+	const { userData } = useUserData();
 	const [exchangePin, setExchangePin] = useState("");
 	const [pendingExchangeAction, setPendingExchangeAction] = useState<
 		"accept" | "reject" | null
@@ -213,6 +218,15 @@ export default function NotificationObject({
 			? () => requestExchangeAction("reject")
 			: undefined,
 		exchangeActionLoading,
+		onView: notification.type.startsWith("exchange")
+			? () => {
+					const exchangeId = getNotificationData(notification).exchangeId;
+					if (exchangeId === undefined || !userData) return;
+					navigate(
+						`/profile/${userData.id}/exchanges?exchangeId=${encodeURIComponent(String(exchangeId))}`,
+					);
+				}
+			: undefined,
 	});
 	const createdAt = new Date(notification.created_at);
 	const dateString = createdAt.toLocaleString("en-US", {
@@ -588,7 +602,7 @@ function action(
 }
 
 function receivedActions(props: NotificationProps): ReactNode[] {
-	const isCompleted = props.exchangeStatus?.toLowerCase() === "completed" || props.exchangeStatus?.toLowerCase() === "rejected";
+	const isCompleted = props.exchangeStatus?.toLowerCase() === "completed" || props.exchangeStatus?.toLowerCase() === "rejected" || props.exchangeStatus?.toLowerCase() === "canceled";
 	return [
 		action(
 			`Accept`,
@@ -608,12 +622,8 @@ function receivedActions(props: NotificationProps): ReactNode[] {
 			props.onReject,
 			props.exchangeActionLoading,
 		),
-		action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view"),
+		action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView),
 	];
-}
-
-function viewAction(props: NotificationProps): ReactNode[] {
-	return [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")];
 }
 
 function eventMessage(
@@ -641,28 +651,28 @@ export function ExchangeReceived(props: NotificationProps): NotificationRenderRe
 
 export function ExchangeCompleted(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange was completed"),
 	};
 }
 
 export function ExchangeFailed(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange failed"),
 	};
 }
 
 export function ExchangeCanceled(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange was cancelled"),
 	};
 }
 
 export function ExchangeRejected(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange was rejected"),
 	};
 }
@@ -677,28 +687,28 @@ export function TradeReceived(props: NotificationProps): NotificationRenderResul
 
 export function TradeCompleted(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade was completed"),
 	};
 }
 
 export function TradeFailed(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade failed"),
 	};
 }
 
 export function TradeRejected(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade was rejected"),
 	};
 }
 
 export function TradeCanceled(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade was cancelled"),
 	};
 }

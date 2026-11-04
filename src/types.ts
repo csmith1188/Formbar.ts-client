@@ -598,6 +598,8 @@ export type InventoryItem = {
 	stack_size: number;
 };
 
+export type RegistryItem = Omit<InventoryItem, "quantity">;
+
 export type NotificationType =
 	| "exchange_received"
 	| "exchange_completed"
@@ -637,4 +639,22 @@ export type NotificationData = {
 		offset: number
 		total: number
 	}
+}
+
+export type Exchange = {
+	id: number,
+	to: {
+		id: number,
+		type: "user" | "pool",
+		request: Record<string, number>
+	},
+	from: {
+		id: number,
+		type: "user" | "pool",
+		offer: Record<string, number>
+	},
+	reason: string,
+	status: string,
+	created: string,
+	updated: string
 }

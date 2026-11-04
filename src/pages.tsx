@@ -6,7 +6,6 @@ import NewsPage from "@pages/NewsPage.tsx";
 import ClassesPage from "@pages/Classes.tsx";
 import PogPools from "@pages/PogPools.tsx";
 import InventoryPage from "@pages/InventoryPage.tsx";
-import Transactions from "@pages/Transactions.tsx";
 import ManagerPanel from "@pages/ManagerPanel.tsx";
 import NotFound from "@pages/404.tsx";
 import { Testing } from "@pages/Testing.tsx";
@@ -14,7 +13,8 @@ import PinResetPage from "@pages/PinReset.tsx";
 import EmailVerifyPage from "@pages/EmailVerify.tsx";
 import AuthorizeApp from "@pages/oauth/AuthorizeApp.tsx";
 import Links from "@pages/Links.tsx";
-import NotificationsPage from "./pages/Notifications";
+import NotificationsPage from "@pages/Notifications";
+import ExchangesPage from "@pages/Exchanges";
 
 type Page = {
 	pageName: string;
@@ -79,10 +79,17 @@ const pages: Page[] = [
 		routePath: "/user/verify/email",
 		page: EmailVerifyPage,
 	},
+	//? /transactions are Deprecated, use /exchanges instead
+	// {
+	// 	pageName: "Transactions",
+	// 	routePath: "/profile/:id?/transactions",
+	// 	page: Transactions,
+	// },
+
 	{
-		pageName: "Transactions",
-		routePath: "/profile/:id?/transactions",
-		page: Transactions,
+		pageName: "Exchanges",
+		routePath: "/profile/:id?/exchanges",
+		page: ExchangesPage,
 	},
 	{
 		pageName: "Inventory",
