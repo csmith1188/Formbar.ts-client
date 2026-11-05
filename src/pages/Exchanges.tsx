@@ -6,8 +6,8 @@ import { getExchangeById, getUserExchanges } from "@/api/exchangeApi";
 import { useMobileDetect, useUserData } from "@/main";
 import type { Exchange } from "@/types";
 import Log from "@utils/debugLogger";
-import { getPaginationTotal } from "@/api/pagination";
-import { Card, Empty, Flex, Spin, Tag, Typography } from "antd";
+import { Button, Card, Empty, Flex, Spin, Tag, Typography } from "antd";
+import CreateExchangeModal from "@/components/CreateExchangeModal";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 
@@ -32,16 +32,6 @@ function getExchangeRows(payload: unknown): Exchange[] {
 	}
 
 	return [];
-}
-
-function getExchangePagination(payload: unknown): unknown {
-	if (!payload || typeof payload !== "object") return undefined;
-	const page = payload as ExchangePagePayload;
-	if (page.pagination) return page.pagination;
-	if (page.data && !Array.isArray(page.data)) {
-		return getExchangePagination(page.data);
-	}
-	return undefined;
 }
 
 function getExchangeTimestamp(exchange: Exchange) {
@@ -86,6 +76,7 @@ export default function ExchangesPage() {
 	const [totalExchanges, setTotalExchanges] = useState(0);
 	const [selectedExchange, setSelectedExchange] = useState<Exchange | null>(null);
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const targetId = id || (userData ? String(userData.id) : "");
 
 	useEffect(() => {
@@ -235,7 +226,14 @@ export default function ExchangesPage() {
 								Review digipog and item exchanges.
 							</Text>
 						</div>
-						<Tag>{totalExchanges} total</Tag>
+						<Flex align="center" gap={12}>
+							<Tag>{totalExchanges} total</Tag>
+							{userData && (
+								<Button type="primary" onClick={() => setIsCreateModalOpen(true)}>
+									Create exchange
+								</Button>
+							)}
+						</Flex>
 					</Flex>
 					{isLoading ? (
 						<Flex justify="center" align="center" style={{ minHeight: 160 }}>
@@ -313,6 +311,12 @@ export default function ExchangesPage() {
 					style={{ margin: 0 }}
 				/>
 			</Flex>
+			<CreateExchangeModal
+				open={isCreateModalOpen}
+				onCancel={() => setIsCreateModalOpen(false)}
+				onCreated={() => setRefreshKey((current) => current + 1)}
+				userData={userData}
+			/>
 		</Flex>
 	);
 }

@@ -435,6 +435,20 @@ export default function NotificationsPage() {
 						{selectedNotification ? (
 							<NotificationDetails
 								notification={selectedNotification}
+								onReadStateChange={(isRead) => {
+									setNotifications((current) =>
+										current.map((item) =>
+											item.id === selectedNotification.id
+												? { ...item, is_read: isRead ? 1 : 0 }
+												: item,
+										),
+									);
+									setSelectedNotification((current) =>
+										current?.id === selectedNotification.id
+											? { ...current, is_read: isRead ? 1 : 0 }
+											: current,
+									);
+								}}
 								onDelete={
 									deletingNotificationId === selectedNotification.id
 										? undefined

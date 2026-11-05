@@ -20,7 +20,10 @@ import type {
 	NotificationData,
 	NotificationPayload,
 } from "@/types";
-import { markNotificationAsRead } from "@/api/notificationApi";
+import {
+	markNotificationAsRead,
+	markNotificationAsUnread,
+} from "@/api/notificationApi";
 import {
 	acceptExchange,
 	getExchangeById,
@@ -181,6 +184,21 @@ export default function NotificationObject({
 	>(null);
 	const [exchangeActionLoading, setExchangeActionLoading] = useState(false);
 	const { refreshNotifications } = useNotiData();
+	const isRead = notification.is_read !== 0;
+	const toggleReadState = async () => {
+		const response = isRead
+			? await markNotificationAsUnread(String(notification.id))
+			: await markNotificationAsRead(String(notification.id));
+		if (response.error) {
+			Log({
+				message: `Error marking notification as ${isRead ? "unread" : "read"}`,
+				data: response.error,
+				level: "error",
+			});
+			return;
+		}
+		await refreshNotifications();
+	};
 	const requestExchangeAction = (action: "accept" | "reject") => {
 		setExchangePin("");
 		setPendingExchangeAction(action);
@@ -312,20 +330,9 @@ export default function NotificationObject({
 						{actions}
 						<NotificationActionButton
 							showLabel={includeAdditionalData}
-							label="Mark as read"
-							icon={IonIcons.mailOpen}
-							onClick={async () => {
-								const response = await markNotificationAsRead(String(notification.id));
-								if (response.error) {
-									Log({
-										message: "Error marking notification as read",
-										data: response.error,
-										level: "error",
-									});
-								} else {
-									await refreshNotifications();
-								}
-							}}
+							label={isRead ? "Mark as Unread" : "Mark as Read"}
+							icon={isRead ? IonIcons.mailUnread : IonIcons.mailOpen}
+							onClick={() => void toggleReadState()}
 						/>
 					</Flex>
 				)}
@@ -337,11 +344,15 @@ export default function NotificationObject({
 export function NotificationDetails({
 	notification,
 	onDelete,
+	onReadStateChange,
 }: {
 	notification: Notification;
 	onDelete?: () => void;
+	onReadStateChange?: (isRead: boolean) => void;
 }) {
+	const navigate = useNavigate();
 	const [exchangeData, setExchangeData] = useState<unknown>(null);
+	const { userData } = useUserData();
 	const [isExchangeLoading, setIsExchangeLoading] = useState(false);
 	const [exchangeError, setExchangeError] = useState<string | null>(null);
 	const [exchangeActionLoading, setExchangeActionLoading] = useState(false);
@@ -350,12 +361,35 @@ export function NotificationDetails({
 		"accept" | "reject" | null
 	>(null);
 	const { refreshNotifications } = useNotiData();
+	const [isRead, setIsRead] = useState(notification.is_read !== 0);
 	const formattedDate = new Date(notification.created_at).toLocaleString("en-US", {
 		dateStyle: "long",
 		timeStyle: "short",
 	});
 	const notificationData = getNotificationData(notification);
 	const exchangeId = notificationData.exchangeId;
+
+	useEffect(() => {
+		setIsRead(notification.is_read !== 0);
+	}, [notification.id, notification.is_read]);
+
+	async function toggleReadState() {
+		const nextIsRead = !isRead;
+		const response = nextIsRead
+			? await markNotificationAsRead(String(notification.id))
+			: await markNotificationAsUnread(String(notification.id));
+		if (response.error) {
+			Log({
+				message: `Error marking notification as ${nextIsRead ? "read" : "unread"}`,
+				data: response.error,
+				level: "error",
+			});
+			return;
+		}
+		setIsRead(nextIsRead);
+		onReadStateChange?.(nextIsRead);
+		await refreshNotifications();
+	}
 
 	const isExchangeNotification = notification.type.startsWith("exchange");
 	const exchangeDetails = getExchangeDetails(exchangeData);
@@ -394,6 +428,15 @@ export function NotificationDetails({
 			? () => requestExchangeAction("reject")
 			: undefined,
 		exchangeActionLoading: exchangeActionLoading,
+		onView: notification.type.startsWith("exchange")
+			? () => {
+					const exchangeId = getNotificationData(notification).exchangeId;
+					if (exchangeId === undefined || !userData) return;
+					navigate(
+						`/profile/${userData.id}/exchanges?exchangeId=${encodeURIComponent(String(exchangeId))}`,
+					);
+				}
+			: undefined,
 	});
 
 	useEffect(() => {
@@ -549,6 +592,12 @@ export function NotificationDetails({
 				}}
 			>
 				{actions}
+				<NotificationActionButton
+					showLabel
+					label={isRead ? "Mark as Unread" : "Mark as Read"}
+					icon={isRead ? IonIcons.mailUnread : IonIcons.mailOpen}
+					onClick={() => void toggleReadState()}
+				/>
 				{onDelete && (
 					<Popconfirm
 						title="Delete this notification?"

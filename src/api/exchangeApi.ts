@@ -17,7 +17,22 @@ export function getUserExchanges(
 	);
 }
 
-export function createExchange(body: any) {
+export type CreateExchangeBody = {
+	from: {
+		id: number;
+		type: "user";
+		offer: Record<string, number>;
+		pin: string;
+	};
+	to: {
+		id: number;
+		type: "user";
+		request: Record<string, number>;
+	};
+	reason?: string;
+};
+
+export function createExchange(body: CreateExchangeBody) {
 	return http(`/exchanges`, "POST", {}, body);
 }
 
