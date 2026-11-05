@@ -1,20 +1,22 @@
-import { Button, Flex, Tooltip, Modal, Badge, Avatar } from "antd";
+import { Button, Flex, Tooltip, Modal, Badge, Avatar, Popover } from "antd";
 import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useNavigate } from "react-router-dom";
 import Log from "@utils/debugLogger";
 
-import { useMobileDetect, useSettings, useTheme, useUserData } from "@/main";
+import { useMobileDetect, useNotiData, useSettings, useTheme, useUserData } from "@/main";
 import { themeColors } from "@/themes/ThemeConfig";
 
 import { useState } from "react";
 import SettingsModal from "@components/SettingsModal";
 import { leaveClassSession } from "@api/classApi";
 import { currentUserHasScope } from "@utils/scopeUtils";
+import NotificationUI from "@components/NotificationUI";
 
 export default function FormbarHeader() {
 	const { isDark, isHighContrast } = useTheme();
 	const navigate = useNavigate();
+	const { notiData } = useNotiData();
 	const isMobileView = useMobileDetect();
 	const { userData } = useUserData();
 	const { settings } = useSettings();
@@ -142,14 +144,6 @@ export default function FormbarHeader() {
 					</h1>
 				</>
 			)}
-			{/* 			
-			<Badge count={1} size="small" styles={{root: { marginRight: 'auto'}}}>
-				<Button style={{marginLeft: 10}} type="primary" shape="square" variant="solid" color="default" size="large"
-					onClick={() => navigate("/profile")}
-				>
-					<IonIcon icon={IonIcons.notifications} size="large" />
-				</Button>
-			</Badge> */}
 
 			<Flex align="center" justify="center" gap={10}>
 				{userData && userData.activeClass && canStudentPanel ? (
@@ -306,14 +300,32 @@ export default function FormbarHeader() {
 					/>
 				)}
 
+				{
+					userData && notiData && (
+						<Popover
+							trigger="hover"
+							title="Notifications"
+							placement="bottomRight"
+							content={<NotificationUI/>}
+						>
+							<Badge count={notiData?.notifications.filter((e) => e.is_read == 0).length} size="small" offset={[-3, 3]} overflowCount={9}>
+								<Button
+									type="primary"
+									variant="solid"
+									color="default"
+									size="large"
+									style={styles.headerButton}
+									onClick={() => { navigate('/notifications') }}
+								>
+									<IonIcon icon={IonIcons.notifications} size="large" />
+								</Button>
+							</Badge>
+						</Popover>
+					)
+				}
+
 				{userData && (
-					<Tooltip
-						mouseEnterDelay={0.5}
-						placement="bottomRight"
-						title="Profile"
-						arrow={{ pointAtCenter: true }}
-						color={settings.appearance.accentColor}
-					>
+					<Tooltip placement="bottomRight" color={settings.appearance.accentColor} title="Profile">
 						<Avatar
 							size={36}
 							style={{

@@ -7,7 +7,6 @@ import {
 	Typography,
 	Button,
 	Input,
-	message,
 	Modal,
 	Space,
 	InputNumber,
@@ -36,6 +35,7 @@ import { messageTemplates } from "@utils/messageTemplates";
 export default function Profile() {
 	const { settings } = useSettings();
 	const { isHighContrast } = useTheme();
+	// const { notiData } = useNotiData();
 	const { userData } = useUserData();
 	const globalMessageAPI = useGlobalMessage();
 	const navigate = useNavigate();
@@ -837,7 +837,7 @@ export default function Profile() {
 																						window.navigator.clipboard.writeText(
 																							apiKey,
 																						);
-																						messageApi.success(
+																						globalMessageAPI.success(
 																							"API key copied to clipboard.",
 																						);
 																					}}

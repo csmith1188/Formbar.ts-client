@@ -344,26 +344,15 @@ export default function Dashboard({
 														onChange={(value) =>
 															setSortType(value)
 														}
-													>
-														<Select.Option value="Name">
-															Name
-														</Select.Option>
-														<Select.Option value="Permissions">
-															Permissions
-														</Select.Option>
-														<Select.Option value="Response Order">
-															Response Order
-														</Select.Option>
-														<Select.Option value="Response Time">
-															Response Time
-														</Select.Option>
-														<Select.Option value="Response Text">
-															Response Text
-														</Select.Option>
-														<Select.Option value="Help Time">
-															Help Time
-														</Select.Option>
-													</Select>
+														options={[
+															{ value: "Name", title: "Name" },
+															{ value: "Permissions", title: "Permissions" },
+															{ value: "Response Order", title: "Response Order" },
+															{ value: "Response Time", title: "Response Time" },
+															{ value: "Response Text", title: "Response Text" },
+															{ value: "Help Time", title: "Help Time" },
+														]}
+													/>
 													<Switch
 														checked={
 															sortDirection ===

@@ -589,3 +589,14 @@ label.correctAnswer .ant-checkbox-inner::after {
 .wmde-markdown.wmde-markdown-color img {
 	background: none !important;
 }
+
+.notiCard li {
+	padding-block: 4px !important;
+	margin: 0 !important;
+}
+
+.notiCard ul.ant-card-actions li span {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}

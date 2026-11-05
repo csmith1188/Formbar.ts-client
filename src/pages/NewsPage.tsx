@@ -38,6 +38,7 @@ export default function NewsPage() {
 				<Title level={5} style={{ margin: 0 }}>
 					Latest Update: Dec 17th, 2025
 				</Title>
+
 				<Card
 					title={
 						<Title level={4} style={{ margin: 0 }}>
