@@ -13,8 +13,13 @@ export function markNotificationAsRead(notificationId: string) {
 	return http(
 		`/notifications/${encodeURIComponent(notificationId)}/mark-read`,
 		"POST",
-		{},
-		{ read: true },
+	);
+}
+
+export function markNotificationAsUnread(notificationId: string) {
+	return http(
+		`/notifications/${encodeURIComponent(notificationId)}/mark-unread`,
+		"POST",
 	);
 }
 

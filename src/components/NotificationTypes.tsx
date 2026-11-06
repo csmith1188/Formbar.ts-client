@@ -20,7 +20,10 @@ import type {
 	NotificationData,
 	NotificationPayload,
 } from "@/types";
-import { markNotificationAsRead } from "@/api/notificationApi";
+import {
+	markNotificationAsRead,
+	markNotificationAsUnread,
+} from "@/api/notificationApi";
 import {
 	acceptExchange,
 	getExchangeById,
@@ -28,6 +31,8 @@ import {
 } from "@/api/exchangeApi";
 import Log from "@/utils/debugLogger";
 import { useNotiData } from "@/main";
+import { useUserData } from "@/main";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 const { Ribbon } = Badge;
@@ -48,6 +53,7 @@ type NotificationProps = {
 	onAccept?: () => void;
 	onReject?: () => void;
 	exchangeActionLoading?: boolean;
+	onView?: () => void;
 };
 
 type NotificationRenderResult = {
@@ -170,12 +176,29 @@ export default function NotificationObject({
 	onSelect,
 	selected = false,
 }: NotificationProps) {
+	const navigate = useNavigate();
+	const { userData } = useUserData();
 	const [exchangePin, setExchangePin] = useState("");
 	const [pendingExchangeAction, setPendingExchangeAction] = useState<
 		"accept" | "reject" | null
 	>(null);
 	const [exchangeActionLoading, setExchangeActionLoading] = useState(false);
 	const { refreshNotifications } = useNotiData();
+	const isRead = notification.is_read !== 0;
+	const toggleReadState = async () => {
+		const response = isRead
+			? await markNotificationAsUnread(String(notification.id))
+			: await markNotificationAsRead(String(notification.id));
+		if (response.error) {
+			Log({
+				message: `Error marking notification as ${isRead ? "unread" : "read"}`,
+				data: response.error,
+				level: "error",
+			});
+			return;
+		}
+		await refreshNotifications();
+	};
 	const requestExchangeAction = (action: "accept" | "reject") => {
 		setExchangePin("");
 		setPendingExchangeAction(action);
@@ -213,6 +236,15 @@ export default function NotificationObject({
 			? () => requestExchangeAction("reject")
 			: undefined,
 		exchangeActionLoading,
+		onView: notification.type.startsWith("exchange")
+			? () => {
+					const exchangeId = getNotificationData(notification).exchangeId;
+					if (exchangeId === undefined || !userData) return;
+					navigate(
+						`/profile/${userData.id}/exchanges?exchangeId=${encodeURIComponent(String(exchangeId))}`,
+					);
+				}
+			: undefined,
 	});
 	const createdAt = new Date(notification.created_at);
 	const dateString = createdAt.toLocaleString("en-US", {
@@ -298,20 +330,9 @@ export default function NotificationObject({
 						{actions}
 						<NotificationActionButton
 							showLabel={includeAdditionalData}
-							label="Mark as read"
-							icon={IonIcons.mailOpen}
-							onClick={async () => {
-								const response = await markNotificationAsRead(String(notification.id));
-								if (response.error) {
-									Log({
-										message: "Error marking notification as read",
-										data: response.error,
-										level: "error",
-									});
-								} else {
-									await refreshNotifications();
-								}
-							}}
+							label={isRead ? "Mark as Unread" : "Mark as Read"}
+							icon={isRead ? IonIcons.mailUnread : IonIcons.mailOpen}
+							onClick={() => void toggleReadState()}
 						/>
 					</Flex>
 				)}
@@ -323,11 +344,15 @@ export default function NotificationObject({
 export function NotificationDetails({
 	notification,
 	onDelete,
+	onReadStateChange,
 }: {
 	notification: Notification;
 	onDelete?: () => void;
+	onReadStateChange?: (isRead: boolean) => void;
 }) {
+	const navigate = useNavigate();
 	const [exchangeData, setExchangeData] = useState<unknown>(null);
+	const { userData } = useUserData();
 	const [isExchangeLoading, setIsExchangeLoading] = useState(false);
 	const [exchangeError, setExchangeError] = useState<string | null>(null);
 	const [exchangeActionLoading, setExchangeActionLoading] = useState(false);
@@ -336,12 +361,35 @@ export function NotificationDetails({
 		"accept" | "reject" | null
 	>(null);
 	const { refreshNotifications } = useNotiData();
+	const [isRead, setIsRead] = useState(notification.is_read !== 0);
 	const formattedDate = new Date(notification.created_at).toLocaleString("en-US", {
 		dateStyle: "long",
 		timeStyle: "short",
 	});
 	const notificationData = getNotificationData(notification);
 	const exchangeId = notificationData.exchangeId;
+
+	useEffect(() => {
+		setIsRead(notification.is_read !== 0);
+	}, [notification.id, notification.is_read]);
+
+	async function toggleReadState() {
+		const nextIsRead = !isRead;
+		const response = nextIsRead
+			? await markNotificationAsRead(String(notification.id))
+			: await markNotificationAsUnread(String(notification.id));
+		if (response.error) {
+			Log({
+				message: `Error marking notification as ${nextIsRead ? "read" : "unread"}`,
+				data: response.error,
+				level: "error",
+			});
+			return;
+		}
+		setIsRead(nextIsRead);
+		onReadStateChange?.(nextIsRead);
+		await refreshNotifications();
+	}
 
 	const isExchangeNotification = notification.type.startsWith("exchange");
 	const exchangeDetails = getExchangeDetails(exchangeData);
@@ -380,6 +428,15 @@ export function NotificationDetails({
 			? () => requestExchangeAction("reject")
 			: undefined,
 		exchangeActionLoading: exchangeActionLoading,
+		onView: notification.type.startsWith("exchange")
+			? () => {
+					const exchangeId = getNotificationData(notification).exchangeId;
+					if (exchangeId === undefined || !userData) return;
+					navigate(
+						`/profile/${userData.id}/exchanges?exchangeId=${encodeURIComponent(String(exchangeId))}`,
+					);
+				}
+			: undefined,
 	});
 
 	useEffect(() => {
@@ -535,6 +592,12 @@ export function NotificationDetails({
 				}}
 			>
 				{actions}
+				<NotificationActionButton
+					showLabel
+					label={isRead ? "Mark as Unread" : "Mark as Read"}
+					icon={isRead ? IonIcons.mailUnread : IonIcons.mailOpen}
+					onClick={() => void toggleReadState()}
+				/>
 				{onDelete && (
 					<Popconfirm
 						title="Delete this notification?"
@@ -588,7 +651,7 @@ function action(
 }
 
 function receivedActions(props: NotificationProps): ReactNode[] {
-	const isCompleted = props.exchangeStatus?.toLowerCase() === "completed" || props.exchangeStatus?.toLowerCase() === "rejected";
+	const isCompleted = props.exchangeStatus?.toLowerCase() === "completed" || props.exchangeStatus?.toLowerCase() === "rejected" || props.exchangeStatus?.toLowerCase() === "canceled";
 	return [
 		action(
 			`Accept`,
@@ -608,12 +671,8 @@ function receivedActions(props: NotificationProps): ReactNode[] {
 			props.onReject,
 			props.exchangeActionLoading,
 		),
-		action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view"),
+		action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView),
 	];
-}
-
-function viewAction(props: NotificationProps): ReactNode[] {
-	return [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")];
 }
 
 function eventMessage(
@@ -641,28 +700,28 @@ export function ExchangeReceived(props: NotificationProps): NotificationRenderRe
 
 export function ExchangeCompleted(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange was completed"),
 	};
 }
 
 export function ExchangeFailed(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange failed"),
 	};
 }
 
 export function ExchangeCanceled(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange was cancelled"),
 	};
 }
 
 export function ExchangeRejected(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view", false, props.onView)],
 		children: eventMessage(props.notification, "Your exchange was rejected"),
 	};
 }
@@ -677,28 +736,28 @@ export function TradeReceived(props: NotificationProps): NotificationRenderResul
 
 export function TradeCompleted(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade was completed"),
 	};
 }
 
 export function TradeFailed(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade failed"),
 	};
 }
 
 export function TradeRejected(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade was rejected"),
 	};
 }
 
 export function TradeCanceled(props: NotificationProps): NotificationRenderResult {
 	return {
-		actions: viewAction(props),
+		actions: [action(`View`, IonIcons.eye, !!props.includeAdditionalData, "view")],
 		children: eventMessage(props.notification, "Your trade was cancelled"),
 	};
 }

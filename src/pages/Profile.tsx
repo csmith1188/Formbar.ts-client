@@ -459,8 +459,8 @@ export default function Profile() {
 											onClick={() => {
 												navigate(
 													id
-														? `/profile/${id}/transactions`
-														: "/profile/transactions",
+														? `/profile/${id}/exchanges`
+														: "/profile/exchanges",
 												);
 											}}
 											style={
@@ -474,7 +474,7 @@ export default function Profile() {
 													icon={IonIcons.cashOutline}
 												/>
 											) : (
-												"Transactions"
+												"Exchanges"
 											)}
 										</Button>
 									</Tooltip>

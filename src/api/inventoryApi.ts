@@ -1,5 +1,13 @@
 import { http } from "@api/HTTPApi";
 
+export function getItemRegistry() {
+	return http("/items");
+}
+
+export function getItemByID(itemId: number) {
+	return http(`/item/${itemId}`);
+}
+
 // GET /user/{id}/inventory
 export function getUserInventory(id: string) {
 	return http(`/user/${id}/inventory`, "GET");
