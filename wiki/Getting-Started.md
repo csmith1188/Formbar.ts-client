@@ -53,4 +53,4 @@ npm run build
 
 The production build is written to `dist/`.
 
-### Next -> [Configuration](Configuration.md)
+### Next -> [Configuration](Configuration)

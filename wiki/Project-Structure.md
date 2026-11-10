@@ -74,4 +74,4 @@ The realtime connection is separate from ordinary HTTP requests and is implement
 
 Keep server behavior in the Formbar.js repository. This client should contain browser UI, client state, API wrappers, and the transport integration required to communicate with that server.
 
-### Next -> [Building and Deployment](Building-and-Deployment.md)
+### Next -> [Building and Deployment](Building-and-Deployment)

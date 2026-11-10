@@ -27,4 +27,4 @@ Vite replaces environment variables while building. Changing `.env` on a server 
 
 Inspect the generated bundle and deployment logs carefully; never print secret values while troubleshooting.
 
-### Next -> [Project Structure](Project-Structure.md)
+### Next -> [Project Structure](Project-Structure)
