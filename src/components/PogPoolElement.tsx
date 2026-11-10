@@ -9,8 +9,9 @@ import {
 	Typography,
 	InputNumber,
 	Segmented,
+	Input,
 } from "antd";
-import { payoutPool, deletePool } from "@api/pogPoolsApi";
+import { updatePoolPIN, payoutPool, deletePool } from "@api/pogPoolsApi";
 const { Text } = Typography;
 import { IonIcon } from "@ionic/react";
 import Log from "@utils/debugLogger";
@@ -27,26 +28,41 @@ export default function PogPoolElement({
 	refreshPools,
 }: {
 	pool: PogPool;
-	refreshPools: Function;
+	refreshPools: () => void;
 }) {
 	const { userData } = useUserData();
 	const globalMessageAPI = useGlobalMessage();
 	const [modal, contextHolder] = Modal.useModal();
 
 	const [payoutModalOpen, setPayoutModalOpen] = useState<boolean>(false);
+	const [changePinModalOpen, setChangePinModalOpen] =
+		useState<boolean>(false);
+	const [actionLoading, setActionLoading] = useState(false);
 	const [percentOrSet, setPercentOrSet] = useState<"Percent" | "Digipogs">(
 		"Percent",
 	);
 	const [payoutPercent, setPayoutPercent] = useState<number>(100);
 	const [payoutDigipogs, setPayoutDigipogs] = useState<number>(pool.amount);
 
+	const [oldPinInput, setOldPinInput] = useState<string>("");
+	const [newPinInput, setNewPinInput] = useState<string>("");
+
+	const [payoutPinInput, setPayoutPinInput] = useState<string>("");
+
 	const handlePayout = (poolId: number) => {
+		if (!/^\d{4,6}$/.test(payoutPinInput)) {
+			globalMessageAPI.error(messageTemplates.pin_invalid_error);
+			return;
+		}
+
 		Log({ message: `Payout initiated for pool ${poolId}` });
+		setActionLoading(true);
 
 		payoutPool(
 			poolId,
 			percentOrSet === "Percent" ? payoutPercent : payoutDigipogs,
 			percentOrSet,
+			payoutPinInput,
 		)
 			.then((response) => {
 				if (response?.success === false || response?.error) {
@@ -57,15 +73,54 @@ export default function PogPoolElement({
 				}
 				Log({ message: `Payout successful for pool ${poolId}` });
 				globalMessageAPI.success(messageTemplates.pool_payout_success);
+				setPayoutModalOpen(false);
+				setPayoutPinInput("");
 				refreshPools();
 			})
-			.catch((error) =>
-				Log({
-					message: `Error paying out pool ${poolId}`,
-					data: error,
-					level: "error",
-				}),
-			);
+			.catch((error) => {
+			Log({
+				message: `Error paying out pool ${poolId}`,
+				data: error,
+				level: "error",
+			});
+			globalMessageAPI.error(messageTemplates.user_pool_payout_failed);
+			})
+			.finally(() => setActionLoading(false));
+	};
+
+	const handleChangePin = () => {
+		if (
+			!/^\d{4,6}$/.test(newPinInput)
+		) {
+			globalMessageAPI.error(messageTemplates.pin_invalid_error);
+			return;
+		}
+		if (oldPinInput === newPinInput) {
+			globalMessageAPI.error(messageTemplates.pin_confirmation_mismatch_error);
+			return;
+		}
+
+		setActionLoading(true);
+		updatePoolPIN(pool.id, oldPinInput, newPinInput)
+			.then((response) => {
+			if (response?.success === false || response?.error) {
+				globalMessageAPI.error(messageTemplates.pin_update_failed);
+				return;
+			}
+			globalMessageAPI.success(messageTemplates.pin_updated_success);
+			setChangePinModalOpen(false);
+			setOldPinInput("");
+			setNewPinInput("");
+			})
+			.catch((error) => {
+			Log({
+				message: `Error changing PIN for pool ${pool.id}`,
+				data: error,
+				level: "error",
+			});
+			globalMessageAPI.error(messageTemplates.pin_update_failed);
+			})
+			.finally(() => setActionLoading(false));
 	};
 
 	const handleDelete = (poolId: number) => {
@@ -105,14 +160,7 @@ export default function PogPoolElement({
 		});
 	};
 
-	const isOwner =
-		Array.isArray(pool.owners) &&
-		pool.owners.some((owner) => owner.id === Number(userData?.id));
-	const ownerLabel = isOwner
-		? "You"
-		: Array.isArray(pool.owners) && pool.owners.length > 0
-			? `${pool.owners[0].displayName}`
-			: "N/A";
+	const isOwner = pool.topShareholders.some((e) => { return e.id === userData?.id })
 
 	const canManagePools = currentUserHasScope(userData, "global.pools.manage");
 
@@ -127,8 +175,18 @@ export default function PogPoolElement({
 				okType="primary"
 				okText="Payout"
 				onOk={() => handlePayout(pool.id)}
+				confirmLoading={actionLoading}
 				cancelText="Cancel"
 			>
+				<Input.Password
+					placeholder="Pool PIN"
+					maxLength={6}
+					value={payoutPinInput}
+					onChange={(event) =>
+						setPayoutPinInput(event.target.value.replace(/\D/g, ""))
+					}
+				/>
+
 				<Text type="secondary" style={{ fontSize: 14 }}>
 					You can payout a set amount of digipogs, or a percentage of
 					the full amount.
@@ -169,6 +227,36 @@ export default function PogPoolElement({
 				</Flex>
 			</Modal>
 
+			<Modal
+				open={changePinModalOpen}
+				onCancel={() => {
+					if (!actionLoading) setChangePinModalOpen(false);
+				}}
+				title="Change Pool PIN"
+				okText="Change PIN"
+				onOk={handleChangePin}
+				confirmLoading={actionLoading}
+			>
+				<Flex vertical gap={12}>
+					<Input.Password
+						placeholder="Current PIN"
+						maxLength={6}
+						value={oldPinInput}
+						onChange={(event) =>
+							setOldPinInput(event.target.value.replace(/\D/g, ""))
+						}
+					/>
+					<Input.Password
+						placeholder="New PIN"
+						maxLength={6}
+						value={newPinInput}
+						onChange={(event) =>
+							setNewPinInput(event.target.value.replace(/\D/g, ""))
+						}
+					/>
+				</Flex>
+			</Modal>
+
 			<Card
 				title={pool.name}
 				styles={{
@@ -206,6 +294,22 @@ export default function PogPoolElement({
 										key="payout"
 									/>
 								</Tooltip>,
+								<span>
+									<Tooltip
+										mouseEnterDelay={0.5}
+										title="Change Pool PIN"
+										key="changePin"
+										placement="top"
+										color="red"
+									>
+										<IonIcon
+											icon={IonIcons.keyOutline}
+											style={{ fontSize: "32px" }}
+											onClick={() => setChangePinModalOpen(true)}
+											key="changePin"
+										/>
+									</Tooltip>
+								</span>,
 								<Tooltip
 									mouseEnterDelay={0.5}
 									title="Delete Pool"
@@ -229,8 +333,8 @@ export default function PogPoolElement({
 				<Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
 					<Col span={12}>
 						<Statistic
-							title="Owner"
-							value={ownerLabel}
+							title="Top Shareholder"
+							value={pool.topShareholders.map((e) => e.displayName).join(', ')}
 							styles={{
 								content: {
 									textAlign: "center",
