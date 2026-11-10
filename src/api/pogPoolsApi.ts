@@ -25,6 +25,7 @@ export function payoutPool(
 	poolId: number,
 	amount: number,
 	payoutType: "Percent" | "Digipogs",
+	pin: string,
 ) {
 	return http(
 		`/pools/${poolId}/payout`,
@@ -33,6 +34,7 @@ export function payoutPool(
 		{
 			amount,
 			payoutType: payoutType.toLowerCase(),
+			pin
 		},
 	);
 }
@@ -44,4 +46,12 @@ export function removePoolMember(
 	},
 ) {
 	return http(`/pools/${poolId}/remove-member`, "POST", {}, body);
+}
+
+export function updatePoolPIN(
+	poolId: number,
+	oldPin: string,
+	newPin: string
+) {
+	return http(`/pool/${poolId}/pin`, "PATCH", {}, {oldPin, pin: newPin});
 }
