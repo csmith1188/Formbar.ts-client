@@ -106,4 +106,4 @@ server {
 
 When using this same-origin arrangement, build with `VITE_FORMBAR_API_URL=https://formbar.example.com`. Verify the Formbar server's own proxy/trust settings for the deployment.
 
-### Next -> [Formbar Server Integration](Formbar-Server-Integration.md)
+### Next -> [Formbar Server Integration](Formbar-Server-Integration)

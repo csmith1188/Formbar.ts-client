@@ -67,4 +67,4 @@ pm2 save
 
 Nginx is still recommended as the public TLS-terminating reverse proxy. PM2 is an alternative static file server, not a replacement for the Formbar API server.
 
-### Next -> [Nginx Hosting](Nginx-Hosting.md)
+### Next -> [Nginx Hosting](Nginx-Hosting)

@@ -52,4 +52,4 @@ After deployment:
 5. Verify the Socket.IO connection reaches `connected` and class updates appear.
 6. Open a deep route directly, refresh it, and confirm Nginx returns the client instead of a 404.
 
-### Next -> [Troubleshooting](Troubleshooting.md)
+### Next -> [Troubleshooting](Troubleshooting)
