@@ -298,7 +298,7 @@ export default function CreateExchangeModal({
 							submitExchange()
 						}}
 					>
-						<Button type="primary" disabled={!(itemQuantityAmount(offer) > 0 || itemQuantityAmount(request) > 0)}>Custom Button</Button>
+						<Button type="primary" disabled={!(itemQuantityAmount(offer) > 0 || itemQuantityAmount(request) > 0)}>Create Exchange</Button>
 					</Popconfirm>
 				</>
 			)}
