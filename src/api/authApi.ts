@@ -1,8 +1,7 @@
 import CryptoJS from "crypto-js";
 import { http } from "@api/HTTPApi";
 
-const SECRET_KEY =
-	import.meta.env.VITE_ENCRYPTION_KEY || "default-key-change-in-prod";
+const SECRET_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 const REFRESH_TOKEN_STORAGE_KEY = "refreshToken";
 const GUEST_ACCESS_TOKEN_STORAGE_KEY = "guestAccessToken";
 
@@ -34,7 +33,6 @@ function decryptToken(encrypted: string): string {
 		return decrypted;
 	} catch (e) {
 		console.error("Failed to decrypt token:", e);
-		setRefreshToken("");
 		return "";
 	}
 }
@@ -46,7 +44,17 @@ export function setRefreshToken(token: string) {
 
 export function getRefreshToken(): string | null {
 	const encrypted = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
-	return encrypted ? decryptToken(encrypted) : null;
+	if (!encrypted) {
+		return null;
+	}
+
+	const token = decryptToken(encrypted);
+	if (!token) {
+		localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+		return null;
+	}
+
+	return token;
 }
 
 export function setGuestAccessToken(token: string) {
