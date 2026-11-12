@@ -3,7 +3,6 @@ import {
 	Col,
 	Divider,
 	Flex,
-	Pagination,
 	Row,
 	Spin,
 	Typography,

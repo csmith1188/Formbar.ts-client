@@ -3,8 +3,6 @@ import { getUserInventory } from "@/api/inventoryApi";
 import { getUser } from "@/api/userApi";
 import type { CurrentUserData, InventoryItem, UserData } from "@/types";
 import Log from "@/utils/debugLogger";
-import { IonIcon } from "@ionic/react";
-import * as IonIcons from "ionicons/icons";
 import {
 	Alert,
 	Button,
