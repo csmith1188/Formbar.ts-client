@@ -7,7 +7,6 @@ import {
 	Typography,
 	Button,
 	Modal,
-	InputNumber,
 	Select,
 	Tag,
 } from "antd";
@@ -23,7 +22,6 @@ import {
 	endStudentBreak,
 	kickClassStudent,
 } from "@api/classApi";
-import { awardDigipogs as awardDigipogAPICall } from "@api/digipogApi";
 import { addRoleToStudent, removeRoleFromStudent } from "@api/rolesApi";
 import { useEffect, useState } from "react";
 import { themeColors } from "@/themes/ThemeConfig";

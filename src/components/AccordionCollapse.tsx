@@ -1,4 +1,4 @@
-import { Button, Flex, InputNumber, Modal, Select, Tag, Tooltip } from "antd";
+import { Button, Flex, Modal, Select, Tag, Tooltip } from "antd";
 import { Activity, useState, useEffect, useRef } from "react";
 import { textColorForBackground } from "@utils/GlobalFunctions";
 import { type Student } from "@/types";
@@ -6,7 +6,6 @@ import { IonIcon } from "@ionic/react";
 import * as IonIcons from "ionicons/icons";
 import { useClassData, useTheme, useUserData } from "@/main";
 
-import { awardDigipogs as awardDigipogAPI } from "@api/digipogApi";
 import {
 	approveStudentBreak,
 	banClassStudent,
@@ -298,7 +297,6 @@ export function StudentAccordion({
 	const { isDark } = useTheme();
 	const globalMessageAPI = useGlobalMessage();
 
-	const [awardDigipogs, setAwardDigipogs] = useState<number>(0);
 	const [studentRoleIds, setStudentRoleIds] = useState<number[]>([]);
 	const [isUpdatingRoles, setIsUpdatingRoles] = useState<boolean>(false);
 
@@ -368,11 +366,6 @@ export function StudentAccordion({
 	const canEndBreaks = currentUserHasScope(userData, "class.break.end");
 
 	const canAssignRoles = currentUserHasScope(userData, "class.roles.assign");
-
-	const canAwardDigipogs = currentUserHasScope(
-		userData,
-		"class.digipogs.award",
-	);
 
 	const canKick = currentUserHasScope(userData, "class.students.kick");
 	const canBan = currentUserHasScope(userData, "class.students.ban");

@@ -20,7 +20,6 @@ import {
 	getAppearAnimation,
 	useClassData,
 	useMobileDetect,
-	useTheme,
 	useUserData,
 	useSettings,
 } from "@/main";
@@ -37,7 +36,6 @@ import {
 	updateSettings,
 } from "@api/classApi";
 import { currentUserHasScope } from "@/utils/scopeUtils";
-import type { Student } from "@/types";
 import { useGlobalMessage } from "@/components/providers/GlobalMessageProvider";
 import { messageTemplates } from "@utils/messageTemplates";
 import CustomPagination from "@components/CustomPagination";
@@ -62,7 +60,6 @@ export default function SettingsMenu() {
 	const canManageUsers =
 		currentUserHasScope(userData, "class.students.ban") ||
 		currentUserHasScope(userData, "class.students.kick");
-	const canReadUsers = currentUserHasScope(userData, "class.students.read");
 	const canManageLinks = currentUserHasScope(userData, "class.links.manage");
 	const canDeleteClass = currentUserHasScope(
 		userData,
@@ -96,12 +93,10 @@ export default function SettingsMenu() {
 	const [bannedStudents, setBannedStudents] = useState<BannedClassStudent[]>(
 		[],
 	);
-	const [bannedSearchQuery, setBannedSearchQuery] = useState("");
 
 	const [bannedCurrentPage, setBannedCurrentPage] = useState(1);
 	const [bannedPageSize, setBannedPageSize] = useState(10);
 	const [totalBannedUsers, setTotalBannedUsers] = useState(0);
-	const [isBannedLoading, setIsBannedLoading] = useState(false);
 
 	const [linkType, setLinkType] = useState<string>("https://")
 
@@ -112,11 +107,6 @@ export default function SettingsMenu() {
 	];
 
 	const [modal, contextHolderModal] = Modal.useModal();
-
-	const students =
-		classData && classData.students
-			? (Object.values(classData.students) as Student[])
-			: [];
 
 	const [classLinks, setClassLinks] = useState<
 		{ name: string; url: string }[]
@@ -177,7 +167,6 @@ export default function SettingsMenu() {
 			return;
 		}
 
-		setIsBannedLoading(true);
 		getBannedClassStudents(classData.id)
 			.then((response: any) => {
 				const bannedList = response?.data.banned;
@@ -191,9 +180,6 @@ export default function SettingsMenu() {
 					data: err,
 					level: "error",
 				});
-			})
-			.finally(() => {
-				setIsBannedLoading(false);
 			});
 	}, [classData, canManageUsers]);
 
@@ -273,8 +259,6 @@ export default function SettingsMenu() {
 				}),
 			);
 	}
-
-	const { isDark } = useTheme();
 
 	return (
 		<>

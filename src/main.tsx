@@ -441,6 +441,7 @@ const AppContent = () => {
 		useState(false);
 	const { userData, setUserData } = useUserData();
 	const { notiData, setNotiData } = useNotiData();
+	notiData;
 	const publicRoutes = [
 		"/login",
 		"/oauth",
@@ -626,7 +627,7 @@ const AppContent = () => {
 		pingServer();
 
 		return () => {
-			// clearTimeout(timeoutId);
+			clearTimeout(timeoutId);
 		};
 	}, []);
 

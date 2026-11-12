@@ -1,5 +1,5 @@
 import FormbarHeader from "@components/FormbarHeader";
-import { Flex, Pagination, Spin, Typography } from "antd";
+import { Flex, Spin, Typography } from "antd";
 import Log from "@utils/debugLogger";
 const { Title, Text } = Typography;
 
