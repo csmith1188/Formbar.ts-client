@@ -66,6 +66,7 @@ export default function PogPools() {
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [poolName, setPoolName] = useState("");
 	const [poolDesc, setPoolDesc] = useState("");
+	const [userPin, setUserPin] = useState("");
 
 	useEffect(() => {
 		if (!userData) return;
@@ -112,7 +113,7 @@ export default function PogPools() {
 		}
 
 		Log({ message: `Creating pool: ${poolName}` });
-		createPool({ name: poolName, description: poolDesc })
+		createPool({ name: poolName, description: poolDesc, pin: userPin })
 			.then((response) => {
 				if (response?.success === false || response?.error) {
 					globalMessageAPI.error(messageTemplates.pool_create_failed);
@@ -282,6 +283,12 @@ export default function PogPools() {
 						value={poolDesc}
 						onChange={(e) => setPoolDesc(e.target.value)}
 						rows={4}
+					/>
+					<Input.Password
+						autoFocus
+						value={userPin}
+						onChange={(event) => setUserPin(event.target.value)}
+						placeholder="Your PIN"
 					/>
 				</Flex>
 			</Modal>
