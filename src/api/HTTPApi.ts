@@ -7,6 +7,7 @@ const anonymousClientIdPaths = new Set([
 	"/certs",
 	"/config",
 	"/auth/refresh",
+	"/auth/register",
 	"/auth/login"
 ]);
 
